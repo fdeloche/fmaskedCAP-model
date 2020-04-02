@@ -55,7 +55,7 @@ The NAP method was used to estimate the latencies of each frequency contribution
 
 
 
-(exponential dependency, more visible on this figure for click : )
+(exponential dependency on distance steps, more visible on this figure for click : )
 
 
 
@@ -91,7 +91,7 @@ Other ref: thesis of Wang [@Wang1979]
 
 
 
-Note: interpretation in terms of finite differences: $\approx \delta - \delta'$ (and possibly second derivative)
+Note: interpretation in terms of finite differences: $\approx \delta - 2/1000 \delta'$ (and possibly second derivative)
 
 
 
@@ -121,7 +121,8 @@ Related to the PST histogram or time distribution of first spike (if 2nd peak ne
   NPST: "norm" PST (distribution of spikes for synchronous ANFs)  
   CPST: Compound PST (PST given all the contributions of ANFs)  
   UR: unit response  
-  In fact, there is a logarithm transform (dilatation) of the CPST to take into account the exponential shape of latencies wrt frequencies, so it is not strictly speaking a double convolution.
+  In fact, there is a logarithm transform (dilatation) of the CPST to take into account the exponential shape of latencies wrt distance stapes, so it is not strictly speaking a double convolution.  
+  The model was used to estimate the excitation pattern.
 
 ## Forward masking experiments
 
@@ -169,7 +170,11 @@ It is still the 'blind deconvolution' problem but we have a stronger prior on th
 idea: initialize the algorithm with reasonable estimations of $E$ and $H$. At the end of the algorithm, done for each set of parameters $\theta$, we would select the best model minimizing the square error, then see how it behaves compared to real data.
 
 
+Toy model: Masked CAP toy model.ipynb  
+Possibility of first step? try to see if estimation works on simple simulated data like this one
 
+
+ * TODO, next week : more on type of makser/probes, hypotheses, questions and difficulties
 
 
 
