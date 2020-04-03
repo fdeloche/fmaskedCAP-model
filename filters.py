@@ -73,6 +73,17 @@ class GaussianFilter(AuditoryFilter):
 		self.sig_f=sig_f
 		self.name=f'Gaussian filter (sig_f: {self.sig_f:.1f}f Hz)'
 
+
+	@classmethod
+	def givenQ10(cls, f_c, Q10):
+		'''
+		Alternative constructor with f and Q10 values  
+		Note that these values will just be used to compute sig_f will and f and Q will be forgetten
+		'''
+		BW10=f_c/Q10
+		sig_f=BW10/(2*np.sqrt(2*np.log(10)))
+		return cls(sig_f)
+
 	def g(self, f):
 		'''
 		Args:

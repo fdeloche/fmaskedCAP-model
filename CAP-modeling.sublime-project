@@ -5,7 +5,7 @@
 			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
 			"name": "Anaconda Python Builder",
 			"selector": "source.python",
-			"shell_cmd": "\"python\" -u \"$file\""
+			"shell_cmd": "\"/home/fdeloche/anaconda3/bin/python\" -u \"$file\""
 		}
 	],
 	"conda_environment": "/home/fdeloche/anaconda3/",
@@ -14,6 +14,5 @@
 		{
 			"path": "."
 		}
-	],
-	"python_interpreter": "home/fdeloche/anaconda3/bin/python3.7"
+	]
 }
