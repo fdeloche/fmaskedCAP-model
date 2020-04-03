@@ -19,7 +19,7 @@ Masking of a click or tone-burst with a high-passed white noise (NB: not strictl
 It has been used especially by Eggermont, although not the 1st one to use it (Teas et al., 1962)
 
 * *Analysis of compound action potential responses to tone bursts in the human and guinea pig cochlea* Eggermont 1976 [@Eggermont1976]
-  * TT recordings
+   * TT recordings
 * *Narrow-band analysis of compound action potentials for several stimulus conditions in the guinea pig* Eggermont 1981
 
 ![NAP of click in humans](./figures/NAP_click.png){width=4in}
@@ -110,12 +110,16 @@ Related to the PST histogram or time distribution of first spike (if 2nd peak ne
 
 
 * Double convolution models (or similar)
-  * *Synthetic whole-nerve action potentials for the cat* E. de Boer 1975 
-    	artifical PST histograms are computed with a filter + envelope + rectifier model, so it seems to go far in the modeling
-  * *Deconvolution of compound action potentials and nonlinear features of the PST histogram* [@Bappert1980]
 
+  * *Synthetic whole-nerve action potentials for the cat* E. de Boer 1975 [@Boer1975]
+    artifical PST histograms are computed with a filter + envelope + rectifier model, so it seems to go far in the modeling
+  
+> It was shown that the assumed type of frequency selectivity, coupled with the AN fiber latency as a function of the characteristic frequency ~CF!, is the major determinant of the AP ~e.g., de Boer, 1975  (in Dau, *The importance of cochlear processing for the formation of auditory brainstem and frequency following responses*)
+  
+* *Deconvolution of compound action potentials and nonlinear features of the PST histogram* [@Bappert1980]
+  
   $$CAP = \underbrace{E \star NPST}_{CPST} \star UR$$
-
+  
   CAP:Compound action potential  
   E: excitation pattern (in time, does not try to go in the frequency domain using the latencies)  
   NPST: "norm" PST (distribution of spikes for synchronous ANFs)  
@@ -142,7 +146,9 @@ Related to the PST histogram or time distribution of first spike (if 2nd peak ne
 
 
 
-# Idea
+# Project
+
+## General idea
 
 **General idea: ** return to the 'double convolution' model but exploit different forward masking settings to have a more robust model of CAP (and possibly estimate auditory tuning)
 
@@ -169,9 +175,20 @@ $$[CAP]_i = [M_i (\theta) \cdot E_0]_i \star H \ .$$
 It is still the 'blind deconvolution' problem but we have a stronger prior on the excitation patterns as they belong to a linear subspace parametrized by $E_0$. Simple projection-based algorithms exist in this case [@Yang1994] (this is essentially deconvolution done alternatively on $E$ and $H$ with a projection step between two iterations). Note: prior constraints could be also put on $H$ based on what we know about UR and NPST, but this seems more challenging (maybe as a second step). We can also think of a regularity prior on $E_0$.   
 idea: initialize the algorithm with reasonable estimations of $E$ and $H$. At the end of the algorithm, done for each set of parameters $\theta$, we would select the best model minimizing the square error, then see how it behaves compared to real data.
 
-
 Toy model: Masked CAP toy model.ipynb  
 Possibility of first step? try to see if estimation works on simple simulated data like this one
+
+
+
+## Hypotheses, limitations or difficulties
+
+
+
+| Point | Hypothesis   Comment/Description | Limitations/Possible workarounds or improvements |
+| ----- | -------------------------------- | ------------------------------------------------ |
+|       |                                  |                                                  |
+
+
 
 
  * TODO, next week : more on type of makser/probes, hypotheses, questions and difficulties
