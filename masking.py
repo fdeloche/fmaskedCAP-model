@@ -1,5 +1,10 @@
 import numpy as np 
 
+
+
+###########  MASKING DEGREE FUNC. ##############
+
+
 class MaskingDegreeFunction:
 	'''Parent class for functions relating masking degree with intensity (dB).  
 	It implements a linear function (on a bounded interval) by default, methods should be overridden by children.'''
@@ -52,6 +57,22 @@ class SigmoidMaskingDegreeFunction(MaskingDegreeFunction):
 
 
 
+################ MASKING PATTERNS ####################
+
+class MaskingPattern:
+	'''Parent class for masking patterns.  
+	By default, no masking.  
+	Methods should be overriden by children'''
+
+	def __init__(self):
+		pass
+
+	def M(self, f):
+		'''
+		Returns:
+			Degree of masking as a function of frequency
+		'''
+		return np.zeros_like(f)
 
 
 
