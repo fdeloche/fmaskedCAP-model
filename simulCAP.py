@@ -68,12 +68,13 @@ URWang1979m = URfromCsv.modify(URWang1979, lambda t:1+3*np.exp(-1/2*(t)**2/1e-4*
 Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")
 
 
-def simulCAP(E, t=None, ur=URWang1979m, sig=5e-4):
+def simulCAP2convolGaussianKernel(E, t=None, ur=URWang1979m, sig=5e-4):
 	'''
 	Args:
 		E: ExcitationPattern
 		t (array-like): time, if None, init with np.linspace(5e-4, 10e-3, num=500)
 		ur: Unitary response
+		sig: std of Gaussian kernel 'blur' (in s)
 	Returns:
 		array-like: a simulation of the CAP
 	'''

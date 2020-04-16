@@ -97,7 +97,7 @@ class ToneSingleFilterMaskingPattern(MaskingPattern):
 		self.mdFunc=mdFunc
 
 	def M(self, f):
-		I=20*np.log10(self.A)+self.filt.g_dB(f-self.f_0)
+		I=20*np.log10(self.A)+self.filt.g_dB(self.f_0-f)
 		return self.mdFunc.md(I)
 
 	def __repr__(self):

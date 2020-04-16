@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.integrate import cumtrapz
 
 class AuditoryFilter:
 	'''Parent class for auditory filters. It implements a rectangular filter but its methods should be overridden by children.'''
@@ -31,7 +32,36 @@ class AuditoryFilter:
 		'''
 		return 20*np.log10(self.g(f)+eps)
 
+	def _compute_right_sq_int(self, fmax=None, num=5000):
+		'''Private method. Computes and stores the values of integral from +inf of squared filter in a array
+		Args:
+			f_max: integral will be computed between -f_max and f_max. If none, f_max is chosen as 3 BW10.
+			num: num of points to compute the integral values'''
+		if fmax is None:
+			fmax=3*self.BW10()
+		f=np.linspace(fmax, -fmax, num)
+		self._right_sq_int=-cumtrapz(np.abs(self.g(f))**2, f, initial=0)[::-1]
+		self._right_sq_int_f=f[::-1]
 
+	def right_sq_int(self, f_cut):
+		'''
+		Args:
+			f_cut (array-like): frequencies where to compute the integral values
+		Return:
+			(numpy array): The integral values of squared filter fron f_c to +inf
+		'''
+		if not(hasattr(self, '_right_sq_int')):
+			self._compute_right_sq_int() #compute integral values at regulat intervals
+		return np.interp(f_cut, self._right_sq_int_f, self._right_sq_int, 1., 0.)
+
+	def right_sq_int_dB(self, f_cut, eps=1e-12):
+		'''
+		Args:
+			f_cut (array-like): frequencies where to compute the integral values
+		Return:
+			(numpy array): The integral values of squared filter fron f_c to +inf (RMS values in dB)
+		'''
+		return 10*np.log10(self.right_sq_int(f_cut)+eps)
 
 	def ERB(self):
 		'''

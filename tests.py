@@ -17,15 +17,27 @@ def plot_auditory_filter(auditoryFilter):
 	f=np.linspace(-2000, 2000, num=500)
 	g=auditoryFilter.g(f)
 
+	right_int=auditoryFilter.right_sq_int(f)
 	pl.figure()
-	pl.plot(f,g)
+	pl.plot(f,g, label='filter shape')
 	pl.xlabel('f (Hz)')
 	pl.ylabel('Amplitude spectrum')
+	pl.legend()
+	pl.gca().twinx()
+	pl.plot(f,right_int, label='right integral', color='orange')
+	# #Check with error function
+	# from scipy.special import erf
+	# sig=auditoryFilter.BW10()/(2*2.14)
+	# pl.plot(f, 0.5-0.5*erf(f/(np.sqrt(2)*sig)))
+	pl.legend(loc='lower right')
 	pl.show()
 
 	g_dB=auditoryFilter.g_dB(f)
+	right_int_dB=auditoryFilter.right_sq_int_dB(f)
 	pl.figure()
-	pl.plot(f,g_dB)
+	pl.plot(f,g_dB, label='filter shape')
+
+	pl.plot(f,right_int_dB, label='right integral', color='orange')
 	pl.xlabel('f (Hz)')
 	pl.ylabel('Amplitude spectrum (dB)')
 	pl.ylim([-100,20])
@@ -58,22 +70,22 @@ def test_g_db(auditoryFilter):
 
 if __name__ == '__main__':
 	pass
-	#rectFilter = AuditoryFilter(300)
-	#plot_auditory_filter(rectFilter)
+	# #rectFilter = AuditoryFilter(300)
+	# #plot_auditory_filter(rectFilter)
 
-	#gaussianFilter= GaussianFilter(115.)
-	#plot_auditory_filter(gaussianFilter)
+	# #gaussianFilter= GaussianFilter(115.)
+	# #plot_auditory_filter(gaussianFilter)
 	
 	# gaussianFilter2= GaussianFilter.givenQ10(1e3, 2.)
 	# plot_auditory_filter(gaussianFilter2)
 	
 
-	#test_g_db(gaussianFilter)
+	# #test_g_db(gaussianFilter)
 
 
 
-	#test_L2_normalization(rectFilter)
-	#test_L2_normalization(gaussianFilter)
+	# #test_L2_normalization(rectFilter)
+	# #test_L2_normalization(gaussianFilter)
 
 
 ########## MASK DEGREE FUNC ##############
@@ -151,12 +163,12 @@ def plotURs(t, urlist):
 
 if __name__ == '__main__':
 	pass
-	ur=URWang1979
-	ur2=URWang1979m
-	t = np.linspace(ur._t[0], ur._t[-1], num=512) #resample t
-	# u = ur.u(t)
-	# plotUR(t,u, name=ur.name)
-	plotURs(t,[ur, ur2])
+	# ur=URWang1979
+	# ur2=URWang1979m
+	# t = np.linspace(ur._t[0], ur._t[-1], num=512) #resample t
+	# # u = ur.u(t)
+	# # plotUR(t,u, name=ur.name)
+	# plotURs(t,[ur, ur2])
 
 
 
@@ -281,10 +293,10 @@ if __name__ == '__main__':
 
 
 
-########## SIMUL CAP ############
+#### SIMUL CAP: double convolution (w/ Gaussian Kernel) ###
 
 
-def plotSimulCAP(EPat, sig=5e-4):
+def plotSimulCAP2convGaussianKernel(EPat, sig=5e-4):
 
 	masker=EPat.masker
 	lat = EPat.latencies
@@ -316,8 +328,8 @@ def plotSimulCAP(EPat, sig=5e-4):
 	pl.subplot(1,2,2)
 	pl.title('Simulated CAP')
 
-	cap0 = simulCAP(ExcitationPattern.rawExcitationPattern(EPat), t, sig=sig)
-	cap = simulCAP(EPat, t, sig=sig)
+	cap0 = simulCAP2convolGaussianKernel(ExcitationPattern.rawExcitationPattern(EPat), t, sig=sig)
+	cap = simulCAP2convolGaussianKernel(EPat, t, sig=sig)
 
 	pl.plot(t*1000,cap0, label='raw')
 	pl.plot(t*1000,cap, label='masked')
@@ -339,8 +351,7 @@ def plotSimulCAP(EPat, sig=5e-4):
 
 
 
-def plotSimulCAPs(EPats, sig=5e-4):
-
+def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4):
 	lat = EPats[0].latencies
 
 	t_max=10e-3
@@ -406,13 +417,13 @@ def plotSimulCAPs(EPats, sig=5e-4):
 	pl.subplot(2,2,2)
 	pl.title('Simulated CAPs')
 
-	cap0 = simulCAP(ExcitationPattern.rawExcitationPattern(EPats[0]), t, sig=sig)
+	cap0 = simulCAP2convolGaussianKernel(ExcitationPattern.rawExcitationPattern(EPats[0]), t, sig=sig)
 	pl.plot(t*1000,cap0, label='raw')
 
 
 
 	for EPat in EPats:
-		cap = simulCAP(EPat, t, sig=sig)
+		cap = simulCAP2convolGaussianKernel(EPat, t, sig=sig)
 		masker=EPat.masker
 		Q10=masker.f_0/masker.filt.BW10()
 		pl.plot(t*1000,cap, label=f'Q10: {Q10:.2f}')
@@ -443,7 +454,7 @@ def plotSimulCAPs(EPats, sig=5e-4):
 	for EPat in EPats:
 		masker=EPat.masker
 
-		cap = simulCAP(EPat, t, sig=sig)
+		cap = simulCAP2convolGaussianKernel(EPat, t, sig=sig)
 		Q10=masker.f_0/masker.filt.BW10()
 		cap_fft=norm_c*np.fft.rfft(cap)
 		pl.plot(f,np.abs(cap_fft), label=f'Q10: {Q10:.2f}')
@@ -461,44 +472,44 @@ def plotSimulCAPs(EPats, sig=5e-4):
 	pl.show()
 
 if __name__ == '__main__':
-	# pass
-	lat=Eggermont1976clickLatencies80dB
+	pass
+	# lat=Eggermont1976clickLatencies80dB
 
 
-	EPat = ExcitationPattern(lat, 2000, 1.5, 70)
+	# EPat = ExcitationPattern(lat, 2000, 1.5, 70)
 
 
-	# gaussianFilter= GaussianFilter.givenQ10(3e3, 3.)
+	# # gaussianFilter= GaussianFilter.givenQ10(3e3, 3.)
 
-	# #md=linMD=MaskingDegreeFunction(20, 40, 0.8)
+	# # #md=linMD=MaskingDegreeFunction(20, 40, 0.8)
+	# # md=sig=SigmoidMaskingDegreeFunction(30, 2*1/15., 0.8)
+	# # #plotMaskingDegreeFunc(md)
+	# # A=10**(35/20.)*np.sqrt(gaussianFilter.ERB())
+
+	# # mask= ToneSingleFilterMaskingPattern(A, 3e3, gaussianFilter, md)
+	# # EPat2 = ExcitationPattern.mask(EPat, mask)
+
+
+	# # plotSimulCAP2convGaussianKernel(EPat, sig=2e-4)
+	# # plotSimulCAP2convGaussianKernel(EPat2, sig=2e-4)
+
+
+	# f_m=1.8e3
+	# gaussianFilters= [GaussianFilter.givenQ10(f_m, 2.5*1.2**i) for i in range(5)]
+
 	# md=sig=SigmoidMaskingDegreeFunction(30, 2*1/15., 0.8)
 	# #plotMaskingDegreeFunc(md)
-	# A=10**(35/20.)*np.sqrt(gaussianFilter.ERB())
 
-	# mask= ToneSingleFilterMaskingPattern(A, 3e3, gaussianFilter, md)
-	# EPat2 = ExcitationPattern.mask(EPat, mask)
+	# A=10**(45/20.)*np.sqrt(gaussianFilters[-1].ERB())
 
+	# maskers=[ToneSingleFilterMaskingPattern(A, f_m, gf, md) for gf in gaussianFilters]
+	# EPats = [ExcitationPattern.mask(EPat, mask) for mask in maskers]
 
-	# #plotSimulCAP(EPat, sig=2e-4)
-	# plotSimulCAP(EPat2, sig=2e-4)
+	# plotSimulCAPs2convGaussianKernel(EPats, sig=3e-4)
 
+	# # A2=10**(35/20.)*np.sqrt(gaussianFilters[-1].ERB())
 
-	f_m=1.8e3
-	gaussianFilters= [GaussianFilter.givenQ10(f_m, 2.5*1.2**i) for i in range(5)]
+	# # maskers2=[ToneSingleFilterMaskingPattern(A2, f_m, gf, md) for gf in gaussianFilters]
+	# # EPats2 = [ExcitationPattern.mask(EPat, mask) for mask in maskers2]
 
-	md=sig=SigmoidMaskingDegreeFunction(30, 2*1/15., 0.8)
-	#plotMaskingDegreeFunc(md)
-
-	A=10**(45/20.)*np.sqrt(gaussianFilters[-1].ERB())
-
-	maskers=[ToneSingleFilterMaskingPattern(A, f_m, gf, md) for gf in gaussianFilters]
-	EPats = [ExcitationPattern.mask(EPat, mask) for mask in maskers]
-
-	plotSimulCAPs(EPats, sig=3e-4)
-
-	# A2=10**(35/20.)*np.sqrt(gaussianFilters[-1].ERB())
-
-	# maskers2=[ToneSingleFilterMaskingPattern(A2, f_m, gf, md) for gf in gaussianFilters]
-	# EPats2 = [ExcitationPattern.mask(EPat, mask) for mask in maskers2]
-
-	#plotSimulCAPs(EPats+EPats2, sig=6e-4)
+	# #plotSimulCAPs2convGaussianKernel(EPats+EPats2, sig=6e-4)
