@@ -1,6 +1,6 @@
 import numpy as np 
 
-
+from filters import *
 
 ###########  MASKING DEGREE FUNC. ##############
 
@@ -50,6 +50,7 @@ class SigmoidMaskingDegreeFunction(MaskingDegreeFunction):
 		self.max_masking=self.m=m
 
 	def func(self, I):
+		I=np.maximum(I, -20) #HACK: avoid overflow in exp
 		return self.m/(1+np.exp(-self.a*(I-self.mu)))
 
 	md=func
@@ -74,5 +75,35 @@ class MaskingPattern:
 		'''
 		return np.zeros_like(f)
 
+	def __repr__(self):
+		return 'no masking'
+
+class ToneSingleFilterMaskingPattern(MaskingPattern):
+	'''
+	Masking pattern associated with a tone masker and a model of a filter bank made of a single auditory filter model (constant bandwidth).
+	'''
+
+	def __init__(self, A, f_0, filt, mdFunc):
+		'''
+		Args:
+			A: amplitude of tone (in dB)
+			f_0: frequency of tone
+			filt: AuditoryFilter object
+			mdFunc: MaskingDegreeFunction object
+		'''
+		self.A = A
+		self.f_0=f_0
+		self.filt=filt
+		self.mdFunc=mdFunc
+
+	def M(self, f):
+		I=20*np.log10(self.A)+self.filt.g_dB(f-self.f_0)
+		return self.mdFunc.md(I)
+
+	def __repr__(self):
+		st=f"Tone masker (1-filter bank model)\n"
+		st+=f"f_c={self.f_0/1e3:.2f} kHz; Amplitude:{20*np.log10(self.A):.1f} dB"
+		st+=f"\nfilter model: {self.filt}"
+		return st
 
 

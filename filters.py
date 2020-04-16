@@ -101,7 +101,6 @@ class GaussianFilter(AuditoryFilter):
 		Returns:
 			The 10dB bandwidth
 		'''
-
 		return 2*np.sqrt(2*np.log(10))*self.sig_f #2 x 2.14 sig_f
 
 

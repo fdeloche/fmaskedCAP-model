@@ -1,6 +1,7 @@
 import numpy as np  
 from masking import MaskingPattern
 from latencies import *
+import copy
 
 class ExcitationPattern:
 	'''Parent class for excitation patterns.   
@@ -61,6 +62,32 @@ class ExcitationPattern:
 			array-like: excitation pattern (with masker, i.e. E0*(1-M) )
 		''' 
 		return self.E0_from_f(f)*(1-self.masker.M(f))
+
+	def changeMasker(self, mask):
+		self.masker=mask
+
+	@classmethod
+	def mask(cls, excitationPattern, mask):
+		'''
+		Returns:
+			A new ExcitationPattern object based on excitationPattern with masker mask. (Caution: based on shallow copy of excitationPattern)
+		'''
+		newExcitationPattern=copy.copy(excitationPattern)
+		newExcitationPattern.changeMasker(mask)
+		return newExcitationPattern
+
+	@classmethod
+	def rawExcitationPattern(cls, excitationPattern):
+		'''
+		Returns:
+			A new ExcitationPattern object based on excitationPattern without any masking. (Caution: based on shallow copy of excitationPattern)
+		'''
+		newExcitationPattern=copy.copy(excitationPattern)
+		newExcitationPattern.changeMasker(MaskingPattern())
+		return newExcitationPattern
+
+	def __repr__(self):
+		return f"Excitation Pattern of quadratic type, f_0={self.f_c*1e-3:.2f} kHz\nMasker: {self.masker}"
 
 
 

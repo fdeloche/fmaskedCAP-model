@@ -47,7 +47,7 @@ class PowerLawLatencies:
 		return self.t0 + np.power(f/self.A, 1/self.alpha)
 
 	def __repr__(self):
-		return f"PowerLawLatencies obj. {self.name} /n (A={self.A:.2e}, alpha={self.alpha:.2e}, t0={self.t0:.2e})"
+		return f"PowerLawLatencies obj. {self.name} \n (A={self.A:.2e}, alpha={self.alpha:.2e}, t0={self.t0:.2e})"
 
 
 
