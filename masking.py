@@ -106,4 +106,31 @@ class ToneSingleFilterMaskingPattern(MaskingPattern):
 		st+=f"\nfilter model: {self.filt}"
 		return st
 
+class HighPassNoiseSingleFilterMaskingPattern(MaskingPattern):
+	'''
+	Masking pattern associated with a high-passed noise masker and a model of a filter bank made of a single auditory filter model (constant bandwidth).
+	'''
 
+	def __init__(self, IHz, f_cut, filt, mdFunc):
+		'''
+		Args:
+			IHz: Noise power spectrum distribution weight (in dB/Hz)
+			f_cut: cut-off frequency for high passed noise
+			filt: AuditoryFilter object
+			mdFunc: MaskingDegreeFunction object
+		'''
+		self.IHz = IHz
+		self.f_cut=f_cut
+		self.filt=filt
+		self.mdFunc=mdFunc
+
+
+	def M(self, f):
+		I=self.IHz+self.filt.right_sq_int_dB(self.f_cut-f)
+		return self.mdFunc.md(I)
+
+	def __repr__(self):
+		st=f"High-pass noise masker (1-filter bank model)\n"
+		st+=f"f_cut={self.f_cut/1e3:.2f} kHz; PSD weight:{self.IHz:.2f} dB"
+		st+=f"\nfilter model: {self.filt}"
+		return st
