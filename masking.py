@@ -78,6 +78,28 @@ class MaskingPattern:
 	def __repr__(self):
 		return 'no masking'
 
+NoMaskingPattern = MaskingPattern
+
+class MaskingCondition:
+	'''Parent class for masking conditions. By default, no masking.
+	Object that generates masking patterns'''
+
+
+	def __init__(self):
+		pass
+
+	def pattern(self, filt, mdFunc):
+		'''
+		Returns:
+			a NoMaskingPattern
+		'''
+		return NoMaskingPattern()
+
+	def __repr__(self):
+		return 'no masking'
+
+NoMaskingCondition = MaskingCondition
+
 class ToneSingleFilterMaskingPattern(MaskingPattern):
 	'''
 	Masking pattern associated with a tone masker and a model of a filter bank made of a single auditory filter model (constant bandwidth).
@@ -104,6 +126,30 @@ class ToneSingleFilterMaskingPattern(MaskingPattern):
 		st=f"Tone masker (1-filter bank model)\n"
 		st+=f"f_c={self.f_0/1e3:.2f} kHz; Amplitude:{20*np.log10(self.A):.1f} dB"
 		st+=f"\nfilter model: {self.filt}"
+		return st
+
+class ToneSingleFilterMaskingCondition(MaskingCondition):
+	def __init__(self, A, f_0):
+		'''
+		Args:
+			A: amplitude of tone (in dB)
+			f_0: frequency of tone
+		'''
+		self.A=A
+		self.f_0=f_0
+
+	def pattern(self, filt, mdFunc):
+		'''
+		Args:
+			filt: AuditoryFilter object
+			mdFunc: MaskingDegreeFunction object
+		Returns:
+			a ToneSingleFilterMaskingPattern corresponding to tone and filter model/mdFunc
+		'''
+		return ToneSingleFilterMaskingPattern(self.A, self.f_0, filt, mdFunc)
+
+	def __repr__(self):
+		st=f"Tone masker (f_c={self.f_0/1e3:.2f} kHz; Amplitude:{20*np.log10(self.A):.1f} dB)"
 		return st
 
 class HighPassNoiseSingleFilterMaskingPattern(MaskingPattern):
@@ -133,4 +179,29 @@ class HighPassNoiseSingleFilterMaskingPattern(MaskingPattern):
 		st=f"High-pass noise masker (1-filter bank model)\n"
 		st+=f"f_cut={self.f_cut/1e3:.2f} kHz; PSD weight:{self.IHz:.2f} dB"
 		st+=f"\nfilter model: {self.filt}"
+		return st
+
+
+class HighPassNoiseSingleFilterMaskingCondition(MaskingCondition):
+	def __init__(self, IHz, f_cut):
+		'''
+		Args:
+			IHz: Noise power spectrum distribution weight (in dB/Hz)
+			f_cut: cut-off frequency for high passed noise
+		'''
+		self.IHz = IHz
+		self.f_cut=f_cut
+
+	def pattern(self, filt, mdFunc):
+		'''
+		Args:
+			filt: AuditoryFilter object
+			mdFunc: MaskingDegreeFunction object
+		Returns:
+			a HighPassNoiseSingleFilterMaskingPattern corresponding to noise and filter model/mdFunc
+		'''
+		return HighPassNoiseSingleFilterMaskingPattern(self.IHz, self.f_cut, filt, mdFunc)
+
+	def __repr__(self):
+		st=f"High-pass noise masker (f_cut={self.f_cut/1e3:.2f} kHz; PSD weight:{self.IHz:.2f} dB)"
 		return st

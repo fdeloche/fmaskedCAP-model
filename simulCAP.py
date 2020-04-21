@@ -6,13 +6,84 @@ from excitation import *
 
 import copy
 
+
+
+
+class ConvolutionCAPSimulatorSingleFilterModel:
+	'''
+	Simulates CAPs based on a raw excitation pattern, a set of masking patterns, and a unitary response.
+
+	Works with arrays (not ExcitationPattern, MaskingCondition objects, etc., except for initalization). 
+	Then, the array t should be considered invariant throughout simulations.
+
+	The masking patterns are based on a masking conditions and a single filter model for auditory filters (constant bandwidth)
+
+	Attributes:
+		E0 (array): raw excitation pattern (without masking). Note: it is advised to have NoMaskingCondition in list of masking conditions at init.
+		E_init : E0 at initialization of object (ExcitationPattern object)
+		masingPatterns: list of masking patterns (numpy arrays) corresponding to a list of masking conditions
+		u: UnitaryResponse
+	'''
+
+	def __init__(self, lat, filt, E_init, mdFunc, maskingConditions, t=None, ur=None):
+		'''
+		Optional args:
+			lat: Latencies object
+			filt: filter model
+			E_init: ExcitationPattern object, for initialization of excitation pattern (defined hereafter as an array)
+			t: time for CAP simulations, if None, initialized with np.linspace(5e-4, 10e-3, num=500)
+			ur: UnitaryResponse object, if None intialized with a zero array except 1 at pos 0
+			mdFunc: maskingDegreeFunction
+			maskingConditions: a list of maskingConditions to create the masking patterns.
+		'''
+
+		if t is None:
+			t=np.linspace(5e-4, 10e-3, num=500)
+		self.t=t
+
+		self.latencies=lat
+
+		self.E_init=E_init #excitation pattern
+		self.E0=E_init.E(t) #array
+
+		self.filt=filt
+		self.mdFunc=mdFunc
+		self.maskingConditions_init=maskingConditions
+
+		#create masking patterns
+		maskingPatterns=[]
+		f = self.latencies.f_from_t(t)
+		for mc in maskingConditions:
+			MPat=mc.pattern(filt, mdFunc)
+			maskingPatterns.append(MPat.M(f))
+
+		#unitary response
+		self.ur_init=ur
+		if ur is None:
+			self.u=np.zeros_like(t)
+			self.u[0]=1
+		else:
+			self.u = ur.u(t)
+
+	def simulCAPs(self):
+		#TODO
+		pass
+
+
+
+
+
+########### 'REALISTIC' SIMULATIONS ###########
+
+
 class URfromCsv:
 
-	def __init__(self,filename, name=''):
+	def __init__(self,filename, name='', shifted=False):
 
 		'''
 		Args:
 			filename (str) : csv filename. 2 fields: time (in ms), amplitude
+			shifted (boolean) : if True, time array begins at 0
 		'''
 		with open(filename, 'r') as f:
 			csv_reader=csv.DictReader(f, delimiter=',')
@@ -36,6 +107,8 @@ class URfromCsv:
 
 			ind=np.argsort(t)
 			self._t, self._u = t[ind], u[ind]
+			if shifted:
+				self._t-=t[0]
 		self._func = lambda x: 1
 		self.name=name
 
@@ -65,8 +138,10 @@ class URfromCsv:
 URWang1979 = URfromCsv('./UR/Wang1979Fig14.csv', name='averaged UR (Wang 1979, Fig14)')
 URWang1979m = URfromCsv.modify(URWang1979, lambda t:1+4*np.exp(-1/2*(t)**2/1e-4**2)) #produces more realistic CAP
 
-Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")
+URWang1979shifted = URfromCsv('./UR/Wang1979Fig14.csv', name='averaged UR (Wang 1979, Fig14)', shifted=True)
+URWang1979shiftedm = URfromCsv.modify(URWang1979shifted, lambda t:1+4*np.exp(-1/2*(t)**2/1e-4**2))
 
+Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")
 
 def simulCAP2convolGaussianKernel(E, t=None, ur=URWang1979m, sig=5e-4, 
 	secondPeak=0., secondPeak_sig=3e-4, secondPeak_dt=1.5e-3):
@@ -74,7 +149,7 @@ def simulCAP2convolGaussianKernel(E, t=None, ur=URWang1979m, sig=5e-4,
 	Args:
 		E: ExcitationPattern
 		t (array-like): time, if None, init with np.linspace(5e-4, 10e-3, num=500)
-		ur: Unitary response
+		ur: Unitary response object
 		sig: std of Gaussian kernel 'blur' (in s)
 		secondPeak (float): float between 0 and 1 (typically), amplitude ratio second peak/first speak. 0: no second peak
 		secondPeak_sig (float): std for addition blur on second peak

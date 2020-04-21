@@ -88,9 +88,3 @@ class ExcitationPattern:
 
 	def __repr__(self):
 		return f"Excitation Pattern of quadratic type, f_0={self.f_c*1e-3:.2f} kHz\nMasker: {self.masker}"
-
-
-
-
-
-
