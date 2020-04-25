@@ -98,7 +98,9 @@ class MaskingCondition:
 	def __repr__(self):
 		return 'no masking'
 
-NoMaskingCondition = MaskingCondition
+#alias
+class NoMaskingCondition(MaskingCondition):
+	pass
 
 class ToneSingleFilterMaskingPattern(MaskingPattern):
 	'''

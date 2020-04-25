@@ -95,7 +95,7 @@ def plotMaskingDegreeFunc(maskingDegreeFunction):
 
 	pl.figure()
 	pl.plot(I, maskingDegreeFunction.md(I)*100)
-	pl.xlabel('I (dB)')
+	pl.xlabel('Spectral intensity (dB)')
 	pl.ylabel('masking degree (%)')
 	pl.ylim([0, 100])
 	pl.show()
@@ -221,7 +221,7 @@ if __name__ == '__main__':
 
 ####### EXCITATION PATTERNS ########
 
-def plotExcitationPattern(EPat):
+def plotExcitationPattern(EPat, **kwargsplot):
 
 	masker=EPat.masker
 	lat = EPat.latencies
@@ -229,7 +229,7 @@ def plotExcitationPattern(EPat):
 	t=np.linspace(5e-4, 10e-3, num=500)
 	f=lat.f_from_t(t)
 
-	pl.figure()
+	pl.figure(**kwargsplot)
 	pl.subplot(1,2,1)
 	pl.plot(t*1000,EPat.E0(t))
 	pl.twinx()
@@ -240,15 +240,15 @@ def plotExcitationPattern(EPat):
 	if isinstance(masker, HighPassNoiseSingleFilterMaskingPattern):
 		pl.text(5, 0.8, f'f_cut={masker.f_cut/1e3:.2f} kHz\nQ10={EPat.f_c/masker.filt.BW10():.1f} (at max excitation)')
 	pl.xlabel('t (ms)')
-	pl.title('Raw excitation pattern and masking pattern (1-M)')
+	pl.title('Raw excitation pattern\n& masking pattern (1-M)')
 
 	locs =np.linspace(1, 10, num=10)
 	pl.gca().set_xticks(locs)   
 
 	ax2 = pl.gca().twiny()
 	ax2.set_xticks(locs)
-	ax2.set_xticklabels(np.round(lat.f_from_t(locs*1e-3)/50).astype(np.int32)*50)
-	ax2.set_xlabel('f (Hz)')
+	ax2.set_xticklabels([f'{CF/1e3:.1f}' for CF in list(lat.f_from_t(locs*1e-3))])
+	ax2.set_xlabel('Place: CF (kHz)')
 
 
 	pl.subplot(1,2,2)
@@ -262,8 +262,9 @@ def plotExcitationPattern(EPat):
 
 	ax2 = pl.gca().twiny()
 	ax2.set_xticks(locs)
-	ax2.set_xticklabels(np.round(lat.f_from_t(locs*1e-3)/50).astype(np.int32)*50)
-	ax2.set_xlabel('f (Hz)')
+	ax2.set_xticklabels([f'{CF/1e3:.1f}' for CF in list(lat.f_from_t(locs*1e-3))])
+	ax2.set_xlabel('Place: CF (kHz)')
+
 
 	pl.show()
 
@@ -355,7 +356,7 @@ def plotSimulCAP2convGaussianKernel(EPat, sig=5e-4):
 
 
 
-def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0.):
+def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0., plotGaussianKernel=True, plotmaskingpattern=False, **kwargsplots):
 	lat = EPats[0].latencies
 
 	t_max=10e-3
@@ -364,7 +365,7 @@ def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0.):
 	t=np.linspace(t_min,t_max, num=500)
 	f=lat.f_from_t(t)
 
-	pl.figure()
+	pl.figure(**kwargsplots)
 
 
 	#EXCITATION + MASKING PATTERNS : temporal
@@ -378,6 +379,10 @@ def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0.):
 		Em=EPat.E(t)
 		Q10=EPat.f_c/masker.filt.BW10()
 		pl.plot(t*1000,Em, label=f'Q10: {Q10:.2f}')
+		if plotmaskingpattern:
+			pl.gca().twinx()
+			pl.plot(t*1000, 1-masker.M(f), linestyle='--', color='black', label='masking pattern')
+			pl.legend()
 
 	pl.xlabel('t (ms)')
 	pl.title('Masked excitation patterns E*(1-M)')
@@ -388,8 +393,8 @@ def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0.):
 	#pl.legend()
 	ax2 = pl.gca().twiny()
 	ax2.set_xticks(locs)
-	ax2.set_xticklabels(np.round(lat.f_from_t(locs*1e-3)/50).astype(np.int32)*50)
-	ax2.set_xlabel('Place: f (Hz)')
+	ax2.set_xticklabels([f'{CF/1e3:.1f}' for CF in list(lat.f_from_t(locs*1e-3))])
+	ax2.set_xlabel('Place: CF (kHz)')
 
 
 	#EXCITATION + MASKING PATTERNS : in frequency
@@ -433,9 +438,10 @@ def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0.):
 		pl.plot(t*1000,cap, label=f'Q10: {Q10:.2f}')
 
 	#also plot Gaussian kernel
-	a=np.amax(cap0)
-	g_kn = 0.4*a*np.exp(- (t-(1e-3+3*sig))**2/(2*sig**2))
-	pl.plot(t*1000, g_kn, label='Gaussian kernel', color='black', ls='--')
+	if plotGaussianKernel:
+		a=np.amax(cap0)
+		g_kn = 0.4*a*np.exp(- (t-(1e-3+3*sig))**2/(2*sig**2))
+		pl.plot(t*1000, g_kn, label='Gaussian kernel', color='black', ls='--')
 
 	pl.xlabel('t (ms)')
 
@@ -446,8 +452,8 @@ def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0.):
 
 	ax2 = pl.gca().twiny()
 	ax2.set_xticks(locs)
-	ax2.set_xticklabels(np.round(lat.f_from_t(locs*1e-3)/50).astype(np.int32)*50)
-	ax2.set_xlabel('Place: f (Hz)')
+	ax2.set_xticklabels([f'{CF/1e3:.1f}' for CF in list(lat.f_from_t(locs*1e-3))])
+	ax2.set_xlabel('Place: CF (kHz)')
 
 
 	# SIMUL CAP : in frequency
@@ -465,8 +471,9 @@ def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0.):
 
 
 	#also plot Gaussian kernel
-	g_kn_fft=norm_c*np.fft.rfft(g_kn)
-	pl.plot(f,np.abs(g_kn_fft), label='Gaussian kernel', color='black', ls='--')
+	if plotGaussianKernel:
+		g_kn_fft=norm_c*np.fft.rfft(g_kn)
+		pl.plot(f,np.abs(g_kn_fft), label='Gaussian kernel', color='black', ls='--')
 
 
 	pl.xlabel('f (Hz)')
@@ -477,46 +484,130 @@ def plotSimulCAPs2convGaussianKernel(EPats, sig=5e-4, secondPeak=0.):
 
 if __name__ == '__main__':
 	pass
-	lat=Eggermont1976clickLatencies80dB
+	# lat=Eggermont1976clickLatencies80dB
 
 
-	EPat = ExcitationPattern(lat, 3000, 2., 70)
+	# EPat = ExcitationPattern(lat, 6000, 3., 70)
 
 
-	# gaussianFilter= GaussianFilter.givenQ10(3e3, 3.)
+	# # gaussianFilter= GaussianFilter.givenQ10(3e3, 3.)
 
-	# #md=linMD=MaskingDegreeFunction(20, 40, 0.8)
-	# md=sig=SigmoidMaskingDegreeFunction(30, 2*1/15., 0.8)
-	# #plotMaskingDegreeFunc(md)
-	# A=10**(35/20.)*np.sqrt(gaussianFilter.ERB())
+	# # #md=linMD=MaskingDegreeFunction(20, 40, 0.8)
+	# # md=sig=SigmoidMaskingDegreeFunction(30, 2*1/15., 0.8)
+	# # #plotMaskingDegreeFunc(md)
+	# # A=10**(35/20.)*np.sqrt(gaussianFilter.ERB())
 
-	# mask= ToneSingleFilterMaskingPattern(A, 3e3, gaussianFilter, md)
-	# EPat2 = ExcitationPattern.mask(EPat, mask)
-
-
-	# plotSimulCAP2convGaussianKernel(EPat, sig=2e-4)
-	# plotSimulCAP2convGaussianKernel(EPat2, sig=2e-4)
+	# # mask= ToneSingleFilterMaskingPattern(A, 3e3, gaussianFilter, md)
+	# # EPat2 = ExcitationPattern.mask(EPat, mask)
 
 
-	f_m=3.5e3
-	gaussianFilters= [GaussianFilter.givenQ10(f_m, 2*1.2**i) for i in range(5)]
+	# # plotSimulCAP2convGaussianKernel(EPat, sig=2e-4)
+	# # plotSimulCAP2convGaussianKernel(EPat2, sig=2e-4)
 
-	md=sig=SigmoidMaskingDegreeFunction(30, 2*1/15., 0.95)
-	plotMaskingDegreeFunc(md)
 
-	A=10**(45/20.)*np.sqrt(gaussianFilters[-1].ERB())
+	# f_m=6e3
+	# gaussianFilters= [GaussianFilter.givenQ10(f_m, 4*1.2**i) for i in range(5)]
 
-	#maskers=[ToneSingleFilterMaskingPattern(A, f_m, gf, md) for gf in gaussianFilters]
-	maskers=[HighPassNoiseSingleFilterMaskingPattern(50, f_m, gf, md) for gf in gaussianFilters]
+	# md=sig=SigmoidMaskingDegreeFunction(30, 2*1/15., 0.95)
+	# plotMaskingDegreeFunc(md)
+
+	# A=10**(45/20.)*np.sqrt(gaussianFilters[-1].ERB())
+
+	# maskers=[ToneSingleFilterMaskingPattern(A, f_m, gf, md) for gf in gaussianFilters]
+	# #maskers=[HighPassNoiseSingleFilterMaskingPattern(50, f_m, gf, md) for gf in gaussianFilters]
 	
 
-	EPats = [ExcitationPattern.mask(EPat, mask) for mask in maskers]
+	# EPats = [ExcitationPattern.mask(EPat, mask) for mask in maskers]
 
-	plotSimulCAPs2convGaussianKernel(EPats, sig=3e-4, secondPeak=0.4)
+	# plotSimulCAPs2convGaussianKernel(EPats, sig=3e-4, secondPeak=0.)
 
-	# A2=10**(35/20.)*np.sqrt(gaussianFilters[-1].ERB())
+	# # A2=10**(35/20.)*np.sqrt(gaussianFilters[-1].ERB())
 
-	# maskers2=[ToneSingleFilterMaskingPattern(A2, f_m, gf, md) for gf in gaussianFilters]
-	# EPats2 = [ExcitationPattern.mask(EPat, mask) for mask in maskers2]
+	# # maskers2=[ToneSingleFilterMaskingPattern(A2, f_m, gf, md) for gf in gaussianFilters]
+	# # EPats2 = [ExcitationPattern.mask(EPat, mask) for mask in maskers2]
 
-	#plotSimulCAPs2convGaussianKernel(EPats+EPats2, sig=6e-4)
+	# #plotSimulCAPs2convGaussianKernel(EPats+EPats2, sig=6e-4)
+
+
+
+
+
+#### Test class ConvolutionCAPSimulatorSingleFilterModel ####
+
+
+
+
+def plotConvCAPSimulator(capSimul, **kwargsplots):
+	
+	m=capSimul.m
+	t=capSimul.t
+	MPs=capSimul.maskingPatterns
+	EPs=capSimul.getEPs()
+	CAPs=capSimul.simulCAPs()
+	lat=capSimul.latencies
+	MCs=capSimul.maskingConditions_init
+
+	#TODO
+	#also plot ur
+
+	ERB=capSimul.filt.ERB()
+	
+	pl.figure(**kwargsplots)
+	pl.suptitle(f'Simulation of CAPs ERB={ERB:.0f} Hz')
+	nb_col=(m+1)//2 if m<=12 else (m+2)//3
+	nb_row=2*(m+nb_col-1)//nb_col
+	EPamax=np.amax(EPs)
+	for i in range(m):
+
+		ind=i+1+(i//nb_col)*nb_col
+
+		pl.subplot(nb_row, nb_col, ind)
+		pl.plot(t*1e3, EPs[i])
+		pl.xlabel('t (ms)')
+		pl.ylim([0, 1.1*EPamax])
+		pl.gca().get_yaxis().set_visible(False)
+		if isinstance(MCs[i], NoMaskingCondition):
+			pl.text(4, 0.5*EPamax, f'raw\n(no masker)')		
+		if isinstance(MCs[i], ToneSingleFilterMaskingCondition):
+			pl.text(4, 0.5*EPamax, f'tone\n{MCs[i].f_0/1e3:.2f}kHz\nA={20*np.log10(MCs[i].A):.0f}dB')
+		if isinstance(MCs[i], HighPassNoiseSingleFilterMaskingCondition):
+			pl.text(4, 0.5*EPamax, f'hp noise\n{MCs[i].f_cut/1e3:.2f}kHz\n{MCs[i].IHz:.0f}dB/Hz')
+		pl.subplot(nb_row, nb_col, ind+nb_col)
+		pl.plot(t*1e3, CAPs[i], color='r')
+		pl.gca().get_yaxis().set_visible(False)
+		if i==0:
+			u=capSimul.u
+			pl.plot(t*1e3, capSimul.u*0.4/np.amax(u)*np.amax(CAPs[i]), color='black') #also plot u
+		pl.xlabel('t (ms)')
+	pl.show()
+
+
+if __name__ == '__main__':
+	pass
+	lat=Eggermont1976clickLatencies80dB
+
+	t=ConvolutionCAPSimulatorSingleFilterModel.default_t_array()
+	ur=URWang1979m
+	u0=ur.u(t-2e-3) #shift
+	from scipy.ndimage  import gaussian_filter1d
+	sig=0.3e-3 #std of gaussian kernel in s
+	sig2=sig/(t[1]-t[0])
+	u = gaussian_filter1d(u0, sigma=sig2)
+
+	EPinit = ExcitationPattern(lat, 3000, 2., 70)
+	f_m = 3000
+	gf= GaussianFilter.givenQ10(f_m, 4.)
+	md=sig=SigmoidMaskingDegreeFunction(30, 2*1/15., 0.95)
+	#plotMaskingDegreeFunc(md)
+	
+	A=10**(45/20.)*np.sqrt(gf.ERB())
+	mc_1 = ToneSingleFilterMaskingCondition(A, f_m)
+	mc_2 = HighPassNoiseSingleFilterMaskingCondition(50, f_m)
+
+	mcs = [NoMaskingCondition(), mc_1, mc_2]
+
+
+	capSimulator = ConvolutionCAPSimulatorSingleFilterModel(lat, gf, EPinit, md, mcs, ur=u)
+
+	plotConvCAPSimulator(capSimulator)
+

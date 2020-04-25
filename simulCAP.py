@@ -16,13 +16,15 @@ class ConvolutionCAPSimulatorSingleFilterModel:
 	Works with arrays (not ExcitationPattern, MaskingCondition objects, etc., except for initalization). 
 	Then, the array t should be considered invariant throughout simulations.
 
-	The masking patterns are based on a masking conditions and a single filter model for auditory filters (constant bandwidth)
+	The masking patterns are based on a list of masking conditions and a single filter model for auditory filters (constant bandwidth)
 
 	Attributes:
 		E0 (array): raw excitation pattern (without masking). Note: it is advised to have NoMaskingCondition in list of masking conditions at init.
+		t (numpy array): time
 		E_init : E0 at initialization of object (ExcitationPattern object)
-		masingPatterns: list of masking patterns (numpy arrays) corresponding to a list of masking conditions
-		u: UnitaryResponse
+		m: number of masking patterns
+		maskingPatterns: numpy arrays of 'masking patterns' where each row corresponds to a masking condition
+		u: unitary response (array)
 	'''
 
 	def __init__(self, lat, filt, E_init, mdFunc, maskingConditions, t=None, ur=None):
@@ -32,18 +34,18 @@ class ConvolutionCAPSimulatorSingleFilterModel:
 			filt: filter model
 			E_init: ExcitationPattern object, for initialization of excitation pattern (defined hereafter as an array)
 			t: time for CAP simulations, if None, initialized with np.linspace(5e-4, 10e-3, num=500)
-			ur: UnitaryResponse object, if None intialized with a zero array except 1 at pos 0
+			ur (UnitaryResponse object or array): if None intialized with a zero array except 1 at pos 0
 			mdFunc: maskingDegreeFunction
 			maskingConditions: a list of maskingConditions to create the masking patterns.
 		'''
 
 		if t is None:
-			t=np.linspace(5e-4, 10e-3, num=500)
+			t=self.default_t_array()
 		self.t=t
 
 		self.latencies=lat
 
-		self.E_init=E_init #excitation pattern
+		self.E_init=E_init #initial excitation pattern
 		self.E0=E_init.E(t) #array
 
 		self.filt=filt
@@ -51,11 +53,13 @@ class ConvolutionCAPSimulatorSingleFilterModel:
 		self.maskingConditions_init=maskingConditions
 
 		#create masking patterns
-		maskingPatterns=[]
+		maskingPatterns=np.zeros((len(maskingConditions), len(t)))
+		self.m=len(maskingPatterns)
 		f = self.latencies.f_from_t(t)
-		for mc in maskingConditions:
+		for i, mc in enumerate(maskingConditions):
 			MPat=mc.pattern(filt, mdFunc)
-			maskingPatterns.append(MPat.M(f))
+			maskingPatterns[i]=MPat.M(f)
+		self.maskingPatterns=maskingPatterns
 
 		#unitary response
 		self.ur_init=ur
@@ -63,13 +67,39 @@ class ConvolutionCAPSimulatorSingleFilterModel:
 			self.u=np.zeros_like(t)
 			self.u[0]=1
 		else:
-			self.u = ur.u(t)
+			if isinstance(ur, URfromCsv):
+				self.u = ur.u(t)
+			else: #np array
+				assert len(ur)==len(t), 'u and t must be of same size'
+				self.u = ur
+
+	@classmethod
+	def default_t_array(cls):
+		return np.linspace(5e-4, 10e-3, num=500)
+
+	def getExcitationPatterns(self):
+		'''
+		computes excitation patterns with E=E0*(1-M)
+		Returns:
+			numpy array: excitations patterns as a matrix (similar to maskingPatterns)
+		'''
+		return self.E0*(1-self.maskingPatterns)
+
+	getEPs=getExcitationPatterns #alias
+
 
 	def simulCAPs(self):
-		#TODO
-		pass
-
-
+		'''
+		Simulates CAPs by convolution of excitation patterns and u
+		Returns:
+			numpy array: simulations of CAP as a matrix (similar to maskingPatterns)
+		'''
+		EPs=self.getEPs()
+		m, T = np.shape(EPs)
+		CAPs=np.zeros((m,T))
+		for i in range(m):
+			CAPs[i]=np.convolve(EPs[i], self.u, 'full')[0:T]
+		return CAPs
 
 
 
@@ -133,13 +163,12 @@ class URfromCsv:
 		Returns:
 			float or numpy array: UR for t
 		'''
-		return np.interp(t, self._t, self._u)*self._func(t)
+		return np.interp(t, self._t, self._u, left=0., right=0.)*self._func(t)
 
 URWang1979 = URfromCsv('./UR/Wang1979Fig14.csv', name='averaged UR (Wang 1979, Fig14)')
-URWang1979m = URfromCsv.modify(URWang1979, lambda t:1+4*np.exp(-1/2*(t)**2/1e-4**2)) #produces more realistic CAP
+URWang1979m = URfromCsv.modify(URWang1979, lambda t:1+4*np.exp(-1/2*(t+0.2e-4)**2/1e-4**2)) #produces more realistic CAP
 
 URWang1979shifted = URfromCsv('./UR/Wang1979Fig14.csv', name='averaged UR (Wang 1979, Fig14)', shifted=True)
-URWang1979shiftedm = URfromCsv.modify(URWang1979shifted, lambda t:1+4*np.exp(-1/2*(t)**2/1e-4**2))
 
 Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")
 
