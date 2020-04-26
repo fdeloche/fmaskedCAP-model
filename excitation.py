@@ -45,7 +45,7 @@ class ExcitationPattern:
 			array-like: raw excitation pattern (without masking)
 		''' 
 		# cte for normalized filter: -1/4*np.log10(2*np.pi)-1/2*np.log10(self.sig_f)
-		return np.maximum(self.A_max-self.A_0-20*1/np.log(10)*1/4*(f-self.f_c)**2/self.sig_f**2, 0)
+		return np.maximum(self.A_max-self.A_0-20*1/np.log(10)*1/4*(f-self.f_c)**2/self.sig_f**2, 0)/100.
 
 	def E(self, t):
 		'''

@@ -186,8 +186,8 @@ def plotLatencies(lat):
 
 	pl.figure()
 	pl.title(f'Latencies {lat.name}')
-	pl.plot(t, f)
-	pl.xlabel('t-t0 (s)')
+	pl.plot(t*1e3, f)
+	pl.xlabel('t-t0 (ms)')
 	pl.ylabel('f (Hz)')
 	pl.xscale('log')
 	pl.yscale('log')
@@ -547,9 +547,6 @@ def plotConvCAPSimulator(capSimul, **kwargsplots):
 	lat=capSimul.latencies
 	MCs=capSimul.maskingConditions_init
 
-	#TODO
-	#also plot ur
-
 	ERB=capSimul.filt.ERB()
 	
 	pl.figure(**kwargsplots)
@@ -557,6 +554,9 @@ def plotConvCAPSimulator(capSimul, **kwargsplots):
 	nb_col=(m+1)//2 if m<=12 else (m+2)//3
 	nb_row=2*(m+nb_col-1)//nb_col
 	EPamax=np.amax(EPs)
+	CAPmin=np.amin(CAPs)
+	CAPmax=np.amax(CAPs)
+	
 	for i in range(m):
 
 		ind=i+1+(i//nb_col)*nb_col
@@ -574,6 +574,7 @@ def plotConvCAPSimulator(capSimul, **kwargsplots):
 			pl.text(4, 0.5*EPamax, f'hp noise\n{MCs[i].f_cut/1e3:.2f}kHz\n{MCs[i].IHz:.0f}dB/Hz')
 		pl.subplot(nb_row, nb_col, ind+nb_col)
 		pl.plot(t*1e3, CAPs[i], color='r')
+		pl.ylim([1.1*CAPmin, 1.1*CAPmax])
 		pl.gca().get_yaxis().set_visible(False)
 		if i==0:
 			u=capSimul.u
