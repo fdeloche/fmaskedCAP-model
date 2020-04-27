@@ -5,7 +5,7 @@ from latencies import *
 from excitation import *
 
 import copy
-
+import functools
 
 
 
@@ -74,6 +74,18 @@ class ConvolutionCAPSimulatorSingleFilterModel:
 				self.u = ur
 
 	@classmethod
+	def fromNewExcitationPattern(cls, capSimulator, E0):
+		'''
+		Args:
+			E0 (np array) : raw excitation pattern 
+		Returns:
+			a (shallow) copy of capSimulator with new excitation pattern E0
+		'''
+		capSimulator2=copy.copy(capSimulator)
+		capSimulator2.set_E0(E0)
+		return capSimulator2
+
+	@classmethod
 	def default_t_array(cls):
 		return np.linspace(5e-4, 10e-3, num=500)
 
@@ -100,6 +112,28 @@ class ConvolutionCAPSimulatorSingleFilterModel:
 		for i in range(m):
 			CAPs[i]=np.convolve(EPs[i], self.u, 'full')[0:T]
 		return CAPs
+
+	def get_projector(self):
+		'''
+		Returns:
+			A function that projects a matrix of excitation patterns in the linear subspace
+			 ((1-M_0) E_0, ... (1-M_(m-1)) E_0) parametrized by E0. (linear regression)
+			Argument of the resulting function is E_mat matrix of excitation patterns.
+		'''
+		def proj(maskingPatterns, E_mat):
+			cross_prod=np.average((1-maskingPatterns)*E_mat, axis=0)
+			mean_square=np.average((1-maskingPatterns)**2, axis=0)
+			E0=cross_prod/mean_square
+			return (1-maskingPatterns)*E0
+
+		return functools.partial(proj, self.maskingPatterns)
+
+	def set_E0(self, E0):
+		self.E0=E0
+
+	def set_u(self, u):
+		self.u=u
+
 
 
 

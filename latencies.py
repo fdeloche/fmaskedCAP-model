@@ -26,6 +26,21 @@ class PowerLawLatencies:
 		return cls(np.exp(beta), alpha, t0, name=name)
 
 	@classmethod
+	def dilate(cls, lat, a):
+		'''
+		Pseudo dilatation
+		Class method.
+		Args:
+			lat: PowerLawLatencies object
+			a : multiplication factor for alpha
+		Returns:
+			A new PowerLawLatencies object with alpha=1/a*alpha0  
+		'''
+		dLat=copy.copy(lat)
+		dLat.alpha/=a
+		return dLat
+
+	@classmethod
 	def shift(cls, lat, t0, reinitShift=False):
 		'''
 		Class method.
