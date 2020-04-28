@@ -26,18 +26,21 @@ class PowerLawLatencies:
 		return cls(np.exp(beta), alpha, t0, name=name)
 
 	@classmethod
-	def dilate(cls, lat, a):
+	def dilate(cls, lat, a, f_0):
 		'''
-		Pseudo dilatation
+		Local dilatation with fixed point at f_0
 		Class method.
 		Args:
 			lat: PowerLawLatencies object
-			a : multiplication factor for alpha
+			a : dilatation factor
+			f_0: frequency for fixed point
 		Returns:
-			A new PowerLawLatencies object with alpha=1/a*alpha0  
+			A new PowerLawLatencies object
 		'''
 		dLat=copy.copy(lat)
+		t_f0=lat.t_from_f(f_0)
 		dLat.alpha/=a
+		dLat.A=f_0/np.power(t_f0-dLat.t0, dLat.alpha)
 		return dLat
 
 	@classmethod
