@@ -1,5 +1,5 @@
 clear all;
-for nPic=5:137
+for nPic=736:924
     struct = loadPic(nPic);
     date=struct.General.date;
     time=struct.General.time;
@@ -8,6 +8,8 @@ for nPic=5:137
     fixedPhase=struct.Stimuli.fixedPhase;
     fs=struct.Stimuli.RPsamprate_Hz;
     nPairs=struct.Stimuli.RunStimuli_params.nPairs;
+    invFilterOnWavefiles=struct.Stimuli.RunStimuli_params.invFilterOnWavefiles;
+    lpcInvFilterOnClick=struct.Stimuli.RunStimuli_params.lpcInvFilterOnClick;
     decimateFact=struct.Stimuli.RunStimuli_params.decimateFact;
     duration_masker_ms=struct.Stimuli.CAP_intervals.duration_ms;
     rftime_ms=struct.Stimuli.CAP_intervals.rftime_ms;
