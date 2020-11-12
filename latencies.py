@@ -1,9 +1,10 @@
+import torch
 import copy
 import numpy as np
 
 class PowerLawLatencies:
 	'''
-	Relates frequency with latencies (power law model).
+	Links frequencies and latencies (power law model).
 
 	log(f)= log(A) + alpha log (t-t0) 
 	Attributes:
@@ -12,10 +13,10 @@ class PowerLawLatencies:
 		t0
 	'''
 
-	def __init__(self, A, alpha, t0=0., name=""):
-		self.A=A
-		self.alpha=alpha
-		self.t0=t0
+	def __init__(self, A, alpha, t0=0., requires_grad=False, name=""):
+		self.A=torch.tensor(A, requires_grad=requires_grad)
+		self.alpha=torch.tensor(alpha, requires_grad=requires_grad)
+		self.t0=torch.tensor(t0, requires_grad=requires_grad)
 		self.name=name
 
 	@classmethod
@@ -37,11 +38,11 @@ class PowerLawLatencies:
 		Returns:
 			A new PowerLawLatencies object
 		'''
-		dLat=copy.copy(lat)
-		t_f0=lat.t_from_f(f_0)
-		dLat.alpha/=a
-		dLat.A=f_0/np.power(t_f0-dLat.t0, dLat.alpha)
-		return dLat
+		with torch.no_grad():
+			t_f0=lat.t_from_f(f_0)
+			alpha=lat.alpha.clone()/a
+			A=f_0/torch.pow(t_f0-lat.t0, alpha)
+		return cls(A, alpha, t0=lat.t0)
 
 	@classmethod
 	def shift(cls, lat, t0, reinitShift=False):
@@ -53,19 +54,23 @@ class PowerLawLatencies:
 		Returns:
 			A new PowerLawLatencies object, lat shifted by t0 
 		'''
-		sLat=copy.copy(lat)
-		t0=(1-reinitShift)*lat.t0+t0
-		sLat.t0=t0
-		return sLat
-
+		with torch.no_grad():
+			alpha=lat.alpha.clone()
+			A=lat.A.clone()
+			t0=(1-reinitShift)*lat.t0+t0
+		return cls(A, alpha, t0=t0)
+		
 	def f_from_t(self, t):
-		return self.A*np.power(t-self.t0, self.alpha)
+		return self.A*torch.pow(t-self.t0, self.alpha)
 
 	def t_from_f(self, f):
-		return self.t0 + np.power(f/self.A, 1/self.alpha)
+		return self.t0 + torch.pow(f/self.A, 1/self.alpha)
+
+	def __call__(self, f):
+		return self.t_from_f(f)
 
 	def __repr__(self):
-		return f"PowerLawLatencies obj. {self.name} \n (A={self.A:.2e}, alpha={self.alpha:.2e}, t0={self.t0:.2e})"
+		return f"PowerLawLatencies obj. {self.name} \n (A={self.A.numpy():.2e}, alpha={self.alpha.numpy():.2e}, t0={self.t0.numpy():.2e})"
 
 
 

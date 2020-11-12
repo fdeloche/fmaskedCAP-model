@@ -1,6 +1,21 @@
 import numpy as np
 from scipy.integrate import cumtrapz
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class AuditoryFilter:
 	'''Parent class for auditory filters. It implements a rectangular filter but its methods should be overridden by children.'''
 

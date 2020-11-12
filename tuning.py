@@ -8,9 +8,9 @@ class constant_BW10:
 			BW10_0: initial bandwitdh (Hz) at -10dB
 			requires_grad: forwards argument to pytorch
 		''' 
-		self.BW_10=torch.Tensor(BW10_0, requires_grad=requires_grad)
+		self.BW_10=torch.tensor(BW10_0, requires_grad=requires_grad)
 
-	def __call__(self):
+	def __call__(self, f):
 		return self.BW_10
 
 
