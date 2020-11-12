@@ -86,6 +86,8 @@ end
 [~, idx_sorted]=sort(-attns);
 
 max_arr=zeros(1, length(attn_fields));
+
+min_arr=zeros(1, length(attn_fields));
 for k=1:length(idx_sorted)
     i=idx_sorted(k);
     attn_field=attn_fields{i};
@@ -107,7 +109,9 @@ for k=1:length(idx_sorted)
        end
     end
     arr=arr/length(picDic.(freq_field).(attn_field));
-    max_arr(i)=max(abs(arr-broadband_sig));
+    max_arr(i)=max(arr-broadband_sig);
+    min_arr(i)=min(arr-broadband_sig);
+
     plot(t*1e3, arr-broadband_sig);
     hold on;
 end
@@ -115,9 +119,9 @@ title('CAP (ref: broadband noise 20 dB attn)');
 legend(labels)
 xlabel('t (ms)')
 
-
+CAP_arr=max_arr-min_arr;
 figure();
-plot(attns(idx_sorted), max_arr(idx_sorted));
+plot(attns(idx_sorted), CAP_arr(idx_sorted));
 
 xlabel('Notch attenuation (dB)')
 ylabel('CAP amplitude (ref: broadband 20dB attn)')
