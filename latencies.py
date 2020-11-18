@@ -1,6 +1,7 @@
 import torch
 import copy
 import numpy as np
+import matplotlib.pyplot as pl
 
 class PowerLawLatencies:
 	'''
@@ -74,4 +75,31 @@ class PowerLawLatencies:
 
 
 
+Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")
+
+
+def plotLatencies(lat):
+	t0=lat.t0
+
+	tmin=lat.t_from_f(torch.tensor(10e3))
+
+	t=torch.linspace(tmin-t0, 10e-3-t0, 200) #t - t0
+	f=lat.f_from_t(t+t0)
+
+	pl.figure()
+	pl.title(f'Latencies {lat.name}')
+	pl.plot(t*1e3, f)
+	pl.xlabel('t-t0 (ms)')
+	pl.ylabel('f (Hz)')
+	pl.xscale('log')
+	pl.yscale('log')
+	pl.show()
+
+	pl.figure()
+	pl.title(f'Latencies {lat.name}')
+	pl.plot((t0+t)*1e3, f*1e-3)
+	pl.xlabel('t (ms)')
+	pl.xlim([0, 10])
+	pl.ylabel('f (kHz)')
+	pl.show()
 

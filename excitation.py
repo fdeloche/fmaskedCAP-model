@@ -1,12 +1,13 @@
 import torch
 import tuning
+import masking
 import numpy as np
 
 def get_sq_masking_excitation_pattern(f, bw10Func, n_conditions, n_bands, amp_list, f_low_list, f_high_list, filter_model='gaussian'):
 	'''
 	Args:
 		f: Tensor of frequencies at which the excitation is computed 
-		bw10Func: function to get BW10, see tuning
+		bw10Func: function (or callable) to get BW10, see tuning
 		n_conditions: number of masking conditions
 		n_bands: (max) number of bands for the noise masking conditions
 		amp_list: list of Tensors (length list: n_bands, dim Tensors: nb_conditions) amp of each band 
@@ -32,6 +33,5 @@ def get_sq_masking_excitation_pattern(f, bw10Func, n_conditions, n_bands, amp_li
 	for amp, f_low, f_high in zip(amp_list, f_low_list, f_high_list):
 		b=(torch.unsqueeze(f_high, 1) - torch.unsqueeze(f, 0))*bw10_inv
 		a=(torch.unsqueeze(f_low, 1) - torch.unsqueeze(f, 0))*bw10_inv
-		exc+= amp*(F(b)-F(a))
+		exc+= torch.unsqueeze(amp, 1)*(F(b)-F(a))
 	return exc
-

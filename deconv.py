@@ -23,7 +23,7 @@ def deconv_newton_step(EPs, u_fft, CAPs_fft, eps=1e-6):
 	Args:
 		EPs: matrix of excitation patterns (in time domain)
 		u_fft: unitary response (rfft)
-		eps: epsilon, not to divide by zero
+		eps: epsilon, in order not to divide by zero
 		CAPs_fft: matrix of CAP signals (rfft) corresponding to EPs
 	Returns:
 		Gradient-like term cooresponding to one step of Newton algorithm, for EPs
