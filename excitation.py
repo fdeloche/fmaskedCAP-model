@@ -3,7 +3,8 @@ import tuning
 import masking
 import numpy as np
 
-def get_sq_masking_excitation_pattern(f, bw10Func, n_conditions, n_bands, amp_list, f_low_list, f_high_list, filter_model='gaussian'):
+
+def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, amp_list, f_low_list, f_high_list, filter_model='gaussian'):
 	'''
 	Args:
 		f: Tensor of frequencies at which the excitation is computed 
@@ -15,7 +16,7 @@ def get_sq_masking_excitation_pattern(f, bw10Func, n_conditions, n_bands, amp_li
 		f_high_list: list of Tensors (length list: n_bands, dim Tensors: nb_conditions) f_cut high
 		filter_model: 'gaussian' (default), only available for now  #TODO gammatone filters
 	Returns:
-		squared excitation pattern associated to the masking conditions
+		squared excitation patterns associated to the masking conditions (tensor shape (n_conditions, n_freq))
 	'''
 
 	bw10=bw10Func(f)
@@ -33,5 +34,10 @@ def get_sq_masking_excitation_pattern(f, bw10Func, n_conditions, n_bands, amp_li
 	for amp, f_low, f_high in zip(amp_list, f_low_list, f_high_list):
 		b=(torch.unsqueeze(f_high, 1) - torch.unsqueeze(f, 0))*bw10_inv
 		a=(torch.unsqueeze(f_low, 1) - torch.unsqueeze(f, 0))*bw10_inv
-		exc+= torch.unsqueeze(amp, 1)*(F(b)-F(a))
+		exc+= torch.unsqueeze(amp**2, 1)*(F(b)-F(a))
 	return exc
+
+
+def get_sq_masking_excitation_patterns_maskCond(f, bw10Func, maskCond, filter_model='gaussian'):
+	'''overloading function for get_sq_masking_excitation_pattern'''
+	return get_sq_masking_excitation_patterns(f, bw10Func, maskCond.n_conditions, maskCond.n_bands, maskCond.amp_list, maskCond.f_low_list, maskCond.f_high_list, filter_model=filter_model)
