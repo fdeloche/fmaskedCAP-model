@@ -41,3 +41,63 @@ def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, amp_l
 def get_sq_masking_excitation_patterns_maskCond(f, bw10Func, maskCond, filter_model='gaussian'):
 	'''overloading function for get_sq_masking_excitation_pattern'''
 	return get_sq_masking_excitation_patterns(f, bw10Func, maskCond.n_conditions, maskCond.n_bands, maskCond.amp_list, maskCond.f_low_list, maskCond.f_high_list, filter_model=filter_model)
+
+
+class ExcitationPatterns:
+
+	def __init__(self, t, E0_maskable, E0_nonmaskable=None, requires_grad=False):
+		'''
+		Args:
+			t: time vector (torch tensor)
+			E0_maskable: raw excitation pattern (numpy array or torch tensor), maskable part
+
+			E0_nonmaskable (optional): raw excitation pattern (numpy array or torch tensor), fixed part
+			requires_grad: if E0 tensors requires gradient mdFunc
+		'''
+		self.t=t
+		self.E0_maskable=torch.tensor(E0_maskable, requires_grad=requires_grad)
+		if E0_nonmaskable is None:
+			self.E0_nonmaskable=torch.zeros_like(E0_maskable)
+		else:
+			self.E0_nonmaskable=torch.tensor(E0_nonmaskable, requires_grad=requires_grad)
+		self.masked=False
+
+	def set_masking_model(self, latencies, bw10Func, maskCond, maskingIOFunc, filter_model='gaussian'):
+		'''
+		Args:
+			maskCond: MaskingConditions object
+			maskingIOFunc: e.g. SigmoidMaskingDegreeFunction object
+		'''
+		self.masked=True
+		self.latencies=latencies
+		self.bw10Func=bw10Func
+		self.maskingConditions=maskCond
+		self.maskingIOFunc=maskingIOFunc
+		self.filter_model=filter_model
+
+
+	def get_tensors(self, eps=1e-6):
+		'''
+		Returns:
+			a tuple (maskingAmounts, excitation_patterns) of tensors  (of shape (n_conditions, n_freq))
+		'''
+		
+		if self.masked:
+			f=self.latencies.f_from_t(self.t)
+			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, bw10Func, maskCond, filter_model=filter_model)
+		
+			I=10*torch.log10(sq_exc+eps)
+			maskingAmount=self.maskingIOFunc(I)
+			return maskingAmount, torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*maskingAmount
+		else:
+			return None, torch.unsqueeze(self.E0_nonmaskable+self.E0_maskable, 0)  #init with raw excitation pattern
+		
+	def get_tensor(self, eps=1e-6):
+		'''
+		Returns:
+			a tensor of shape (n_conditions, n_freq) representing the excitation patterns
+		'''
+		maskingAmounts, excitation_patterns = self.get_tensors(eps=eps)
+		return excitation_patterns
+
+
