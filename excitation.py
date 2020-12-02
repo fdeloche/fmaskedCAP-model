@@ -3,6 +3,7 @@ import tuning
 import masking
 import numpy as np
 
+#from scipy.stats import gamma
 
 def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, amp_list, f_low_list, f_high_list, filter_model='gaussian'):
 	'''
@@ -55,11 +56,17 @@ class ExcitationPatterns:
 			requires_grad: if E0 tensors requires gradient mdFunc
 		'''
 		self.t=t
-		self.E0_maskable=torch.tensor(E0_maskable, requires_grad=requires_grad)
-		if E0_nonmaskable is None:
-			self.E0_nonmaskable=torch.zeros_like(E0_maskable)
+		if torch.is_tensor(E0_maskable):
+			self.E0_maskable = E0_maskable.clone().detach().requires_grad_(requires_grad=requires_grad)
 		else:
-			self.E0_nonmaskable=torch.tensor(E0_nonmaskable, requires_grad=requires_grad)
+			self.E0_maskable=torch.tensor(E0_maskable, requires_grad=requires_grad)
+		if E0_nonmaskable is None:
+			self.E0_nonmaskable=torch.zeros_like(self.E0_maskable)
+		else:		
+			if torch.is_tensor(E0_nonmaskable):
+				self.E0_nonmaskable = E0_nonmaskable.clone().detach().requires_grad_(requires_grad=requires_grad)
+			else:
+				self.E0_nonmaskable=torch.tensor(E0_nonmaskable, requires_grad=requires_grad)
 		self.masked=False
 
 	def set_masking_model(self, latencies, bw10Func, maskCond, maskingIOFunc, filter_model='gaussian'):
@@ -84,11 +91,11 @@ class ExcitationPatterns:
 		
 		if self.masked:
 			f=self.latencies.f_from_t(self.t)
-			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, bw10Func, maskCond, filter_model=filter_model)
+			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
 		
-			I=10*torch.log10(sq_exc+eps)
+			I=10*torch.log10(sq_masking_exc_patterns+eps)
 			maskingAmount=self.maskingIOFunc(I)
-			return maskingAmount, torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*maskingAmount
+			return maskingAmount, torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
 		else:
 			return None, torch.unsqueeze(self.E0_nonmaskable+self.E0_maskable, 0)  #init with raw excitation pattern
 		
@@ -100,4 +107,29 @@ class ExcitationPatterns:
 		maskingAmounts, excitation_patterns = self.get_tensors(eps=eps)
 		return excitation_patterns
 
+	@classmethod
+	def GammaExcitation(cls, t, C, alpha, beta, loc, C_nm=0, alpha_nm=1, beta_nm=1, loc_nm=0):
+		'''
+		Creates an excitation from a gamma law distribution. Max amp: C 
+		_nm params are for the nonmaskable part (optional)
+		Gamma CDF: G(t) = beta/Gamma(a) (beta (t-loc) )**(alpha-1)*exp(-beta (t-loc)) 
+		Normalized function: G(t)/G( (alpha-1)/beta - loc)= (beta*(t-loc)/(alpha-1))**(alpha-1) * exp( alpha - 1 - beta (t-loc))
+		'''
+		assert beta>0, 'beta must be a positive number'
+		#E0_maskable=gamma.pdf(t, alpha, loc, 1/beta)
+		#E0_maskable*=C/gamma.pdf( (alpha-1)/beta, alpha, loc, 1/beta)
+		tt=(t-loc)*((t-loc)>0)+loc
+		E0_maskable=C*(beta*(tt-loc)/(alpha-1))**(alpha-1)*np.exp(alpha - 1 - beta*(tt-loc))
 
+		if C_nm !=0:
+			assert beta_nm>0, 'beta must be a positive number'
+			E0_nonmaskable=C_nm*(beta_nm*(tt-loc_nm)/(alpha_nm-1))**(alpha_nm-1) *np.exp(alpha_nm - 1 - beta_nm*(tt-loc_nm))
+		else:
+			E0_nonmaskable=None
+
+		return cls(t, E0_maskable, E0_nonmaskable=E0_nonmaskable)
+
+	@classmethod
+	def copyRaw(cls, E, requires_grad=False):
+		'''creates a raw excitation pattern by making a copy from another ExcitationPatterns object'''
+		return cls(E.t, E.E0_maskable, E0_nonmaskable=E.E0_nonmaskable, requires_grad=requires_grad)

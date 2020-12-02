@@ -19,7 +19,7 @@ def deconv_grad(EPs, u_fft, CAPs_fft):
 
 def deconv_newton_step(EPs, u_fft, CAPs_fft, eps=1e-6):
 	'''
-	Note: EPs and u_fft can be exchanged (u_mat, EPs_fft)
+	Note: EPs and u_fft can be  interchanged (u_mat, EPs_fft)
 	Args:
 		EPs: matrix of excitation patterns (in time domain)
 		u_fft: unitary response (rfft)

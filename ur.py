@@ -61,6 +61,9 @@ class URfromCsv:
 		'''
 		return np.interp(t, self._t, self._u, left=0., right=0.)*self._func(t)
 
+	def __call__(self, t):
+		return self.u(t)
+
 URWang1979 = URfromCsv('./UR/Wang1979Fig14.csv', name='averaged UR (Wang 1979, Fig14)')
 URWang1979m = URfromCsv.modify(URWang1979, lambda t:1+4*np.exp(-1/2*(t+0.2e-4)**2/1e-4**2)) #produces more realistic CAP
 
