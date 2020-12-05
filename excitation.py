@@ -3,6 +3,8 @@ import tuning
 import masking
 import numpy as np
 
+import functools
+
 #from scipy.stats import gamma
 
 def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, amp_list, f_low_list, f_high_list, filter_model='gaussian'):
@@ -107,6 +109,54 @@ class ExcitationPatterns:
 		maskingAmounts, excitation_patterns = self.get_tensors(eps=eps)
 		return excitation_patterns
 
+
+
+	def get_projector(self, intercept=True, eps=1e-6):
+		'''
+		Args:
+			intercept: if True, the function returned will return a nested tuple ( (E0_nonmaskable, E0_maskable), E0_nonmaskable+ (1-M) E0_maskable ,
+						else it will return (E0, (1-M) E0)
+		Returns:
+			A function that projects a matrix of excitation patterns in the linear subspace
+			 ((1-M_0) E_0, ... (1-M_(m-1)) E_0) parametrized by E0. (linear regression)
+			Argument of the resulting function is E_mat a matrix of excitation patterns (obtained by deconvolution).
+			The function will return tuples of numpy arrays (param E0, excitation patterns (1-M) E0) 
+		'''
+
+		assert self.masked, 'Excitation pattern must be associated with masking conditions'
+
+		if intercept:
+			def proj(maskingPatterns, E_mat, eps=1e-6):
+					mA_avg=1-np.mean(maskingPatterns, axis=0)
+					mA_centered=(1-maskingPatterns-mA_avg)
+					E_mat_avg=np.mean(E_mat, axis=0)
+					cov=np.mean(mA_centered*(E_mat-E_mat_avg), axis=0)
+					var=np.mean( maCentered**2, axis=0)+eps
+					E0_maskable=cov/var
+					E0_nonmaskable=mA_avg-ma_centered*E0_maskable
+
+
+					return ((E0_maskable, E0_nonmaskable), E0_nonmaskable+(1-maskingPatterns)*E0_maskable)
+
+		else:
+			def proj(maskingPatterns, E_mat, eps=1e-6):
+				cross_prod=np.average((1-maskingPatterns)*E_mat, axis=0)
+				mean_square=np.average((1-maskingPatterns)**2, axis=0)+eps
+				E0=cross_prod/mean_square
+				return (E0, (1-maskingPatterns)*E0)
+
+		#compute maskingPatterns (maskingAmount)
+		with torch.no_grad():
+			f=self.latencies.f_from_t(self.t)
+			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
+			
+			I=10*torch.log10(sq_masking_exc_patterns+eps)
+			maskingAmount=self.maskingIOFunc(I)
+			maskingAmount=maskingAmount.clone().numpy()
+
+		return functools.partial(proj, maskingAmount, eps=eps)
+
+
 	@classmethod
 	def GammaExcitation(cls, t, C, alpha, beta, loc, C_nm=0, alpha_nm=1, beta_nm=1, loc_nm=0):
 		'''
@@ -133,3 +183,4 @@ class ExcitationPatterns:
 	def copyRaw(cls, E, requires_grad=False):
 		'''creates a raw excitation pattern by making a copy from another ExcitationPatterns object'''
 		return cls(E.t, E.E0_maskable, E0_nonmaskable=E.E0_nonmaskable, requires_grad=requires_grad)
+

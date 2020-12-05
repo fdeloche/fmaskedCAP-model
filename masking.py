@@ -5,7 +5,9 @@ import matplotlib.pyplot as pl
 import json 
 
 
-class SigmoidMaskingDegreeFunction:
+###########  Masking I/O functions ###########
+
+class SigmoidIOFunc:
 	'''Implements the sigmoid function
 	f(I) = 1/(1+exp(-a(I-mu) ))
 	'''
@@ -29,6 +31,38 @@ def get_masking_amount(mdFunc, sq_exc, eps=1e-6):
 	'''
 	return mdFunc(10*torch.log10(eps+sq_exc))
 
+SigmoidMaskingDegreeFunction=SigmoidIOFunc  #old name
+
+
+
+class WeibullCDF_IOFunc:
+	'''Implements the Weibull CDF function
+	f(I) = 1-exp(- ((I-I0)/scale)^k )
+	'''
+	def __init__(self, I0, scale, k, requires_grad=False):
+		'''
+		Args:
+			theta: localization parameter (max intensity associated with 0% masking)
+			scale: scale parameter (63% masking intensity reached at I0+scale)
+			k: shape parameter
+		'''
+		self.I0=torch.tensor(I0, requires_grad=requires_grad)
+		self.scale=torch.tensor(scale, requires_grad=requires_grad)	
+		self.k=torch.tensor(k, requires_grad=requires_grad)
+
+	def __call__(self, I):
+		Delta_I=torch.maximum((I-self.I0), torch.tensor(0.))
+		return 1-torch.exp( -(Delta_I/self.scale)**self.k)
+
+def get_masking_amount(mdFunc, sq_exc, eps=1e-6):
+	'''
+	Args:
+		mdFunc: masking degree function
+		sq_exc: squared excitation associated with masking patterns
+	'''
+	return mdFunc(10*torch.log10(eps+sq_exc))
+
+###########  Masking conditions (maskers) ###########
 
 class MaskingConditions:
 	'''
@@ -140,7 +174,8 @@ class MaskingConditions:
 	def f_high_list(self):
 		(_, _, res)=self.get_tensor_lists()
 		return res
-	
+
+
 	@classmethod
 	def from_json_files(cls, list_filenames):
 		stim_dic_list=[]
