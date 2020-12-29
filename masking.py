@@ -4,6 +4,8 @@ import matplotlib.pyplot as pl
 
 import json 
 
+from scipy.optimize import curve_fit
+
 
 ###########  Masking I/O functions ###########
 
@@ -22,6 +24,43 @@ class SigmoidIOFunc:
 
 	def __call__(self, I):
 		return torch.sigmoid(self.a*(I-self.mu))
+
+	def fit_data(self, I_values, m_values, init_with_new_values=True):
+		'''
+		Sets mu and a to fit I_values (np array) and m_values (np array, masking amount values, max 100%).
+		Levenberg-Maquardt algorithm. 
+		Args:
+			init_with_new_values: if True, initialization of algorithm with (median value I, 4/(max(I) - min(I)), if false init with self.a, self.mu'''
+
+		def aux_jac(x, mu, a):
+			y=a*(x-mu)
+			sig2=aux_f(x, mu, a)**2
+			temp=-sig2*np.exp(-y)
+			df_mu=temp*a
+			df_a=temp*(-(x-mu))
+			return np.stack((df_mu, df_a), axis=1)
+
+		def aux_f(x, mu, a):
+			y=a*(x-mu)
+			return 1/(1+np.exp(-y))
+
+		if init_with_new_values:
+			p0 = (np.median(I_values), 4/(np.amax(I_values) - np.amin(I_values) ))
+		else:
+			p0= (self.mu, self.a)
+		params, _= curve_fit(aux_f, I_values, m_values,
+		 	p0= p0, method='lm', jac=aux_jac)
+		print(f'fitting data:\n mu={params[0]:.2f}, a={params[1]:.4f}')
+		self.mu.data=torch.tensor(params[0])
+		self.a.data=torch.tensor(params[1])
+
+
+
+
+
+
+
+
 
 def get_masking_amount(mdFunc, sq_exc, eps=1e-6):
 	'''
