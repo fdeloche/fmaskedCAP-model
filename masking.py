@@ -93,6 +93,48 @@ class WeibullCDF_IOFunc:
 		Delta_I=torch.maximum((I-self.I0), torch.tensor(0.))
 		return 1-torch.exp( -(Delta_I/self.scale)**self.k)
 
+
+	def fit_data(self, I_values, m_values, init_with_new_values=True):
+		'''
+		Sets I0, scale and k to fit I_values (np array) and m_values (np array, masking amount values, max 100%).
+		Levenberg-Maquardt algorithm. 
+		Args:
+			init_with_new_values: if True, initialization of algorithm with (min I, median I - I0, 1) , if false init with values defined by class init
+		'''
+
+		def aux_f(I, I0, scale, k):
+
+			Delta_I=np.maximum((I-I0), 0 )
+			return 1-np.exp( -(Delta_I/scale)**k)
+
+		def aux_jac(I, I0, scale, k):
+			Delta_I=np.maximum((I-I0), 0 )
+			xx=Delta_I/scale
+			temp=np.exp( -xx**k)
+			df_I0=-temp*k*xx**(k-1)*1/scale
+			df_sc=-temp*xx**k*k*1/scale
+			df_k=temp*xx**k*np.log(xx+1e-6)
+			return np.stack((df_I0, df_sc, df_k), axis=1)
+
+
+		if init_with_new_values:
+			p0 = (np.amin(I_values), np.median(I_values) - np.amin(I_values) , 1)
+		else:
+			p0= (self.I0, self.scale, self.k)
+
+		params, _= curve_fit(aux_f, I_values, m_values,
+		 	p0= p0, method='lm', jac=aux_jac)
+
+
+		print(f'fitting data:\n I0={params[0]:.2f}, scale={params[1]:.2f}, k={params[2]:.2f}')
+		self.I0.data=torch.tensor(params[0])
+		self.scale.data=torch.tensor(params[1])
+		self.k.data=torch.tensor(params[2])
+
+
+
+
+
 def get_masking_amount(mdFunc, sq_exc, eps=1e-6):
 	'''
 	Args:
