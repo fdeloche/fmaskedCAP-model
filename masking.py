@@ -47,12 +47,22 @@ class SigmoidIOFunc:
 		if init_with_new_values:
 			p0 = (np.median(I_values), 4/(np.amax(I_values) - np.amin(I_values) ))
 		else:
-			p0= (self.mu, self.a)
+			p0= (self.mu.numpy(), self.a.numpy())
 		params, _= curve_fit(aux_f, I_values, m_values,
 		 	p0= p0, method='lm', jac=aux_jac)
 		print(f'fitting data:\n mu={params[0]:.2f}, a={params[1]:.4f}')
 		self.mu.data=torch.tensor(params[0])
 		self.a.data=torch.tensor(params[1])
+
+	@classmethod
+	def from_datapts(cls, I_values, m_values, requires_grad=False):
+		'''
+		Returns an object of the class and fits the parameter to (I_values, m_values) (see method fit_data)
+		'''
+		sig=cls(0,0, requires_grad=requires_grad)
+		sig.fit_data(I_values, m_values)
+		return sig
+
 
 
 
@@ -97,9 +107,9 @@ class WeibullCDF_IOFunc:
 	def fit_data(self, I_values, m_values, init_with_new_values=True):
 		'''
 		Sets I0, scale and k to fit I_values (np array) and m_values (np array, masking amount values, max 100%).
-		Levenberg-Maquardt algorithm. 
+		Dog leg method (based on Levenberg-Maquardt algorithm, max k=20). 
 		Args:
-			init_with_new_values: if True, initialization of algorithm with (min I, median I - I0, 1) , if false init with values defined by class init
+			init_with_new_values: if True, initialization of algorithm with (min I, median I - I0, 2) , if false init with values defined by class init
 		'''
 
 		def aux_f(I, I0, scale, k):
@@ -118,12 +128,13 @@ class WeibullCDF_IOFunc:
 
 
 		if init_with_new_values:
-			p0 = (np.amin(I_values), np.median(I_values) - np.amin(I_values) , 1)
+			p0 = (np.amin(I_values), np.median(I_values) - np.amin(I_values) , 2)
 		else:
-			p0= (self.I0, self.scale, self.k)
+			p0= (self.I0.numpy(), self.scale.numpy(), self.k.numpy())
 
 		params, _= curve_fit(aux_f, I_values, m_values,
-		 	p0= p0, method='lm', jac=aux_jac)
+		 	p0= p0, method='dogbox', jac=aux_jac, ftol=0.1, 
+		 	bounds=([-np.inf, -np.inf, 1], [np.inf, np.inf, 20]))
 
 
 		print(f'fitting data:\n I0={params[0]:.2f}, scale={params[1]:.2f}, k={params[2]:.2f}')
@@ -131,8 +142,14 @@ class WeibullCDF_IOFunc:
 		self.scale.data=torch.tensor(params[1])
 		self.k.data=torch.tensor(params[2])
 
-
-
+	@classmethod
+	def from_datapts(cls, I_values, m_values, requires_grad=False):
+		'''
+		Returns an object of the class and fits the parameter to (I_values, m_values) (see method fit_data)
+		'''
+		wcdf=cls(0, 10, 2, requires_grad=requires_grad)
+		wcdf.fit_data(I_values, m_values)
+		return wcdf
 
 
 def get_masking_amount(mdFunc, sq_exc, eps=1e-6):

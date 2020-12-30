@@ -3,6 +3,9 @@ import copy
 import numpy as np
 import matplotlib.pyplot as pl
 
+
+from scipy.optimize import curve_fit
+
 class PowerLawLatencies:
 	'''
 	Links frequencies and latencies (power law model).
@@ -72,6 +75,41 @@ class PowerLawLatencies:
 
 	def __repr__(self):
 		return f"PowerLawLatencies obj. {self.name} \n (A={self.A.numpy():.2e}, alpha={self.alpha.numpy():.2e}, t0={self.t0.numpy():.2e})"
+
+
+	def fit_data(self, t_values, f_values, init_with_new_values=True):
+		'''
+		Sets A, alpha and t0 to fit t_values (np array, in s) and f_values (np array).
+		Levenberg-Maquardt algorithm. 
+		Args:
+			init_with_new_values: if True, initialization of algorithm with (0.2, -2, min t - 1 ms) , if false init with values defined by class init
+		'''
+
+		def aux_f(t, A, alpha, t0):
+			return A*np.power(t-t0, alpha)
+
+		def aux_jac(t, A, alpha, t0):
+			temp = np.power(t-t0, alpha)
+			df_A=temp
+			df_alpha=A*temp*np.log(t-t0)
+			df_t0=-A*alpha*np.power(t-t0, alpha-1)
+			return np.stack((df_A, df_alpha, df_t0), axis=1)
+
+		if init_with_new_values:
+			p0=(0.2, -2, np.amin(t_values) - 1e-3)
+		else:
+			p0=(self.A.numpy(), self.alpha.numpy(), self.t0.numpy())
+
+		params, _= curve_fit(aux_f, t_values, f_values,
+		 	p0= p0, method='lm', jac=aux_jac)
+
+
+		print(f'fitting data:\n A={params[0]:.3f}, alpha={params[1]:.2f}, t0={params[2]*1e3:.2f} ms')
+
+		self.A.data=torch.tensor(params[0])
+		self.alpha.data=torch.tensor(params[1])
+		self.t0.data=torch.tensor(params[2])
+
 
 
 
