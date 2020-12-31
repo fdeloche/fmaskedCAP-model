@@ -39,10 +39,10 @@ def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian',
 	return axlist2
 
 
-def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-6, filter_model='gaussian', fmin=800, fmax=8000, axlist=None):
+def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-6, filter_model='gaussian', fmin=800, fmax=8000, axlist=None, max_plots=8):
 	'''
 	Args:
-		axlist:list of axes where to plot. If none creates a list of axes
+		axlist:list of axes for the plots. If none creates a list of axes
 	Returns:
 		the list of axes corresponding to the figures plotted
 	'''
@@ -58,10 +58,12 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 	for amp, f_low, f_high in zip(amp_list, f_low_list, f_high_list):
 		maskerSpectra+= torch.unsqueeze(amp, 1)*(torch.unsqueeze(f_low, 1)<f)*(torch.unsqueeze(f_high, 1)>f)
 	'''
-
+	nb_plots=min(maskingConditions.n_conditions, max_plots)
 	axlist2=[]
 	for i, sq_exc in zip(range(maskingConditions.n_conditions), sq_excitations):
-		ax= pl.subplot(maskingConditions.n_conditions//2, 2, i+1) if axlist is None else axlist[i]
+		if i==nb_plots:
+			break
+		ax= pl.subplot(nb_plots//2, 2, i+1) if axlist is None else axlist[i]
 		ax.set_title(maskingConditions.names[i], fontsize=10)
 		#ax.plot(f, maskerSpectrum, '--')
 		I=10*torch.log10(sq_exc+eps)
@@ -74,7 +76,7 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 
 
 
-def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None):
+def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=6):
 	'''
 	Args:
 		E:ExcitationPatterns object
@@ -89,9 +91,13 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None):
 			pl.suptitle('E_0, M  /  E_0*(1-M)')
 		else:
 			pl.suptitle('Excitation patterns: E_0*(1-M)')
+
+		nb_plots=min(maskingConditions.n_conditions, max_plots)
 		for i, maskAmount, exc in zip(range(maskingConditions.n_conditions), maskAmounts, excs):
+			if i==nb_plots:
+				break
 			if plot_raw_excitation:
-				ax= pl.subplot(maskingConditions.n_conditions, 2, 2*i+1) if axlist is None else axlist[2*i]
+				ax= pl.subplot(nb_plots, 2, 2*i+1) if axlist is None else axlist[2*i]
 			
 				ax.plot(E.t*1e3, E.E0_nonmaskable, label='non maskable part')
 				ax.plot(E.t*1e3, E.E0_maskable, label='maskable part')
@@ -102,10 +108,10 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None):
 				ax.set_xlabel('Time (ms)')
 				ax.set_ylim([0, 100.])
 				axlist2.append(ax)
-				ax= pl.subplot(maskingConditions.n_conditions, 2, 2*i+2) if axlist is None else axlist[2*i+1]
+				ax= pl.subplot(nb_plots, 2, 2*i+2) if axlist is None else axlist[2*i+1]
 				
 			else:	
-				ax= pl.subplot(maskingConditions.n_conditions//2, 2, i+1) if axlist is None else axlist[i]
+				ax= pl.subplot(nb_plots, 2, i+1) if axlist is None else axlist[i]
 	
 			ax.set_title(maskingConditions.names[i], fontsize=10)
 			ax.plot(E.t*1e3, exc)
@@ -118,6 +124,7 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None):
 				ax2.set_xticks(locs)
 				ax2.set_xticklabels([f'{CF/1e3:.1f}' for CF in list(E.latencies.f_from_t(locs*1e-3))])
 				ax2.set_xlabel('Place: CF (kHz)')
+
 			axlist2.append(ax)
 		pl.tight_layout()
 	else:
