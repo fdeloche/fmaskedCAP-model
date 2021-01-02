@@ -2,6 +2,7 @@ import torch
 import tuning
 import masking
 import numpy as np
+import scipy.signal as sg
 
 import functools
 
@@ -51,12 +52,14 @@ class ExcitationPatterns:
 	def __init__(self, t, E0_maskable, E0_nonmaskable=None, requires_grad=False):
 		'''
 		Args:
-			t: time vector (torch tensor)
+			t: time vector (torch  or np array, converted to torch tensor)
 			E0_maskable: raw excitation pattern (numpy array or torch tensor), maskable part
 
 			E0_nonmaskable (optional): raw excitation pattern (numpy array or torch tensor), fixed part
 			requires_grad: if E0 tensors requires gradient mdFunc
 		'''
+		if not(torch.is_tensor(t)):
+			t=torch.tensor(t)
 		self.t=t
 		if torch.is_tensor(E0_maskable):
 			self.E0_maskable = E0_maskable.clone().detach().requires_grad_(requires_grad=requires_grad)
@@ -70,6 +73,18 @@ class ExcitationPatterns:
 			else:
 				self.E0_nonmaskable=torch.tensor(E0_nonmaskable, requires_grad=requires_grad)
 		self.masked=False
+
+	def apply_Tukey_window(self, alpha, on_maskable=True, on_nonmaskable=True):
+		'''apply Tukey window on the raw excitation
+		Args:
+			alpha: (from scipy doc) Shape parameter of the Tukey window, representing the fraction of the window inside the cosine tapered region'''
+		w=sg.tukey(len(self.t), alpha)
+		if on_maskable:
+			self.E0_maskable.data*=w
+		if on_nonmaskable:
+			self.E0_nonmaskable.data*=w
+
+
 
 	def set_masking_model(self, latencies, bw10Func, maskCond, maskingIOFunc, filter_model='gaussian'):
 		'''
@@ -114,7 +129,7 @@ class ExcitationPatterns:
 	def get_projector(self, intercept=True, eps=1e-6):
 		'''
 		Args:
-			intercept: if True, the function returned will return a nested tuple ( (E0_nonmaskable, E0_maskable), E0_nonmaskable+ (1-M) E0_maskable ,
+			intercept: if True, the function returned will return a nested tuple ( (E0_maskable, E0_nonmaskable), E0_nonmaskable+ (1-M) E0_maskable ,
 						else it will return (E0, (1-M) E0)
 		Returns:
 			A function that projects a matrix of excitation patterns in the linear subspace
@@ -131,9 +146,9 @@ class ExcitationPatterns:
 					mA_centered=(1-maskingPatterns-mA_avg)
 					E_mat_avg=np.mean(E_mat, axis=0)
 					cov=np.mean(mA_centered*(E_mat-E_mat_avg), axis=0)
-					var=np.mean( maCentered**2, axis=0)+eps
+					var=np.mean( mA_centered**2, axis=0)+eps
 					E0_maskable=cov/var
-					E0_nonmaskable=mA_avg-ma_centered*E0_maskable
+					E0_nonmaskable=E_mat_avg-np.mean((1-maskingPatterns)*E0_maskable, axis=0)
 
 
 					return ((E0_maskable, E0_nonmaskable), E0_nonmaskable+(1-maskingPatterns)*E0_maskable)
