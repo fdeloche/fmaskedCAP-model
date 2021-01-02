@@ -8,9 +8,11 @@ from excitation import *
 from deconv import *
 from ur import *
 from tuning import *
+import re
 
 
-def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian', fmin=800, fmax=8000, axlist=None):
+
+def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian', fmin=800, fmax=8000, axlist=None, reg_ex=None):
 	'''
 	Args:
 		axlist:list of axes where to plot. If none creates a list of axes
@@ -29,17 +31,22 @@ def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian',
 		maskerSpectra+= torch.unsqueeze(amp, 1)*(torch.unsqueeze(f_low, 1)<f)*(torch.unsqueeze(f_high, 1)>f)
 
 	axlist2=[]
+	ind=0
 	for i, maskerSpectrum, sq_exc in zip(range(maskingConditions.n_conditions), maskerSpectra, sq_excitations):
-		ax= pl.subplot(maskingConditions.n_conditions//2, 2, i+1) if axlist is None else axlist[i]
+		if not reg_ex is None:
+			if not(re.match(reg_ex, maskingConditions.names[i])):
+				continue 
+		ax= pl.subplot(maskingConditions.n_conditions//2, 2, ind+1) if axlist is None else axlist[i]
 		ax.set_title(maskingConditions.names[i], fontsize=10)
 		ax.plot(f, maskerSpectrum, '--')
 		ax.plot(f, torch.sqrt(sq_exc))
 		ax.set_xlabel('f')
 		axlist2.append(ax)
+		ind+=1
 	return axlist2
 
 
-def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-6, filter_model='gaussian', fmin=800, fmax=8000, axlist=None, max_plots=8):
+def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-6, filter_model='gaussian', fmin=800, fmax=8000, axlist=None, max_plots=8, reg_ex=None):
 	'''
 	Args:
 		axlist:list of axes for the plots. If none creates a list of axes
@@ -60,10 +67,14 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 	'''
 	nb_plots=min(maskingConditions.n_conditions, max_plots)
 	axlist2=[]
+	ind=0
 	for i, sq_exc in zip(range(maskingConditions.n_conditions), sq_excitations):
-		if i==nb_plots:
+		if ind==nb_plots:
 			break
-		ax= pl.subplot(nb_plots//2, 2, i+1) if axlist is None else axlist[i]
+		if not reg_ex is None:
+			if not(re.match(reg_ex, maskingConditions.names[i])):
+				continue 
+		ax= pl.subplot(nb_plots//2, 2, ind+1) if axlist is None else axlist[i]
 		ax.set_title(maskingConditions.names[i], fontsize=10)
 		#ax.plot(f, maskerSpectrum, '--')
 		I=10*torch.log10(sq_exc+eps)
@@ -72,11 +83,12 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 		ax.set_ylabel('masking amount (%)')
 		ax.set_ylim([0, 100.])
 		axlist2.append(ax)
+		ind+=1
 	return axlist2
 
 
 
-def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=6):
+def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=6, reg_ex=None):
 	'''
 	Args:
 		E:ExcitationPatterns object
@@ -93,11 +105,15 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 			pl.suptitle('Excitation patterns: E_0*(1-M)')
 
 		nb_plots=min(maskingConditions.n_conditions, max_plots)
+		ind=0
 		for i, maskAmount, exc in zip(range(maskingConditions.n_conditions), maskAmounts, excs):
-			if i==nb_plots:
+			if ind==nb_plots:
 				break
+			if not reg_ex is None:
+				if not(re.match(reg_ex, maskingConditions.names[i])):
+					continue 
 			if plot_raw_excitation:
-				ax= pl.subplot(nb_plots, 2, 2*i+1) if axlist is None else axlist[2*i]
+				ax= pl.subplot(nb_plots, 2, 2*ind+1) if axlist is None else axlist[2*i]
 			
 				ax.plot(E.t*1e3, E.E0_nonmaskable, label='non maskable part')
 				ax.plot(E.t*1e3, E.E0_maskable, label='maskable part')
@@ -108,10 +124,10 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 				ax.set_xlabel('Time (ms)')
 				ax.set_ylim([0, 100.])
 				axlist2.append(ax)
-				ax= pl.subplot(nb_plots, 2, 2*i+2) if axlist is None else axlist[2*i+1]
+				ax= pl.subplot(nb_plots, 2, 2*ind+2) if axlist is None else axlist[2*i+1]
 				
 			else:	
-				ax= pl.subplot(nb_plots, 2, i+1) if axlist is None else axlist[i]
+				ax= pl.subplot(nb_plots, 2, ind+1) if axlist is None else axlist[i]
 	
 			ax.set_title(maskingConditions.names[i], fontsize=10)
 			ax.plot(E.t*1e3, exc)
@@ -126,6 +142,7 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 				ax2.set_xlabel('Place: CF (kHz)')
 
 			axlist2.append(ax)
+			ind+=1
 		pl.tight_layout()
 	else:
 		ax = pl.gca() if axlist is None else axlist[0]
@@ -149,37 +166,57 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 
 
 
-def plotSimulatedCAPs(E, u, axlist=None, shift=0):
+def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=8, ylim=None, reg_ex=None, title='Simulated CAPs (+ excitation patterns)'):
 	'''
 	Args:
 		E:ExcitationPatterns object
 		u: unitary response (numpy array)
+		CAParray: array of CAP signals (if the convolution is done outside the function), must be of size (nb_conditions, len(E.t)) . either CAParray or u must be given
 		axlist:list of axes for the plots. If none creates a list of axes
 		shift:time shift for the convolution
+		ylim: interval to pass to matplotlib (opt.)
+		reg_ex: regular expression to filter masker names (opt.)
 	'''
+	assert not(u is None) or not(CAParray is None), 'either CAParray or u must be given'
 	axlist2=[]
 	if E.masked:
 		excs = E.get_tensor() 
 		maskingConditions = E.maskingConditions
-		pl.suptitle('Simulated CAPs (+ excitation patterns)')
+		pl.suptitle(title)
+		nb_plots=min(maskingConditions.n_conditions, max_plots)
+		ind=0
 		for i, exc in zip(range(maskingConditions.n_conditions), excs):
-
-			ax= pl.subplot(maskingConditions.n_conditions//2, 2, i+1) if axlist is None else axlist[2*i]
+			if ind==nb_plots:
+				break
+			if not reg_ex is None:
+				if not(re.match(reg_ex, maskingConditions.names[i])):
+					continue 
+			ax= pl.subplot(nb_plots//2, 2, ind+1) if axlist is None else axlist[2*i]
 			ax.set_title(maskingConditions.names[i], fontsize=10)
 			p=ax.plot(E.t*1e3, exc, linestyle='--', linewidth=1.5)
 			ax2=ax.twinx()  if axlist is None else axlist[2*i+1]
-			exc_np = exc.detach().numpy()
-			CAP=np.convolve(exc_np, u, mode='full')
-			t=E.t.numpy()
-			ind_time=np.sum(t<(t[0]+shift))
-			ind_time=min(ind_time, len(CAP)-len(E.t))
-			CAP=CAP[ind_time:ind_time+len(E.t)]
-			ax2.plot(E.t*1e3, CAP, color=p[0].get_color()) 
+
+			if not CAParray is None:
+				CAP=CAParray[i]
+				ax2.plot(E.t*1e3, CAP, color=p[0].get_color()) 
+				ax2.grid(False)
+			else:
+				exc_np = exc.detach().numpy()
+				CAP=np.convolve(exc_np, u, mode='full')
+				t=E.t.numpy()
+				ind_time=np.sum(t<(t[0]+shift))
+				ind_time=min(ind_time, len(CAP)-len(E.t))
+				CAP=CAP[ind_time:ind_time+len(E.t)]
+				ax2.plot(E.t*1e3, CAP, color=p[0].get_color()) 
 			ax2.grid(False)
 			ax.set_xlabel('Time (ms)')
 			axlist2.append(ax)
 			axlist2.append(ax2)		
+			if not ylim is None:
+				pl.ylim(ylim)
+			ind+=1
 		pl.tight_layout()
+
 	else:
 		ax = pl.gca() if axlist is None else axlist[0]
 		ax.plot(E.t*1e3, E.E0_nonmaskable, label='non maskable part', linestyle='--')

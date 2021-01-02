@@ -17,7 +17,7 @@ class PowerLawLatencies:
 		t0
 	'''
 
-	def __init__(self, A, alpha, t0=0., requires_grad=False, name=""):
+	def __init__(self, A=1, alpha=-2, t0=0., requires_grad=False, name=""):
 		self.A=torch.tensor(A, requires_grad=requires_grad)
 		self.alpha=torch.tensor(alpha, requires_grad=requires_grad)
 		self.t0=torch.tensor(t0, requires_grad=requires_grad)

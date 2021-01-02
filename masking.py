@@ -88,7 +88,7 @@ class WeibullCDF_IOFunc:
 	'''Implements the Weibull CDF function
 	f(I) = 1-exp(- ((I-I0)/scale)^k )
 	'''
-	def __init__(self, I0, scale, k, requires_grad=False):
+	def __init__(self, I0=0, scale=40, k=10, requires_grad=False):
 		'''
 		Args:
 			theta: localization parameter (max intensity associated with 0% masking)
