@@ -7,8 +7,8 @@ function plotHpNoiseCAPs(begin_ind, end_ind)
     %Extra atten (for maskers) assumed to be 0.
     
     %% Create mappings
-    data_folder='../../Data/Data-10-09/matFiles/'; %test
-    %data_folder=cd;
+    %data_folder='../../Data/Data-10-09/matFiles/'; %test
+    data_folder=cd;
 
     if ~exist('begin_ind','var')
      % third parameter does not exist, so default it to something
@@ -78,36 +78,53 @@ function plotHpNoiseCAPs(begin_ind, end_ind)
        filename=picFiles{picNumber};
        picStruct=load([data_folder '/' filename]);
        if firstPic
-           arr=picStruct.valAvg;
+           %arr=picStruct.valAvg;
+           arr=picStruct.data_struct.AD_Data.AD_Avg_V;
            firstPic=false;
        else
-           arr=arr+picStruct.valAvg;
+           %arr=arr+picStruct.valAvg;
+           arr=arr+picStruct.data_struct.AD_Data.AD_Avg_V;
        end
     end
     arr=arr/length(broadbandPic);
     broadband_sig=arr;
     
+    %% sort freqs
+    
+    freqs=zeros(1, length(freqfields));
+    for i=1:length(freqfields)
+        freq_field=freqfields{i};
+        freq=str2num(freq_field);
+        freqs(i)=freq;
+    end
+    [~, idx_sorted]=sort(-freqs);
+    
     freqfields2=cell(1, length(freqfields));
     %% Plot curves
-    for ifreq=1:length(freqfields)
+    for indfreq=1:length(freqfields)
+        ifreq=idx_sorted(indfreq);
         freq_field=['fc_' freqfields{ifreq}];
-        freqfields2{ifreq}=[freqfields{ifreq} ' Hz'];
+        freqfields2{indfreq}=[freqfields{ifreq} ' Hz'];
         firstPic=true;
         for picNumber=picDic.(freq_field)
            %load pic
            filename=picFiles{picNumber};
            picStruct=load([data_folder '/' filename]);
            if firstPic
-               arr=picStruct.valAvg;
-               t=linspace(0,  picStruct.CAPlength_ms, length(arr));
+               %arr=picStruct.valAvg;
+               arr=picStruct.data_struct.AD_Data.AD_Avg_V;
+               %t=linspace(0,  picStruct.CAPlength_ms, length(arr));
+               t=linspace(0,  picStruct.data_struct.Stimuli.CAP_intervals.CAPlength_ms, length(arr));
+
                firstPic=false;
            else
-               arr=arr+picStruct.valAvg;
+               %arr=arr+picStruct.valAvg;
+               arr=arr+picStruct.data_struct.AD_Data.AD_Avg_V;
            end
         end
         arr=arr/length(picDic.(freq_field));
 
-        if ifreq==1
+        if indfreq==1
             fig_raw=figure();
         else
             figure(fig_raw)
@@ -116,7 +133,7 @@ function plotHpNoiseCAPs(begin_ind, end_ind)
         hold on;
         
         
-        if ifreq==1
+        if indfreq==1
             fig2=figure();
            
         else

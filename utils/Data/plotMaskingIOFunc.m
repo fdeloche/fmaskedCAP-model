@@ -29,7 +29,8 @@ function plotMaskingIOFunc(begin_ind, end_ind)
     files=dir(data_folder);
     exp0='p(?<picNumber>[0-9]{4})_*.mat';
     expBroadband='p(?<picNumber>[0-9]{4})_.*broadband_noise.mat';
-    exp='p(?<picNumber>[0-9]{4})_fmasked_CAP_.*notch(?<freq>.*?)_(?<bw>.*?)_attn(?<attn>.*?)dB.mat';
+    %exp='p(?<picNumber>[0-9]{4})_fmasked_CAP_.*notch(?<freq>.*?)_(?<bw>.*?)_attn(?<attn>.*?)dB.mat';
+    exp='p(?<picNumber>[0-9]{4})_fmasked_CAP_.*notch(?<freq>.*?)_(?<bw>.*?)_(?<attn>.*?)dB.mat';
     
     picDic=struct();
     picFiles=cell(1, length(files)); %list pic-> filename
@@ -83,10 +84,12 @@ function plotMaskingIOFunc(begin_ind, end_ind)
        filename=picFiles{picNumber};
        picStruct=load([data_folder '/' filename]);
        if firstPic
-           arr=picStruct.valAvg;
+           %arr=picStruct.valAvg;
+           arr=picStruct.data_struct.AD_Data.AD_Avg_V;
            firstPic=false;
        else
-           arr=arr+picStruct.valAvg;
+           %arr=arr+picStruct.valAvg;
+           arr=arr+picStruct.data_struct.AD_Data.AD_Avg_V;
        end
     end
     arr=arr/length(broadbandPic);
@@ -125,11 +128,15 @@ function plotMaskingIOFunc(begin_ind, end_ind)
                filename=picFiles{picNumber};
                picStruct=load([data_folder '/' filename]);
                if firstPic
-                   arr=picStruct.valAvg;
-                   t=linspace(0,  picStruct.CAPlength_ms, length(arr));
+                   %arr=picStruct.valAvg;
+                   arr=picStruct.data_struct.AD_Data.AD_Avg_V;
+                   %t=linspace(0,  picStruct.CAPlength_ms, length(arr));
+                   t=linspace(0,  picStruct.data_struct.Stimuli.CAP_intervals.CAPlength_ms, length(arr));
+                   
                    firstPic=false;
                else
-                   arr=arr+picStruct.valAvg;
+                   %arr=arr+picStruct.valAvg;
+                   arr=arr+picStruct.data_struct.AD_Data.AD_Avg_V;
                end
             end
             arr=arr/length(picDic.(freq_field).(attn_field));
