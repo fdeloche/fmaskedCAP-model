@@ -1,4 +1,4 @@
-function figs_labels = plotCAPs_re(re, figs, labels,begin_ind, end_ind)
+function figs_labels = plotCAPs_re(re, begin_ind, end_ind, figs, labels)
     %plot CAPs (baseline : no masker 'broadband_noise')
     % corresponding to regular expression re   ex: '_.*broadband_noise'
     % the regular expression considered will be

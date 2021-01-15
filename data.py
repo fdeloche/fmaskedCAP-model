@@ -1,4 +1,4 @@
-
+ 
 import numpy as np 
 import re
 
@@ -22,13 +22,14 @@ class CAPData:
 	'''
 
 
-	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty):
+	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty, old_format=False):
 		'''
 		Args:
 			root_folder: root folder for .mat files
 			filenames: list of *.mat files with CAPs and info on maskers
 			begin_ind: min pic number
 			end_ind: max pic number
+			old_format:old format of .mat files
 		'''  
 
 		listFilesMat=filenames
@@ -68,7 +69,35 @@ class CAPData:
 			'''
 			filename=picnum_to_filename[n]
 			arr= loadmat(f'{data_folder}/{filename}')
-			return arr
+			if old_format:
+				return arr
+			else:
+				return arr['data_struct']
+
+				
+		def get_info_pic(pic):
+			#avg
+			arr=pic['AD_Data'][0][0]['AD_Avg_V'][0][0][0]
+			
+			#HACK only C or R
+			'''
+			all_data=pic['AD_Data'][0][0]['AD_All_V'][0][0]
+			arr=np.zeros_like(all_data[0])
+			for i in range(len(all_data)):
+				if i%2==0:
+					arr+=all_data[i]
+			arr/=len(all_data)/2
+			'''
+			
+			return {'arr':arr,
+					'XstartPlot_ms':pic['Stimuli'][0][0]['CAP_intervals'][0][0]['XstartPlot_ms'][0][0][0],
+					'XendPlot_ms': pic['Stimuli'][0][0]['CAP_intervals'][0][0]['XendPlot_ms'][0][0][0],
+					'name':pic['Stimuli'][0][0]['masker'][0][0]['name'][0][0],
+					'n_bands':pic['Stimuli'][0][0]['masker'][0][0]['n_bands'][0][0][0][0],
+					'amps':pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['amplitude'],
+					'fcs_low':pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['fc_low'],
+					'fcs_high':pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['fc_high']}
+
 
 		maskerNames=list(filtered_map_table.keys())
 		#maskingConditions=MaskingConditions()
@@ -80,29 +109,50 @@ class CAPData:
 			for picNum in picNums:
 				picDic=loadPic(picNum)
 				if firstPic:
-					#val=np.sum(picDic['valAll'][1::2], axis=0)
-					val=np.squeeze(picDic['valAvg'].T)
-					firstPic=False
-					#info on masker
-					pic=picDic
-					stim_dic={}
-					stim_dic['n_bands']=n_bands=pic['n_bands'][0][0]
-					stim_dic['bands']=[]
-					for k_band in range(n_bands):
-						amp=float(pic['bands'][0][k_band]['amplitude'][0][0])
-						fc_low=float(pic['bands'][0][k_band]['fc_low'][0][0])
-						fc_high=float(pic['bands'][0][k_band]['fc_high'][0][0])
-						stim_dic['bands'].append({'amplitude':amp, 'fc_low':fc_low, 'fc_high':fc_high})
-						stim_dic['name']=pic['masker_name'][0]
-					list_stim_dic.append(stim_dic)
-					#maskingConditions.add_conditions([stim_dic])
+					if old_format:
+						#val=np.sum(picDic['valAll'][1::2], axis=0)
+						val=np.squeeze(picDic['valAvg'].T)
+						firstPic=False
+						#info on masker
+						pic=picDic
+						stim_dic={}
+						stim_dic['n_bands']=n_bands=pic['n_bands'][0][0]
+						stim_dic['bands']=[]
+						for k_band in range(n_bands):
+							amp=float(pic['bands'][0][k_band]['amplitude'][0][0])
+							fc_low=float(pic['bands'][0][k_band]['fc_low'][0][0])
+							fc_high=float(pic['bands'][0][k_band]['fc_high'][0][0])
+							stim_dic['bands'].append({'amplitude':amp, 'fc_low':fc_low, 'fc_high':fc_high})
+							stim_dic['name']=pic['masker_name'][0]
+						list_stim_dic.append(stim_dic)
+						#maskingConditions.add_conditions([stim_dic])
+					else:
+						pic_info=get_info_pic(picDic)
+						val=pic_info[arr]
+						#info on masker
+						pic=pic_info
+						stim_dic={}
+						stim_dic['n_bands']=pic['n_bands']
+						stim_dic['bands']=[]
+						for k_band in range(n_bands):
+							amp=float(pic['amps'][k_band])
+							fc_low=float(pic['fcs_low'][k_band])
+							fc_high=float(pic['fcs_high'][k_band])
+							stim_dic['bands'].append({'amplitude':amp, 'fc_low':fc_low, 'fc_high':fc_high})
+							stim_dic['name']=pic['name']
+						list_stim_dic.append(stim_dic)
+
 				else:
-					#val+=np.sum(picDic['valAll'][1::2], axis=0)
-					val+=np.squeeze(picDic['valAvg'].T)
+					if old_format:
+						val+=np.squeeze(picDic['valAvg'].T)
+					else:
+
+						pic_info=get_info_pic(picDic)
+						val+=pic_info[arr]
 			val/=len(picNums)
 			arr_list.append(val)
 
-		t=np.linspace(picDic['XstartPlot_ms'][0][0], picDic['XendPlot_ms'][0][0], num=len(val))*1e-3
+		t=np.linspace(pic['XstartPlot_ms'], pic['XendPlot_ms'], num=len(val))*1e-3
 		CAP_signals=np.stack(arr_list)
 
 		self.t=t
