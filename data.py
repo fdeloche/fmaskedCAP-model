@@ -46,6 +46,12 @@ class CAPData:
 		filtered_map_table={}  #map masker filename -> pic numbers
 		picnum_to_filename={} #secondary map table
 		for fln in listFilesMat:
+
+			m=re.match('p([0-9]{4})_fmasked_CAP_(.*).mat', fln)
+			if not m:
+				print(f'warning: {fln} did not match reg filter')
+				continue
+
 			p, name = split_name(fln)
 			if p>=begin_ind and p<=end_ind:
 
@@ -88,15 +94,20 @@ class CAPData:
 					arr+=all_data[i]
 			arr/=len(all_data)/2
 			'''
-			
+
+			n_bands=pic['Stimuli'][0][0]['masker'][0][0]['n_bands'][0][0][0][0]
+			amps=pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['amplitude'] if n_bands>0 else []
+			fcs_low=pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['fc_low'] if n_bands>0 else []
+			fcs_high=pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['fc_high'] if n_bands>0 else []
+
 			return {'arr':arr,
 					'XstartPlot_ms':pic['Stimuli'][0][0]['CAP_intervals'][0][0]['XstartPlot_ms'][0][0][0],
 					'XendPlot_ms': pic['Stimuli'][0][0]['CAP_intervals'][0][0]['XendPlot_ms'][0][0][0],
 					'name':pic['Stimuli'][0][0]['masker'][0][0]['name'][0][0],
-					'n_bands':pic['Stimuli'][0][0]['masker'][0][0]['n_bands'][0][0][0][0],
-					'amps':pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['amplitude'],
-					'fcs_low':pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['fc_low'],
-					'fcs_high':pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['fc_high']}
+					'n_bands':n_bands,
+					'amps': amps,
+					'fcs_low': fcs_low,
+					'fcs_high': fcs_high}
 
 
 		maskerNames=list(filtered_map_table.keys())
@@ -126,13 +137,14 @@ class CAPData:
 							stim_dic['name']=pic['masker_name'][0]
 						list_stim_dic.append(stim_dic)
 						#maskingConditions.add_conditions([stim_dic])
+						firstPic=False
 					else:
 						pic_info=get_info_pic(picDic)
-						val=pic_info[arr]
+						val=pic_info['arr']
 						#info on masker
 						pic=pic_info
 						stim_dic={}
-						stim_dic['n_bands']=pic['n_bands']
+						stim_dic['n_bands']=n_bands=pic['n_bands']
 						stim_dic['bands']=[]
 						for k_band in range(n_bands):
 							amp=float(pic['amps'][k_band])
@@ -141,6 +153,7 @@ class CAPData:
 							stim_dic['bands'].append({'amplitude':amp, 'fc_low':fc_low, 'fc_high':fc_high})
 							stim_dic['name']=pic['name']
 						list_stim_dic.append(stim_dic)
+						firstPic=False
 
 				else:
 					if old_format:
@@ -148,7 +161,7 @@ class CAPData:
 					else:
 
 						pic_info=get_info_pic(picDic)
-						val+=pic_info[arr]
+						val+=pic_info['arr']
 			val/=len(picNums)
 			arr_list.append(val)
 
@@ -168,6 +181,11 @@ class CAPData:
 		if not hasattr(self, '_maskingConditions'):
 			self._maskingConditions=MaskingConditions(stim_dic_list=self.list_stim_dic)
 		return self._maskingConditions
+
+	def get_signal_by_name(self, maskerName):
+		ind=self.maskerNames.index(maskerName)
+		#print(self.map_table[maskerName])
+		return self.CAP_signals[ind]
 	
 	def batch_generator(self, batch_size):
 		'''return batches of size batch_size with tuples (maskerNames, maskingConditions, CAPsignals)'''

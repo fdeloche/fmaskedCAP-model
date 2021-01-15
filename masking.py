@@ -72,7 +72,7 @@ class SigmoidIOFunc:
 
 
 
-def get_masking_amount(mdFunc, sq_exc, eps=1e-6):
+def get_masking_amount(mdFunc, sq_exc, eps=1e-10):
 	'''
 	Args:
 		mdFunc: masking degree function
