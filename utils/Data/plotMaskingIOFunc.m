@@ -160,7 +160,7 @@ function plotMaskingIOFunc(begin_ind, end_ind)
         plot(attns(idx_sorted), CAP_arr(idx_sorted));
         hold on;
         xlabel('Notch attenuation (dB)')
-        ylabel('CAP amplitude (ref: broadband 20dB attn)')
+        ylabel('CAP amplitude diff (ref: broadband 20dB attn)')
     end
     legend(freqfields)
 end

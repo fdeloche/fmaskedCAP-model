@@ -22,7 +22,7 @@ class CAPData:
 	'''
 
 
-	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty, old_format=False):
+	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty, old_format=False, mode='C+R'):
 		'''
 		Args:
 			root_folder: root folder for .mat files
@@ -30,7 +30,10 @@ class CAPData:
 			begin_ind: min pic number
 			end_ind: max pic number
 			old_format:old format of .mat files
+			mode: 'C+R', 'C' 'R' (check C and R? #TODO )
 		'''  
+
+		assert mode in ['C+R', 'C', 'R']
 
 		listFilesMat=filenames
 		data_folder=root_folder
@@ -81,19 +84,25 @@ class CAPData:
 				return arr['data_struct']
 
 				
-		def get_info_pic(pic):
-			#avg
-			arr=pic['AD_Data'][0][0]['AD_Avg_V'][0][0][0]
-			
-			#HACK only C or R
+		def get_info_pic(pic, mode='C+R'):
 			'''
-			all_data=pic['AD_Data'][0][0]['AD_All_V'][0][0]
-			arr=np.zeros_like(all_data[0])
-			for i in range(len(all_data)):
-				if i%2==0:
-					arr+=all_data[i]
-			arr/=len(all_data)/2
+			Args:
+				mode: 'C+R', 'C' 'R' (check C and R? #TODO )
 			'''
+
+			if mode=='C+R':
+				#avg
+				arr=pic['AD_Data'][0][0]['AD_Avg_V'][0][0][0]
+				
+			if mode=='C' or mode=='R':
+				rem= 0 if mode == 'C' else 1
+				all_data=pic['AD_Data'][0][0]['AD_All_V'][0][0]
+				arr=np.zeros_like(all_data[0])
+				for i in range(len(all_data)):
+					if i%2==rem:
+						arr+=all_data[i]
+				arr/=len(all_data)/2
+
 
 			n_bands=pic['Stimuli'][0][0]['masker'][0][0]['n_bands'][0][0][0][0]
 			amps=pic['Stimuli'][0][0]['masker'][0][0]['bands'][0][0]['amplitude'] if n_bands>0 else []
@@ -139,7 +148,7 @@ class CAPData:
 						#maskingConditions.add_conditions([stim_dic])
 						firstPic=False
 					else:
-						pic_info=get_info_pic(picDic)
+						pic_info=get_info_pic(picDic, mode=mode)
 						val=pic_info['arr']
 						#info on masker
 						pic=pic_info
@@ -160,7 +169,7 @@ class CAPData:
 						val+=np.squeeze(picDic['valAvg'].T)
 					else:
 
-						pic_info=get_info_pic(picDic)
+						pic_info=get_info_pic(picDic, mode=mode)
 						val+=pic_info['arr']
 			val/=len(picNums)
 			arr_list.append(val)
