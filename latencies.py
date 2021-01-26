@@ -10,7 +10,7 @@ class PowerLawLatencies:
 	'''
 	Links frequencies and latencies (power law model).
 
-	log(f)= log(A) + alpha log (t-t0) 
+	log(f)= log(A) + alpha log (|t-t0|) 
 	Attributes:
 		A
 		alpha
@@ -45,7 +45,7 @@ class PowerLawLatencies:
 		with torch.no_grad():
 			t_f0=lat.t_from_f(f_0)
 			alpha=lat.alpha.clone()/a
-			A=f_0/torch.pow(t_f0-lat.t0, alpha)
+			A=f_0/torch.pow( torch.abs(t_f0-lat.t0) , alpha)
 		return cls(A, alpha, t0=lat.t0)
 
 	@classmethod
@@ -65,10 +65,11 @@ class PowerLawLatencies:
 		return cls(A, alpha, t0=t0)
 		
 	def f_from_t(self, t):
-		return self.A*torch.pow(t-self.t0, self.alpha)
+		return self.A*torch.pow( torch.abs(t-self.t0) , self.alpha)
 
 	def t_from_f(self, f):
-		return self.t0 + torch.pow(f/self.A, 1/self.alpha)
+		'''assumes that latencies decrease with increasing frequencies'''
+		return self.t0 + (1-2*(self.alpha>0) )*torch.pow(f/self.A, 1/self.alpha)
 
 	def __call__(self, f):
 		return self.t_from_f(f)
@@ -77,22 +78,23 @@ class PowerLawLatencies:
 		return f"PowerLawLatencies obj. {self.name} \n (A={self.A.numpy():.2e}, alpha={self.alpha.numpy():.2e}, t0={self.t0.numpy():.2e})"
 
 
-	def fit_data(self, t_values, f_values, init_with_new_values=True):
+	def fit_data(self, t_values, f_values, init_with_new_values=True, bounds=[-10, -0.2]):
 		'''
 		Sets A, alpha and t0 to fit t_values (np array, in s) and f_values (np array).
-		Levenberg-Maquardt algorithm. 
+		Dog leg method (based on Levenberg-Maquardt algorithm, alpha in bounds ).  
 		Args:
 			init_with_new_values: if True, initialization of algorithm with (0.2, -2, min t - 1 ms) , if false init with values defined by class init
+			bounds: bounds for alpha
 		'''
 
 		def aux_f(t, A, alpha, t0):
-			return A*np.power(t-t0, alpha)
+			return A*np.power( np.abs(t-t0) , alpha)
 
 		def aux_jac(t, A, alpha, t0):
-			temp = np.power(t-t0, alpha)
+			temp = np.power( np.abs(t-t0) , alpha)
 			df_A=temp
-			df_alpha=A*temp*np.log(t-t0)
-			df_t0=-A*alpha*np.power(t-t0, alpha-1)
+			df_alpha=A*temp*np.log( np.abs(t-t0) )
+			df_t0=-A*alpha*np.power( np.abs(t-t0) , alpha-1)*np.sign(t-t0)
 			return np.stack((df_A, df_alpha, df_t0), axis=1)
 
 		if init_with_new_values:
@@ -101,7 +103,7 @@ class PowerLawLatencies:
 			p0=(self.A.numpy(), self.alpha.numpy(), self.t0.numpy())
 
 		params, _= curve_fit(aux_f, t_values, f_values,
-		 	p0= p0, method='lm', jac=aux_jac)
+		 	p0= p0,  method='dogbox', jac=aux_jac, bounds=([-np.inf, bounds[0], -np.inf], [np.inf, bounds[1], np.inf]) )
 
 
 		print(f'fitting data:\n A={params[0]:.3f}, alpha={params[1]:.2f}, t0={params[2]*1e3:.2f} ms')

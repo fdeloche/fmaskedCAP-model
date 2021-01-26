@@ -13,7 +13,7 @@ class SigmoidIOFunc:
 	'''Implements the sigmoid function
 	f(I) = 1/(1+exp(-a(I-mu) ))
 	'''
-	def __init__(self, mu, a, requires_grad=False):
+	def __init__(self, mu, a, max_masking=1, requires_grad=False):
 		'''
 		Args:
 			mu: point where 50% of max masking is reached
@@ -21,16 +21,18 @@ class SigmoidIOFunc:
 		'''
 		self.mu=torch.tensor(mu, requires_grad=requires_grad)
 		self.a=torch.tensor(a, requires_grad=requires_grad)
+		self.mmax=torch.tensor(max_masking, requires_grad=requires_grad)
 
 	def __call__(self, I):
-		return torch.sigmoid(self.a*(I-self.mu))
+		return self.mmax*torch.sigmoid(self.a*(I-self.mu))
 
-	def fit_data(self, I_values, m_values, init_with_new_values=True):
+	def fit_data(self, I_values, m_values, init_with_new_values=True, set_mmax=False):
 		'''
 		Sets mu and a to fit I_values (np array) and m_values (np array, masking amount values, max 100%).
 		Levenberg-Maquardt algorithm. 
 		Args:
-			init_with_new_values: if True, initialization of algorithm with (median value I, 4/(max(I) - min(I)), if false init with self.a, self.mu'''
+			init_with_new_values: if True, initialization of algorithm with (median value I, 4/(max(I) - min(I)), if false init with self.a, self.mu
+			set_mmax: if maximum masking is a free parameter (if False, set to 1)'''
 
 		def aux_jac(x, mu, a):
 			y=a*(x-mu)
@@ -44,15 +46,47 @@ class SigmoidIOFunc:
 			y=a*(x-mu)
 			return 1/(1+np.exp(-y))
 
+
+		#if mmax is not set to 1
+		def aux_jac2(x, mu, a, mmax):
+			y=a*(x-mu)
+			auxf=aux_f(x, mu, a)
+			sig2=auxf**2
+			temp=-sig2*np.exp(-y)
+			df_mu=temp*a
+			df_a=temp*(-(x-mu))
+			df_mmax=auxf
+			return np.stack((mmax*df_mu, mmax*df_a, df_mmax), axis=1)
+
+		def aux_f2(x, mu, a, mmax):
+			y=a*(x-mu)
+			return mmax/(1+np.exp(-y))
+
+
 		if init_with_new_values:
 			p0 = (np.median(I_values), 4/(np.amax(I_values) - np.amin(I_values) ))
 		else:
 			p0= (self.mu.numpy(), self.a.numpy())
-		params, _= curve_fit(aux_f, I_values, m_values,
-		 	p0= p0, method='lm', jac=aux_jac)
-		print(f'fitting data:\n mu={params[0]:.2f}, a={params[1]:.4f}')
+
+		if set_mmax:
+
+			if init_with_new_values:
+				p0=p0+(1,)
+			else:
+				p0=p0+(self.mmax.numpy(),)
+
+		if set_mmax:
+			params, _= curve_fit(aux_f2, I_values, m_values,
+			 	p0= p0, method='lm', jac=aux_jac2)
+			print(f'fitting data:\n mu={params[0]:.2f}, a={params[1]:.4f}, mmax:{params[2]:.3f}')
+		else:
+			params, _= curve_fit(aux_f, I_values, m_values,
+			 	p0= p0, method='lm', jac=aux_jac)
+			print(f'fitting data:\n mu={params[0]:.2f}, a={params[1]:.4f}')
 		self.mu.data=torch.tensor(params[0])
 		self.a.data=torch.tensor(params[1])
+		if set_mmax:
+			self.mmax.data=torch.tensor(params[2])
 
 	@classmethod
 	def from_datapts(cls, I_values, m_values, requires_grad=False):
