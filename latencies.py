@@ -6,22 +6,38 @@ import matplotlib.pyplot as pl
 
 from scipy.optimize import curve_fit
 
+from functools import partial
+
 class PowerLawLatencies:
 	'''
 	Links frequencies and latencies (power law model).
 
-	log(f)= log(A) + alpha log (|t-t0|) 
+	log(f)= log(A) + alpha log ( |t-t0|)
+	|t-t0| (mode:'both') can be replaced by  (t-t0)_+   mode 'right' or (t0-t)_+  mode 'left' 
 	Attributes:
 		A
 		alpha
 		t0
 	'''
 
-	def __init__(self, A=1, alpha=-2, t0=0., requires_grad=False, name=""):
+	def __init__(self, A=1, alpha=-2, t0=0., requires_grad=False, name="", mode='right', dt_min=5e-5):
 		self.A=torch.tensor(A, requires_grad=requires_grad)
 		self.alpha=torch.tensor(alpha, requires_grad=requires_grad)
 		self.t0=torch.tensor(t0, requires_grad=requires_grad)
 		self.name=name
+		self.mode=mode
+
+		if mode =='left':
+			def f(t, dt_min=0):
+				return dt_min+ (t<-dt_min)*(-t-dt_min)
+		elif mode =='right':
+			def f(t, dt_min=0):
+				return dt_min+ (t>dt_min)*(t-dt_min)
+		else:
+			def f(t, dt_min=0):
+				return dt_min+(torch.abs(t)>dt_min)*(torch.abs(t)-dt_min)
+		self._f=partial(f, dt_min=dt_min)
+
 
 	@classmethod
 	def fromPts(cls, t1, f1, t2, f2, t0=0, name=""):
@@ -44,9 +60,9 @@ class PowerLawLatencies:
 		'''
 		with torch.no_grad():
 			t_f0=lat.t_from_f(f_0)
-			alpha=lat.alpha.clone()/a
+			alpha=lat.alpha/a
 			A=f_0/torch.pow( torch.abs(t_f0-lat.t0) , alpha)
-		return cls(A, alpha, t0=lat.t0)
+		return cls(A.numpy(), alpha.numpy(), t0=lat.t0.numpy(), mode=lat.mode)
 
 	@classmethod
 	def shift(cls, lat, t0, reinitShift=False):
@@ -62,14 +78,21 @@ class PowerLawLatencies:
 			alpha=lat.alpha.clone()
 			A=lat.A.clone()
 			t0=(1-reinitShift)*lat.t0+t0
-		return cls(A, alpha, t0=t0)
+		return cls(A.numpy(), alpha.numpy(), t0=t0.numpy(), mode=lat.mode)
+
 		
 	def f_from_t(self, t):
-		return self.A*torch.pow( torch.abs(t-self.t0) , self.alpha)
+		return self.A*torch.pow( self._f(t-self.t0) , self.alpha)
 
 	def t_from_f(self, f):
-		'''assumes that latencies decrease with increasing frequencies'''
-		return self.t0 + (1-2*(self.alpha>0) )*torch.pow(f/self.A, 1/self.alpha)
+		if self.mode=='left':
+			return self.t0 -torch.pow(f/self.A, 1/self.alpha)
+		elif self.mode=='right':
+			return self.t0 +torch.pow(f/self.A, 1/self.alpha)
+		else:
+			#'''assumes that latencies decrease with increasing frequencies'''
+			return self.t0 + (1-2*(self.alpha>0) )*torch.pow(f/self.A, 1/self.alpha)
+		
 
 	def __call__(self, f):
 		return self.t_from_f(f)

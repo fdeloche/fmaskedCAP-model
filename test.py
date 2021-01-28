@@ -88,7 +88,7 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 
 
 
-def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=6, reg_ex=None):
+def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=6, reg_ex=None, ylim_top=None):
 	'''
 	Args:
 		E:ExcitationPatterns object
@@ -119,10 +119,10 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 				ax.plot(E.t*1e3, E.E0_maskable, label='maskable part')
 				ax.legend()
 				ax.twinx()
-				ax.plot(E.t*1e3, maskAmount*100, label='masking Amount')
-				ax.set_ylabel('Masking amount (%)')
+				ax.plot(E.t*1e3, maskAmount, label='masking Amount')
+				ax.set_ylabel('Masking amount')
 				ax.set_xlabel('Time (ms)')
-				ax.set_ylim([0, 100.])
+				ax.set_ylim([0, 1.])
 				axlist2.append(ax)
 				ax= pl.subplot(nb_plots, 2, 2*ind+2) if axlist is None else axlist[2*i+1]
 				
@@ -135,12 +135,17 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 
 			if axlist is None:
 
-				locs =torch.linspace(np.ceil(E.t[0]*1e3), np.floor(E.t[-1]*1e3), 10)
+				locs =torch.arange(np.ceil((E.t[0]+1e-4)*1e3), np.floor((E.t[-1]-1e-4)*1e3)+1)
 				ax2 = ax.twiny()
+				ax2.plot(E.t*1e3, -np.ones_like(E.t)) #HACK
 				ax2.set_xticks(locs)
 				ax2.set_xticklabels([f'{CF/1e3:.1f}' for CF in list(E.latencies.f_from_t(locs*1e-3))])
 				ax2.set_xlabel('Place: CF (kHz)')
 
+				ax2.set_ylim(bottom=0)
+				if ylim_top is not None:
+					ax2.set_ylim(top=ylim_top)
+				
 			axlist2.append(ax)
 			ind+=1
 		pl.tight_layout()

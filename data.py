@@ -7,7 +7,6 @@ from scipy.io import loadmat
 from masking import MaskingConditions 
 
 from functools import partial
-#TODO class instead?
 
 class CAPData:
 	'''
@@ -207,6 +206,19 @@ class CAPData:
 			batch = ([obj.maskerNames[ind] for ind in indices], 
 				MaskingConditions([obj.list_stim_dic[ind] for ind in indices]),  obj.CAP_signals[indices])
 			yield batch
+
+
+	def get_batch_re(self, reg_expr):
+		'''return a batch (maskerNames, maskingConditions, CAPsignals) with maskers corresponding to a regular expression'''
+		inds=[]
+		for ind, maskerName in enumerate(self.maskerNames):
+			if re.match(reg_expr, maskerName):
+				inds.append(ind)
+		obj=self
+		batch = ([obj.maskerNames[ind] for ind in inds], 
+				MaskingConditions([obj.list_stim_dic[ind] for ind in inds]),  obj.CAP_signals[inds])
+		return batch
+
 
 
 

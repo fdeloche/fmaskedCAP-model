@@ -20,7 +20,7 @@ def deconv_grad(EPs, u_fft, CAPs_fft, eps_ridge=0):
 
 
 
-def deconv_newton_step(EPs, u_fft, CAPs_fft, eps=1e-6, eps_ridge=0):
+def deconv_newton_step(EPs, u_fft, CAPs_fft, eps=1e-6, eps_ridge=0, proj_fft=None):
 	'''
 	Note: EPs and u_fft can be  interchanged (u_mat, EPs_fft)
 	Args:
@@ -29,13 +29,17 @@ def deconv_newton_step(EPs, u_fft, CAPs_fft, eps=1e-6, eps_ridge=0):
 		CAPs_fft: matrix of CAP signals (rfft) corresponding to EPs
 		eps: epsilon, in order not to divide by zero
 		eps_ridge: eps of ridge regression min (ax-b)^2 + eps x^2
+		proj_fft: project gradient (in freq domain) with function proj_fft, output expected to be of dim 1
 	Returns:
-		Gradient-like term cooresponding to one step of Newton algorithm, for EPs
+		Gradient-like term corresponding to one step of Newton algorithm, for EPs
 	'''
 	EPs_fft = np.fft.rfft(EPs, axis=1)
 	#dEP_fft=-(CAPs_fft/(u_fft+eps)-EPs_fft)
 	grad_EP=-2*(CAPs_fft-EPs_fft*u_fft)+2*eps_ridge*EPs_fft
 	dEP_fft=grad_EP/(2*u_fft**2+eps+2*eps_ridge)
+	if proj_fft is not None:
+		dEP_fft=proj_fft(dEP_fft)
+		return np.fft.irfft(dEP_fft)
 	return np.fft.irfft(dEP_fft, axis=1)
 
 
