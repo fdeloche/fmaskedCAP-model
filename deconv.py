@@ -10,12 +10,18 @@ def deconv_grad(EPs, u_fft, CAPs_fft, eps_ridge=0):
 		EPs: matrix of excitation patterns (in time domain)
 		u_fft: unitary response (rfft)
 		CAPs_fft: matrix of CAP signals (rfft) corresponding to EPs
-		eps_ridge: eps of ridge regression min (ax-b)^2 + eps x^2
+		eps_ridge: eps of ridge regression min |ax-b|^2 + eps |x|^2
 	Returns:
 		Gradient of deconvolution for EPs
 	'''
 	EPs_fft = np.fft.rfft(EPs, axis=1)
-	grad_fft=-2*(CAPs_fft-EPs_fft*u_fft)*u_fft+2*eps_ridge*EPs_fft
+
+	cross_prod=CAPs_fft*np.conjugate(u_fft)
+
+
+	#grad_fft=-2*(CAPs_fft-EPs_fft*u_fft)*u_fft+2*eps_ridge*EPs_fft   #would work if arrays were real
+	grad_fft=2*(-cross_prod+ (np.abs(u_fft)**2 + eps_ridge)*EPs_fft )
+
 	return np.fft.irfft(grad_fft, axis=1)
 
 
@@ -34,9 +40,9 @@ def deconv_newton_step(EPs, u_fft, CAPs_fft, eps=1e-6, eps_ridge=0, proj_fft=Non
 		Gradient-like term corresponding to one step of Newton algorithm, for EPs
 	'''
 	EPs_fft = np.fft.rfft(EPs, axis=1)
-	#dEP_fft=-(CAPs_fft/(u_fft+eps)-EPs_fft)
-	grad_EP=-2*(CAPs_fft-EPs_fft*u_fft)+2*eps_ridge*EPs_fft
-	dEP_fft=grad_EP/(2*u_fft**2+eps+2*eps_ridge)
+	cross_prod=CAPs_fft*np.conjugate(u_fft)
+	grad_EP=2*(-cross_prod+ (np.abs(u_fft)**2 + eps_ridge)*EPs_fft )
+	dEP_fft=grad_EP/(2*np.abs(u_fft)**2+eps+2*eps_ridge)
 	if proj_fft is not None:
 		dEP_fft=proj_fft(dEP_fft)
 		return np.fft.irfft(dEP_fft)

@@ -214,6 +214,7 @@ class CAPData:
 		for ind, maskerName in enumerate(self.maskerNames):
 			if re.match(reg_expr, maskerName):
 				inds.append(ind)
+		inds=sorted(inds, key= lambda ind: self.maskerNames[ind]) 
 		obj=self
 		batch = ([obj.maskerNames[ind] for ind in inds], 
 				MaskingConditions([obj.list_stim_dic[ind] for ind in inds]),  obj.CAP_signals[inds])

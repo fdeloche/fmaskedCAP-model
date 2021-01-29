@@ -196,7 +196,7 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 			if not reg_ex is None:
 				if not(re.match(reg_ex, maskingConditions.names[i])):
 					continue 
-			ax= pl.subplot(nb_plots//2, 2, ind+1) if axlist is None else axlist[2*i]
+			ax= pl.subplot((nb_plots+1)//2, 2, ind+1) if axlist is None else axlist[2*i]
 			ax.set_title(maskingConditions.names[i], fontsize=10)
 			p=ax.plot(E.t*1e3, exc, linestyle='--', linewidth=1.5)
 			ax2=ax.twinx()  if axlist is None else axlist[2*i+1]

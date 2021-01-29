@@ -26,13 +26,18 @@ class SigmoidIOFunc:
 	def __call__(self, I):
 		return self.mmax*torch.sigmoid(self.a*(I-self.mu))
 
-	def fit_data(self, I_values, m_values, init_with_new_values=True, set_mmax=False):
+	def fit_data(self, I_values, m_values, init_with_new_values=True, set_mmax=False, constrained_at_Iref=False, Iref=-20):
 		'''
 		Sets mu and a to fit I_values (np array) and m_values (np array, masking amount values, max 100%).
 		Levenberg-Maquardt algorithm. 
 		Args:
 			init_with_new_values: if True, initialization of algorithm with (median value I, 4/(max(I) - min(I)), if false init with self.a, self.mu
-			set_mmax: if maximum masking is a free parameter (if False, set to 1)'''
+			set_mmax: if maximum masking is a free parameter (if False, set to 1)
+			constrained_at_Iref: if True, constrains the function to equal 1 at Iref. (if True, set_mmax must be False)
+			Iref: Iref in dB in the case of 'constrained_at_Iref'
+			'''
+
+		Iref=np.array([Iref])
 
 		def aux_jac(x, mu, a):
 			y=a*(x-mu)
@@ -63,6 +68,16 @@ class SigmoidIOFunc:
 			return mmax/(1+np.exp(-y))
 
 
+		#if constrained_at_Iref
+
+		def aux_jac3(x, mu, a):
+			sigm_ref=aux_f(Iref, mu, a)
+			return 1/sigm_ref*aux_jac(x, mu, a) - aux_f(x, mu, a)[:, None]/sigm_ref**2*aux_jac(Iref, mu, a)
+
+		def aux_f3(x, mu, a):
+			return aux_f(x, mu, a)/aux_f(Iref, mu, a)
+
+
 		if init_with_new_values:
 			p0 = (np.median(I_values), 4/(np.amax(I_values) - np.amin(I_values) ))
 		else:
@@ -75,7 +90,13 @@ class SigmoidIOFunc:
 			else:
 				p0=p0+(self.mmax.numpy(),)
 
-		if set_mmax:
+		if constrained_at_Iref:
+			params, _= curve_fit(aux_f3, I_values, m_values,
+			 	p0= p0, method='lm', jac=aux_jac3)
+			mmax=1/aux_f(Iref[0], params[0], params[1])
+			self.mmax.data=torch.tensor(mmax)
+			print(f'fitting data (constraint =1 at I={Iref[0]:.1f}dB) :\n mu={params[0]:.2f}, a={params[1]:.4f}, mmax:{mmax:.3f}')
+		elif set_mmax:
 			params, _= curve_fit(aux_f2, I_values, m_values,
 			 	p0= p0, method='lm', jac=aux_jac2)
 			print(f'fitting data:\n mu={params[0]:.2f}, a={params[1]:.4f}, mmax:{params[2]:.3f}')
