@@ -26,10 +26,10 @@ class SigmoidIOFunc:
 	def __call__(self, I):
 		return self.mmax*torch.sigmoid(self.a*(I-self.mu))
 
-	def fit_data(self, I_values, m_values, init_with_new_values=True, set_mmax=False, constrained_at_Iref=False, Iref=-20):
+	def fit_data(self, I_values, m_values, init_with_new_values=True, set_mmax=False, constrained_at_Iref=False, Iref=-20, method='lm'):
 		'''
 		Sets mu and a to fit I_values (np array) and m_values (np array, masking amount values, max 100%).
-		Levenberg-Maquardt algorithm. 
+		Levenberg-Maquardt algorithm or dog leg method (max mu:200, see in code).  [method: 'lm' or 'dogbox'] 
 		Args:
 			init_with_new_values: if True, initialization of algorithm with (median value I, 4/(max(I) - min(I)), if false init with self.a, self.mu
 			set_mmax: if maximum masking is a free parameter (if False, set to 1)
@@ -92,7 +92,7 @@ class SigmoidIOFunc:
 
 		if constrained_at_Iref:
 			params, _= curve_fit(aux_f3, I_values, m_values,
-			 	p0= p0, method='lm', jac=aux_jac3)
+			 	p0= p0, method=method, jac=aux_jac3, bounds=([-100, 0], [200, np.infty]))
 			mmax=1/aux_f(Iref[0], params[0], params[1])
 			self.mmax.data=torch.tensor(mmax)
 			print(f'fitting data (constraint =1 at I={Iref[0]:.1f}dB) :\n mu={params[0]:.2f}, a={params[1]:.4f}, mmax:{mmax:.3f}')
