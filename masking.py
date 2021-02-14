@@ -91,8 +91,12 @@ class SigmoidIOFunc:
 				p0=p0+(self.mmax.numpy(),)
 
 		if constrained_at_Iref:
-			params, _= curve_fit(aux_f3, I_values, m_values,
-			 	p0= p0, method=method, jac=aux_jac3, bounds=([-100, 0], [200, np.infty]))
+			if method=='dogbox':
+				params, _= curve_fit(aux_f3, I_values, m_values,
+				 	p0= p0, method=method, jac=aux_jac3, bounds=([-100, 0], [200, np.infty]))
+			else:
+				params, _= curve_fit(aux_f3, I_values, m_values,
+				 	p0= p0, method=method, jac=aux_jac3)
 			mmax=1/aux_f(Iref[0], params[0], params[1])
 			self.mmax.data=torch.tensor(mmax)
 			print(f'fitting data (constraint =1 at I={Iref[0]:.1f}dB) :\n mu={params[0]:.2f}, a={params[1]:.4f}, mmax:{mmax:.3f}')
@@ -284,6 +288,13 @@ class MaskingConditions:
 	def add(self, stim_dic_list):
 		add_conditions(stim_dic_list)
 
+	def pad_maskers(self, f_thr=11000, f_max=1e5):
+		'''hack function that sets f_high frequencies above f_thr at f_max'''
+		for i in range(self.n_bands):
+			for j in range(len(self._f_high_list[i])):
+				if self._f_high_list[i][j]>f_thr:
+					self._f_high_list[i][j]=f_max
+
 
 	def add_json_strings(self,list_strings):
 		stim_dic_list=[]
@@ -352,12 +363,12 @@ class MaskingConditions:
 			for cond in range(self.n_conditions):
 				st+=f'\ncond {cond} {self.names[cond]}\n  ['
 				for k in range(self.n_bands):
-					amp=self._amp_list[k][cond]
+					amp=self.amp0*self._amp_list[k][cond]
 					f_low=self._f_low_list[k][cond]
 					f_high=self._f_high_list[k][cond]
 					if k!=0:
 						st+='; '
-					st+=f'({amp}, {f_low} Hz, {f_high} Hz)'
+					st+=f'({amp:.4f}, {f_low} Hz, {f_high} Hz)'
 				st+=f']'
 		return st
 
