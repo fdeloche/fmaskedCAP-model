@@ -13,18 +13,29 @@ class SigmoidIOFunc:
 	'''Implements the sigmoid function
 	f(I) = 1/(1+exp(-a(I-mu) ))
 	'''
-	def __init__(self, mu, a, max_masking=1, requires_grad=False):
+	def __init__(self, mu, a, max_masking=1., requires_grad=False, constrained_at_Iref=False, Iref=-20):
 		'''
 		Args:
 			mu: point where 50% of max masking is reached
 			a: shape parameter, 2x slope at I0 (considering that max masking is 100%)
+			constrained_at_Iref: if True, constrains the function to equal 1 at Iref.  (in this case, mmax is superfluous)
+			Iref: Iref in dB in the case of 'constrained_at_Iref
 		'''
+
 		self.mu=torch.tensor(mu, requires_grad=requires_grad)
 		self.a=torch.tensor(a, requires_grad=requires_grad)
+
+		self.constrained_at_Iref=constrained_at_Iref
+		self._Iref=Iref
+		
 		self.mmax=torch.tensor(max_masking, requires_grad=requires_grad)
 
+
 	def __call__(self, I):
-		return self.mmax*torch.sigmoid(self.a*(I-self.mu))
+		if self.constrained_at_Iref:
+			return torch.sigmoid(self.a*(I-self.mu))/torch.sigmoid(self.a*(self._Iref-self.mu))
+		else:
+			return self.mmax*torch.sigmoid(self.a*(I-self.mu))
 
 	def fit_data(self, I_values, m_values, init_with_new_values=True, set_mmax=False, constrained_at_Iref=False, Iref=-20, method='lm'):
 		'''

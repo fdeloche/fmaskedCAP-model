@@ -119,7 +119,7 @@ class ExcitationPatterns:
 	def get_tensor(self, eps=1e-6):
 		'''
 		Returns:
-			a tensor of shape (n_conditions, n_freq) representing the excitation patterns
+			a tensor of shape (n_conditions, N) representing the excitation patterns
 		'''
 		maskingAmounts, excitation_patterns = self.get_tensors(eps=eps)
 		return excitation_patterns
