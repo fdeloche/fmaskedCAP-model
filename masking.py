@@ -158,28 +158,46 @@ class WeibullCDF_IOFunc:
 	'''Implements the Weibull CDF function
 	f(I) = 1-exp(- ((I-I0)/scale)^k )
 	'''
-	def __init__(self, I0=0, scale=40, k=10, requires_grad=False):
+	def __init__(self, I0=0, scale=40, k=10, requires_grad=False, mmax=1, constrained_at_Iref=False, Iref=-20):
 		'''
 		Args:
 			theta: localization parameter (max intensity associated with 0% masking)
 			scale: scale parameter (63% masking intensity reached at I0+scale)
 			k: shape parameter
+			mmax: maximum masking
+			constrained_at_Iref: if True, constrains the function to equal 1 at Iref.  (in this case, mmax is superfluous)
+			Iref: Iref in dB in the case of 'constrained_at_Iref
+		
 		'''
 		self.I0=torch.tensor(I0, requires_grad=requires_grad)
 		self.scale=torch.tensor(scale, requires_grad=requires_grad)	
 		self.k=torch.tensor(k, requires_grad=requires_grad)
 
+		self.constrained_at_Iref=constrained_at_Iref
+		self._Iref=Iref
+		
+		self.mmax=torch.tensor(mmax, requires_grad=requires_grad)
+
+
+
 	def __call__(self, I):
 		Delta_I=torch.maximum((I-self.I0), torch.tensor(0.))
-		return 1-torch.exp( -(Delta_I/self.scale)**self.k)
+		if self.constrained_at_Iref:
+			Delta_I_ref=torch.maximum((self._Iref-self.I0), torch.tensor(0.))
+			return (1-torch.exp( -(Delta_I/self.scale)**self.k))/(1-torch.exp( -(Delta_I_ref/self.scale)**self.k))
+		else:
+			return self.mmax*(1-torch.exp( -(Delta_I/self.scale)**self.k))
 
 
-	def fit_data(self, I_values, m_values, init_with_new_values=True):
+	def fit_data(self, I_values, m_values, init_with_new_values=True,  constrained_at_Iref=False, Iref=-20):
 		'''
 		Sets I0, scale and k to fit I_values (np array) and m_values (np array, masking amount values, max 100%).
 		Dog leg method (based on Levenberg-Maquardt algorithm, max k=20). 
+		Note: fitting mmax is not implemented (but it is automatically set if constrained_at_Iref is True)
 		Args:
 			init_with_new_values: if True, initialization of algorithm with (min I, median I - I0, 2) , if false init with values defined by class init
+			constrained_at_Iref: if True, constrains the function to equal 1 at Iref.
+			Iref: Iref in dB in the case of 'constrained_at_Iref'
 		'''
 
 		def aux_f(I, I0, scale, k):
@@ -197,15 +215,55 @@ class WeibullCDF_IOFunc:
 			return np.stack((df_I0, df_sc, df_k), axis=1)
 
 
+		#if constrained at Iref
+
+		def aux_f3(I, I0, scale, k):
+
+			Delta_I=np.maximum((I-I0), 0 )
+
+			Delta_Iref=np.maximum((Iref-I0), 0 )
+			return (1-np.exp( -(Delta_I/scale)**k))/(1-np.exp( -(Delta_Iref/scale)**k))
+
+		def aux_jac3(I, I0, scale, k):
+			Delta_I=np.maximum((I-I0), 0 )
+
+			Delta_Iref=np.maximum((Iref-I0), 0 )
+
+			xx=Delta_I/scale
+			xx0=Delta_Iref/scale
+			temp=np.exp( -xx**k)
+			temp0=np.exp( -xx0**k)
+			templ=np.log(xx+1e-6)
+			templ0=np.log(xx0+1e-6)
+
+			den=(1-temp0)**2
+			df_sc=(-temp*xx**k + temp0*xx0**k + temp*temp0 * (xx**k-xx0**k))*k*1/scale*1/den
+
+			df_k= (temp*xx**k*templ-temp0*xx0**k*templ0-temp*temp0*(templ*xx**k-templ0*xx0**k) )*1/den
+
+			df_I0=(-temp*xx**(k-1)+temp0*xx0**(k-1)+temp*temp0*(xx**(k-1)-xx0**(k-1)))*k*1/scale*1/den
+			
+			return np.stack((df_I0, df_sc, df_k), axis=1)
+
+
+
+
 		if init_with_new_values:
 			p0 = (np.amin(I_values), np.median(I_values) - np.amin(I_values) , 2)
 		else:
 			p0= (self.I0.numpy(), self.scale.numpy(), self.k.numpy())
 
-		params, _= curve_fit(aux_f, I_values, m_values,
-		 	p0= p0, method='dogbox', jac=aux_jac, ftol=0.1, 
-		 	bounds=([-np.inf, -np.inf, 1], [np.inf, np.inf, 20]))
 
+
+		if constrained_at_Iref:
+			params, _= curve_fit(aux_f3, I_values, m_values,
+			 	p0= p0, method='dogbox', jac=aux_jac3, ftol=0.1, 
+			 	bounds=([-np.inf, -np.inf, 1], [np.inf, np.inf, 20]))
+			self.mmax.data=1/torch.tensor( aux_f(Iref, params[0], params[1], params[2] ))
+		else:
+			params, _= curve_fit(aux_f, I_values, m_values,
+			 	p0= p0, method='dogbox', jac=aux_jac, ftol=0.1, 
+			 	bounds=([-np.inf, -np.inf, 1], [np.inf, np.inf, 20]))
 
 		print(f'fitting data:\n I0={params[0]:.2f}, scale={params[1]:.2f}, k={params[2]:.2f}')
 		self.I0.data=torch.tensor(params[0])
