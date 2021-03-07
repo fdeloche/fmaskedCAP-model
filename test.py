@@ -97,6 +97,9 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 	'''
 	axlist2=[]
 	if E.masked:
+		if isinstance(E.latencies, SingleLatency):
+			return plotExcitationPatternsSingleLat(E, plot_raw_excitation=plot_raw_excitation, axlist=axlist, max_plots=max_plots, 
+				reg_ex=reg_ex, ylim_top=ylim_top)
 		maskAmounts, excs = E.get_tensors() 
 		maskingConditions = E.maskingConditions
 		if plot_raw_excitation:
@@ -170,6 +173,67 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 	return axlist2
 
 
+
+
+
+def plotExcitationPatternsSingleLat(E, plot_raw_excitation=False, axlist=None, max_plots=6, reg_ex=None, ylim_top=None):
+	'''
+	Aux function for excitations with a single latency (raw excitation defined in frequency)
+	Args:
+		E:ExcitationPatterns object
+		plot_raw_excitation: if True plot also raw excitation/amount of masking
+		axlist:list of axes for the plots. If none creates a list of axes
+	'''
+	axlist2=[]
+	assert (E.masked and isinstance(E.latencies, SingleLatency))
+	maskAmounts, excs = E.get_tensors() 
+	maskingConditions = E.maskingConditions
+	if plot_raw_excitation:
+		pl.suptitle('E_0, M  /  E_0*(1-M)')
+	else:
+		pl.suptitle('Excitation patterns: E_0*(1-M)')
+
+	nb_plots=min(maskingConditions.n_conditions, max_plots)
+	ind=0
+	f=E.latencies.get_f_linspace( len(E.E0_maskable))
+	for i, maskAmount, exc in zip(range(maskingConditions.n_conditions), maskAmounts, excs):
+		if ind==nb_plots:
+			break
+		if not reg_ex is None:
+			if not(re.match(reg_ex, maskingConditions.names[i])):
+				continue 
+		if plot_raw_excitation:
+			ax= pl.subplot(nb_plots, 2, 2*ind+1) if axlist is None else axlist[2*i]
+		
+			ax.plot(f, E.E0_nonmaskable, label='non maskable part')
+			ax.plot(f, E.E0_maskable, label='maskable part')
+			ax.legend()
+			ax.twinx()
+			ax.plot(f, maskAmount, label='masking Amount')
+			ax.set_ylabel('Masking amount')
+			ax.set_xlabel('Frequency (Hz)')
+			ax.set_ylim([0, 1.])
+			axlist2.append(ax)
+			ax= pl.subplot(nb_plots, 2, 2*ind+2) if axlist is None else axlist[2*i+1]
+			
+		else:	
+			ax= pl.subplot(nb_plots, 2, ind+1) if axlist is None else axlist[i]
+
+		ax.set_title(maskingConditions.names[i], fontsize=10)
+		ax.plot(f, exc)
+		ax.set_xlabel('Frequency (Hz)')
+
+		if axlist is None:
+
+			ax.set_ylim(bottom=0)
+			if ylim_top is not None:
+				ax.set_ylim(top=ylim_top)
+			
+		axlist2.append(ax)
+		ind+=1
+	pl.tight_layout()
+
+	return axlist2
 
 def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=8, ylim=None, reg_ex=None, title='Simulated CAPs (+ excitation patterns)'):
 	'''

@@ -135,13 +135,41 @@ class PowerLawLatencies:
 		self.alpha.data=torch.tensor(params[1])
 		self.t0.data=torch.tensor(params[2])
 
+class SingleLatency:
+	'''
+	Workaround class to model synchronous fibers
+	Attributes:
+		t0: time of the excitation, in s
+		f_min: min frequency to include in model
+		f_max: max frequency to include in model
+	'''
 
+	def __init__(self, t0, f_min=200, f_max=12000):
+		self.t0=t0
+		self.f_min=f_min
+		self.f_max=f_max
+
+	def get_ind(self, t_arr):
+		'''returns ind associated with the closest time to t0. t_arr supposed to be monotonic.'''
+		ind=0
+		while( self.t0-t_arr[i] > 0):
+			ind+=1
+		if ind==0:
+			return ind
+		ind = ind-1 if np.abs(self.t0-t_arr[i-1])<np.abs(self.t0-t_arr[i]) else ind
+		return ind
+
+	def get_f_linspace(self, num):
+		return torch.linspace(self.f_min, self.f_max, num)
 
 
 Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")
 
 
 def plotLatencies(lat):
+	if isinstance(lat, SingleLatency):
+		print(f'single latency (t={lat.t0:.2f} ms), no plot')
+		return
 	t0=lat.t0
 
 	tmin=lat.t_from_f(torch.tensor(10e3))

@@ -6,6 +6,8 @@ import scipy.signal as sg
 
 import functools
 
+from latencies import *
+
 #from scipy.stats import gamma
 
 def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, amp_list, f_low_list, f_high_list, filter_model='gaussian'):
@@ -51,6 +53,7 @@ class ExcitationPatterns:
 
 	def __init__(self, t, E0_maskable, E0_nonmaskable=None, requires_grad=False):
 		'''
+		Note: excitation patterns are defined in time (same size as t) unless the latency model is SingleLatencies, then defined in frequency
 		Args:
 			t: time vector (torch  or np array, converted to torch tensor)
 			E0_maskable: raw excitation pattern (numpy array or torch tensor), maskable part
@@ -107,12 +110,21 @@ class ExcitationPatterns:
 		'''
 		
 		if self.masked:
-			f=self.latencies.f_from_t(self.t)
+			if isinstance(self.latencies, SingleLatency):
+				f=self.latencies.get_f_linspace(len(self.E0_maskable))
+			else:
+				f=self.latencies.f_from_t(self.t)
 			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
 		
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
 			maskingAmount=self.maskingIOFunc(I)
-			return maskingAmount, torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
+			res= torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
+			if isinstance(self.latencies, SingleLatency):
+				ind=self.latencies.get_ind(self.t)
+				res2=torch.zeros( (res.shape[0], len(self.t)) )
+				res2[:, ind]=torch.sum(res, axis=1)
+				res=res2
+			return maskingAmount, res
 		else:
 			return None, torch.unsqueeze(self.E0_nonmaskable+self.E0_maskable, 0)  #init with raw excitation pattern
 		
