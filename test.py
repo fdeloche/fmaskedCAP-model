@@ -220,8 +220,8 @@ def plotExcitationPatternsSingleLat(E, plot_raw_excitation=False, axlist=None, m
 			ax= pl.subplot(nb_plots, 2, ind+1) if axlist is None else axlist[i]
 
 		ax.set_title(maskingConditions.names[i], fontsize=10)
-		ax.plot(f, exc)
-		ax.set_xlabel('Frequency (Hz)')
+		ax.plot(E.t*1e3, exc)
+		ax.set_xlabel('Time (ms)')
 
 		if axlist is None:
 

@@ -152,11 +152,11 @@ class SingleLatency:
 	def get_ind(self, t_arr):
 		'''returns ind associated with the closest time to t0. t_arr supposed to be monotonic.'''
 		ind=0
-		while( self.t0-t_arr[i] > 0):
+		while( self.t0-t_arr[ind] > 0):
 			ind+=1
 		if ind==0:
 			return ind
-		ind = ind-1 if np.abs(self.t0-t_arr[i-1])<np.abs(self.t0-t_arr[i]) else ind
+		ind = ind-1 if np.abs(self.t0-t_arr[ind-1])<np.abs(self.t0-t_arr[ind]) else ind
 		return ind
 
 	def get_f_linspace(self, num):
