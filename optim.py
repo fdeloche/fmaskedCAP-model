@@ -1,17 +1,22 @@
 import numpy as np 
 import torch 
+import torch.fft
+
 import matplotlib.pyplot as pl 
 
 from excitation import *
 from latencies import *
 
+
+'''
+#not needed anymore
 def complex_multiplication(t1, t2):
-	'''complex multiplication of a 2 D array by a (unsqueezed) 1D array (playing the role of the unitary response) '''
+	#complex multiplication of a 2 D array by a (unsqueezed) 1D array (playing the role of the unitary response)
 	real1, imag1 = t1[:, :, 0], t1[:, :, 1]
 	real2, imag2 = t2[:, 0], t2[:, 1]
 	return torch.stack([real1 * real2 - imag1 * imag2, real1 * imag2 + imag1 * real2], dim = -1)
 
-
+'''
 
 
 def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0=1, E0_t_min=0, E0_t_max=np.infty,
@@ -40,22 +45,22 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		assert fc_ref_Q10>0, "fc_ref_Q10 must be set when plot_Q10 is True"
 	excs = E.get_tensor() 
 
-	excs_fft = torch.rfft(excs, 1)
-	ur_fft= torch.rfft(torch.tensor(ur), 1)
-	CAPs_fft=complex_multiplication(excs_fft, ur_fft)
-	CAPs = torch.irfft(CAPs_fft, 1, signal_sizes=(excs.shape[1], ))
+	excs_fft = torch.fft.rfft(excs)
+	ur_fft= torch.fft.rfft(torch.tensor(ur))
+	#CAPs_fft=complex_multiplication(excs_fft, ur_fft)
+	CAPs_fft=excs_fft*ur_fft
+	CAPs = torch.fft.irfft(CAPs_fft, n=excs.shape[1])
 
 	if E.E0_maskable in alpha_dic:
 		#projection of gradient on first dimensions (Fourier basis)
 		n_dim=n_dim_E0
-		filter_fft=torch.zeros_like(torch.rfft(E.E0_maskable, 1))
+		filter_fft=torch.zeros_like(torch.fft.rfft(E.E0_maskable))
 		filter_fft[0:(n_dim*k_mode_E0):k_mode_E0]=1
-		print(filter_fft)
 
 		def proj_fft2(grad):
-			grad_fft=torch.rfft(grad, 1)
+			grad_fft=torch.fft.rfft(grad)
 			grad_fft*=filter_fft
-			return torch.irfft(grad_fft, 1, signal_sizes=grad.shape)
+			return torch.fft.irfft(grad_fft, n=len(grad) )
 
 		if not(isinstance(E.latencies, SingleLatency)):
 			filter_t=(E.t<E0_t_max)*(E.t>E0_t_min)
@@ -69,10 +74,12 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		
 		excs = E.get_tensor() 
 
-		excs_fft = torch.rfft(excs, 1)
-		#ur_fft= torch.rfft(torch.tensor(ur), 1)
-		CAPs_fft=complex_multiplication(excs_fft, ur_fft)
-		CAPs = torch.irfft(CAPs_fft, 1, signal_sizes=(excs.shape[1], ))
+		excs_fft = torch.fft.rfft(excs)
+		#ur_fft= torch.fft.rfft(torch.tensor(ur))
+		#CAPs_fft=complex_multiplication(excs_fft, ur_fft)
+		CAPs_fft=excs_fft*ur_fft
+		
+		CAPs = torch.fft.irfft(CAPs_fft, n=excs.shape[1])
 
 		err=torch.sum( (CAPs- torch.tensor(signals_proc) )**2 )
 		
