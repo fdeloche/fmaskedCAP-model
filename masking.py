@@ -364,6 +364,13 @@ class MaskingConditions:
 				if self._f_high_list[i][j]>f_thr:
 					self._f_high_list[i][j]=f_max
 
+	def pad_maskers2(self, f_thr=300, f_min=0):
+		'''hack function that sets f_low frequencies below f_thr at f_min'''
+		for i in range(self.n_bands):
+			for j in range(len(self._f_low_list[i])):
+				if self._f_low_list[i][j]<f_thr:
+					self._f_low_list[i][j]=f_min
+
 
 	def add_json_strings(self,list_strings):
 		stim_dic_list=[]
