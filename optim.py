@@ -25,7 +25,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7,
 	NB: the excitations and convolution are computed at every step. ur is fixed.
 	Args:
 		E: excitation pattern object
-		alpha_dic: dictionnary tensor (to be updated by gradient descent, requires_grad must be True) -> gradient descent step 
+		alpha_dic: dictionnary of tensors (to be updated by gradient descent, requires_grad must be True) mapped to gradient descent step 
 		signals_proc: real CAP signals, must be of the size of excitations
 		nb_steps: number of gradient descent steps
 		sum_grad_E0: if True and E.E0_maskable in alpha_dic, apply gradient descent only on the mean amplitude (by summing gradients)
@@ -102,6 +102,20 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7,
 				if i==nb_steps:
 					#ax1.legend()
 					pass
+			else:
+				if (i-1)%step_plots==0:
+					ax1.plot( E.t*1e3 , E.E0_maskable.detach().numpy(), label=f'step {i}')
+					
+				if i==1:
+
+					ax1.set_title('Raw excitation pattern')
+					ax1.set_xlabel('Time (ms)')
+					ax1.set_ylabel('raw excitation')
+				
+				if i==nb_steps:
+					#ax1.legend()
+					pass
+
 
 		if plot_masking_I0_graph:
 			ind_plot+=1

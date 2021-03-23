@@ -166,7 +166,14 @@ class SingleLatency:
 Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")
 
 
-def plotLatencies(lat):
+def plotLatencies(lat, ax=None):
+	'''
+	Args:
+		lat: latencies object
+		axes: axe where the figure is plotted, default None
+	Return:
+		ax
+	'''
 	if isinstance(lat, SingleLatency):
 		print(f'single latency (t={lat.t0:.2f} ms), no plot')
 		return
@@ -177,20 +184,22 @@ def plotLatencies(lat):
 	t=torch.linspace(tmin-t0, 10e-3-t0, 200) #t - t0
 	f=lat.f_from_t(t+t0)
 
-	pl.figure()
-	pl.title(f'Latencies {lat.name}')
-	pl.plot(t*1e3, f)
-	pl.xlabel('t-t0 (ms)')
-	pl.ylabel('f (Hz)')
-	pl.xscale('log')
-	pl.yscale('log')
-	pl.show()
+	# ax1 = pl.figure() if ax is None else pl.figure(ax[1].number)
 
-	pl.figure()
-	pl.title(f'Latencies {lat.name}')
-	pl.plot((t0+t)*1e3, f*1e-3)
+	# pl.title(f'Latencies {lat.name}')
+	# pl.plot(t*1e3, f, label={lat.name})
+	# pl.xlabel('t-t0 (ms)')
+	# pl.ylabel('f (Hz)')
+	# pl.xscale('log')
+	# pl.yscale('log')
+
+
+	ax = pl.figure() if ax is None else pl.figure(ax.number)
+	pl.title(f'Latencies')
+	pl.plot((t0+t)*1e3, f*1e-3, label= lat.name)
 	pl.xlabel('t (ms)')
 	pl.xlim([0, 10])
 	pl.ylabel('f (kHz)')
-	pl.show()
+	pl.legend()
+	return ax
 
