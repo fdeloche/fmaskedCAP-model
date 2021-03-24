@@ -97,7 +97,7 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 	'''
 	axlist2=[]
 	if E.masked:
-		if isinstance(E.latencies, SingleLatency):
+		if isinstance(E.latencies, SingleLatency) or E.use_bincount:
 			return plotExcitationPatternsSingleLat(E, plot_raw_excitation=plot_raw_excitation, axlist=axlist, max_plots=max_plots, 
 				reg_ex=reg_ex, ylim_top=ylim_top)
 		maskAmounts, excs = E.get_tensors() 
@@ -178,14 +178,14 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 
 def plotExcitationPatternsSingleLat(E, plot_raw_excitation=False, axlist=None, max_plots=6, reg_ex=None, ylim_top=None):
 	'''
-	Aux function for excitations with a single latency (raw excitation defined in frequency)
+	Aux function for excitations with a single latency (raw excitation defined in frequency) or computed with bincount
 	Args:
 		E:ExcitationPatterns object
 		plot_raw_excitation: if True plot also raw excitation/amount of masking
 		axlist:list of axes for the plots. If none creates a list of axes
 	'''
 	axlist2=[]
-	assert (E.masked and isinstance(E.latencies, SingleLatency))
+	assert (E.masked and (isinstance(E.latencies, SingleLatency) or E.use_bincount))
 	maskAmounts, excs = E.get_tensors() 
 	maskingConditions = E.maskingConditions
 	if plot_raw_excitation:
@@ -195,7 +195,10 @@ def plotExcitationPatternsSingleLat(E, plot_raw_excitation=False, axlist=None, m
 
 	nb_plots=min(maskingConditions.n_conditions, max_plots)
 	ind=0
-	f=E.latencies.get_f_linspace( len(E.E0_maskable))
+	if isinstance(E.latencies, SingleLatency):
+		f=E.latencies.get_f_linspace( len(E.E0_maskable))
+	else:
+		f=E.bincount_f
 	for i, maskAmount, exc in zip(range(maskingConditions.n_conditions), maskAmounts, excs):
 		if ind==nb_plots:
 			break

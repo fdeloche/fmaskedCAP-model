@@ -51,15 +51,19 @@ def get_sq_masking_excitation_patterns_maskCond(f, bw10Func, maskCond, filter_mo
 
 class ExcitationPatterns:
 
-	def __init__(self, t, E0_maskable, E0_nonmaskable=None, requires_grad=False):
+	def __init__(self, t, E0_maskable, E0_nonmaskable=None, requires_grad=False, 
+		use_bincount=False, bincount_fmin=200, bincount_fmax=12000):
 		'''
-		Note: excitation patterns are defined in time (same size as t) unless the latency model is SingleLatencies, then defined in frequency
+		Note: excitation patterns are defined in time (same size as t) unless the latency model is SingleLatencies or the bincount mode is enabled, then defined in frequency
 		Args:
 			t: time vector (torch  or np array, converted to torch tensor)
 			E0_maskable: raw excitation pattern (numpy array or torch tensor), maskable part
 
 			E0_nonmaskable (optional): raw excitation pattern (numpy array or torch tensor), fixed part
 			requires_grad: if E0 tensors requires gradient mdFunc
+			use_bincount: if True, computes the excitation patterns with torch.bincount, thus releasing the 1 bin <-> one frequency constraint
+			bincount_fmin: if use_bincount True, considers frequencies in [fmin, fmax]
+			bincount_fax: if use_bincount True, considers frequencies in [fmin, fmax]
 		'''
 		if not(torch.is_tensor(t)):
 			t=torch.tensor(t)
@@ -76,6 +80,9 @@ class ExcitationPatterns:
 			else:
 				self.E0_nonmaskable=torch.tensor(E0_nonmaskable, requires_grad=requires_grad)
 		self.masked=False
+		self.use_bincount=use_bincount
+		self.bincount_fmin=bincount_fmin
+		self.bincount_fmax=bincount_fmax
 
 	def apply_Tukey_window(self, alpha, on_maskable=True, on_nonmaskable=True):
 		'''apply Tukey window on the raw excitation
@@ -102,6 +109,23 @@ class ExcitationPatterns:
 		self.maskingIOFunc=maskingIOFunc
 		self.filter_model=filter_model
 
+		if self.use_bincount: #count once for all the mapping bins <-> freqs to avoid the computational burden
+			#Note: assumes a monotonic (decreasing) function of latencies with frequencies
+			f=torch.linspace(self.bincount_fmin, self.bincount_fmax, len(self.E0_maskable))
+			lat=self.latencies(f)
+			mapping=torch.zeros_like(lat, dtype=torch.int)
+			ind=len(self.t)-1
+			ind_lat=0
+			while ind>=0 and ind_lat<len(lat):
+				while ind_lat<len(lat) and lat[ind_lat]>self.t[ind]:
+					mapping[ind_lat]=ind
+					ind_lat+=1
+				ind-=1
+			self.bincount_f=f
+			self.bincount_map=mapping		
+
+
+
 
 	def get_tensors(self, eps=1e-6):
 		'''
@@ -112,6 +136,8 @@ class ExcitationPatterns:
 		if self.masked:
 			if isinstance(self.latencies, SingleLatency):
 				f=self.latencies.get_f_linspace(len(self.E0_maskable))
+			elif self.use_bincount:
+				f=self.bincount_f
 			else:
 				f=self.latencies.f_from_t(self.t)
 			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
@@ -123,6 +149,17 @@ class ExcitationPatterns:
 				ind=self.latencies.get_ind(self.t)
 				res2=torch.zeros( (res.shape[0], len(self.t)) )
 				res2[:, ind]=torch.sum(res, axis=1)
+				res=res2
+			elif self.use_bincount:
+				res2=torch.zeros( (res.shape[0], len(self.t)) )
+
+				for j in range(len(f)):
+					col_sel=torch.zeros_like( self.t )
+					col_sel[self.bincount_map[j]]=1
+					res2+= torch.outer(res[:, j], col_sel)
+				
+					#tens_list.append(torch.bincount(self.bincount_map, weights=res[i], minlength=len(self.t) )) #grad not implemented!
+				#res=torch.stack(tens_list)
 				res=res2
 			return maskingAmount, res
 		else:
