@@ -144,6 +144,7 @@ class ExcitationPatterns:
 		
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
 			maskingAmount=self.maskingIOFunc(I)
+
 			res= torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
 			if isinstance(self.latencies, SingleLatency):
 				ind=self.latencies.get_ind(self.t)
@@ -289,6 +290,7 @@ class ExcitationPatterns:
 
 	@classmethod
 	def copyRaw(cls, E, requires_grad=False):
-		'''creates a raw excitation pattern by making a copy from another ExcitationPatterns object'''
-		return cls(E.t, E.E0_maskable, E0_nonmaskable=E.E0_nonmaskable, requires_grad=requires_grad)
+		'''creates a raw excitation pattern by making a copy from another ExcitationPatterns object. keeps the use_bincount properties'''
+		return cls(E.t, E.E0_maskable, E0_nonmaskable=E.E0_nonmaskable, requires_grad=requires_grad,
+			use_bincount=E.use_bincount, bincount_fmin=E.bincount_fmin, bincount_fmax=E.bincount_fmax)
 

@@ -36,20 +36,14 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		sum_grad_E0: if True and E.E0_maskable in alpha_dic, apply gradient descent only on the mean amplitude (by summing gradients)
 		n_dim_E0: if E0_maskable is in alpha_dic, the gradient will be projected on the n_dim_E0 first dimensions of the Fourier basis (rfft)
 		k_mode_E0: if E0_maskable is in alpha_dic, allows for the projection to be on the harmonics of the k-th mode
-		E0_t_min: (not applicable to single latency model), if E0_maskable is in alpha_dic, restricts E0_maskable to [t_min, t_max]
-		E0_t_max: (not applicable to single latency model), if E0_maskable is in alpha_dic, restricts E0_maskable to [t_min, t_max]
+		E0_t_min: (not applicable to single latency model or when use_bincount is True), if E0_maskable is in alpha_dic, restricts E0_maskable to [t_min, t_max]
+		E0_t_max: (not applicable to single latency model or when use_bincount is True),), if E0_maskable is in alpha_dic, restricts E0_maskable to [t_min, t_max]
 		plot_graphs: monitors updated parameters
 		step_plots: plot every step_plots steps	
 	'''
 	if plot_Q10:
 		assert fc_ref_Q10>0, "fc_ref_Q10 must be set when plot_Q10 is True"
-	excs = E.get_tensor() 
 
-	excs_fft = torch.fft.rfft(excs)
-	ur_fft= torch.fft.rfft(torch.tensor(ur))
-	#CAPs_fft=complex_multiplication(excs_fft, ur_fft)
-	CAPs_fft=excs_fft*ur_fft
-	CAPs = torch.fft.irfft(CAPs_fft, n=excs.shape[1])
 
 	if E.E0_maskable in alpha_dic:
 		#projection of gradient on first dimensions (Fourier basis)
@@ -62,7 +56,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 			grad_fft*=filter_fft
 			return torch.fft.irfft(grad_fft, n=len(grad) )
 
-		if not(isinstance(E.latencies, SingleLatency)):
+		if not(isinstance(E.latencies, SingleLatency) or E.use_bincount):
 			filter_t=(E.t<E0_t_max)*(E.t>E0_t_min)
 			def proj_E0(E0):
 				return E0*filter_t
@@ -71,11 +65,12 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	nb_plots=sum([plot_E0_graph, plot_masking_I0_graph, plot_Q10])
 
 	for i in range(1, nb_steps+1):
-		
+
 		excs = E.get_tensor() 
 
 		excs_fft = torch.fft.rfft(excs)
-		#ur_fft= torch.fft.rfft(torch.tensor(ur))
+		if i==1:
+			ur_fft= torch.fft.rfft(torch.tensor(ur))
 		#CAPs_fft=complex_multiplication(excs_fft, ur_fft)
 		CAPs_fft=excs_fft*ur_fft
 		
@@ -94,7 +89,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				else:
 					E.E0_maskable.data -= alpha*proj_fft2(E.E0_maskable.grad)
 				E.E0_maskable.grad.zero_()
-				if not(isinstance(E.latencies, SingleLatency)):
+				if not(isinstance(E.latencies, SingleLatency) or E.use_bincount):
 					E.E0_maskable.data= proj_E0(E.E0_maskable)
 			else:
 				alpha=alpha_dic[tensor]
@@ -106,11 +101,16 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 			ind_plot+=1
 			if i==1:
 				ax1 = pl.subplot(nb_plots, 1, ind_plot)
-			if isinstance(E.latencies, SingleLatency):
-				lat=E.latencies
+			if isinstance(E.latencies, SingleLatency) or E.use_bincount:
+				if isinstance(E.latencies, SingleLatency):
+					lat=E.latencies
+					f=np.linspace(lat.f_min*1e-3, lat.f_max*1e-3, 
+						len(E.E0_maskable))
+				else:
+					f=E.bincount_f
+
 				if (i-1)%step_plots==0:
-					ax1.plot(np.linspace(lat.f_min*1e-3, lat.f_max*1e-3, 
-						len(E.E0_maskable)), E.E0_maskable.detach().numpy(), label=f'step {i}')
+					ax1.plot(f , E.E0_maskable.detach().numpy(), label=f'step {i}')
 					
 				if i==1:
 
@@ -120,6 +120,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				
 				if i==nb_steps:
 					#ax1.legend()
+
+					ax1.set_ylim(bottom=0)
 					pass
 			else:
 				if (i-1)%step_plots==0:
