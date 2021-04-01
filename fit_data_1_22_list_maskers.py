@@ -330,7 +330,7 @@ ntch_1500_masker_list=['31_notch1500_bw1000_55dB',
 '38_notch1500_bw1000_26dB',
 '39_notch1500_bw1000_23dB']
 
-ntch_1500_re='.*notch2200_bw1000'
+ntch_1500_re='.*notch1500_bw1000'
 
 
 vbw_1500_fln_lists=['1-notch_1400_bw400.json',
@@ -356,6 +356,6 @@ vfreq_fln_lists={8000:vfreq_8k_fln_list, 6000:vfreq_6k_fln_list,
 
 
 vbw_fln_lists={8000:vbw_8k_fln_list, 6000:vbw_6k_fln_list, 5000:vbw_5k_fln_list, 4000:vbw_4k_fln_list,
- 3000:vbw_3k_fln_list}
+ 3000:vbw_3k_fln_list, 2200: vbw_2200_fln_lists, 1500:vbw_1500_fln_lists }
 
 

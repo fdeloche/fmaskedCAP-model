@@ -212,9 +212,7 @@ class ExcitationPatterns:
 
 		#compute maskingPatterns (maskingAmount)
 		with torch.no_grad():
-			f=self.latencies.f_from_t(self.t)
-			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
-			
+			sq_masking_exc_patterns=self.get_tensor()
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
 			maskingAmount=self.maskingIOFunc(I)
 			maskingAmount=maskingAmount.clone().numpy()
@@ -224,7 +222,8 @@ class ExcitationPatterns:
 
 
 	def get_projector_fft(self, eps=1e-6): 
-		'''projector in frequency domain (for unitary response)'''
+		'''projector in frequency domain (for unitary response).
+		NB: not sure this function works'''
 
 
 		def proj(signals_fft, excs_fft):   #, eps=1e-6
@@ -233,17 +232,16 @@ class ExcitationPatterns:
 				a_1=np.real(excs_fft[:, i])
 				a_2=np.imag(excs_fft[:, i])
 
-				A_top=np.stack((a_1, -a_2), axis=1)
-				A_bottom=np.stack((a_2, a_1), axis=1)
-				A=np.concatenate((A_top, A_bottom), axis=0)
+				A_top=np.stack((a_1, -a_2), axis=0)
+				A_bottom=np.stack((a_2, a_1), axis=0)
+				A=np.stack((A_top, A_bottom), axis=0)
 
 				y_top=np.real(signals_fft[:, i])
 				y_bottom=np.imag(signals_fft[:, i])
-				Y=np.concatenate((y_top, y_bottom), axis=0)
+				Y=np.stack((y_top, y_bottom), axis=0)
 
-				cross_prod=np.dot(A.T, Y)
-				cov_mat=np.dot(A.T, A)
-
+				cross_prod=np.einsum('jik, jk', A, Y)  #NB: double contraction, 
+				cov_mat=np.einsum('jik, jlk', A, A)
 				X=np.dot(np.linalg.inv(cov_mat), cross_prod)
 				res[i]=X[0]+1j*X[1]
 			return res
@@ -251,13 +249,7 @@ class ExcitationPatterns:
 		#compute excitationPatterns (maskingAmount)
 		with torch.no_grad():
 			f=self.latencies.f_from_t(self.t)
-			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
-			
-			I=10*torch.log10(sq_masking_exc_patterns+eps)
-
-			maskingAmount=self.maskingIOFunc(I)
-
-			excs=torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
+			excs=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
 			excs_fft=np.fft.rfft(excs, axis=1)
 
 		return functools.partial(proj, excs_fft)
