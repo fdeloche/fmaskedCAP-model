@@ -135,6 +135,9 @@ class PowerLawLatencies:
 		self.alpha.data=torch.tensor(params[1])
 		self.t0.data=torch.tensor(params[2])
 
+	def list_param_tensors(self):
+		return [self.A, self.alpha, self.t0]
+
 class SingleLatency:
 	'''
 	Workaround class to model synchronous fibers
@@ -161,6 +164,9 @@ class SingleLatency:
 
 	def get_f_linspace(self, num):
 		return torch.linspace(self.f_min, self.f_max, num)
+
+	def list_param_tensors(self):
+		return []
 
 
 Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")

@@ -255,7 +255,14 @@ class ExcitationPatterns:
 		return functools.partial(proj, excs_fft)
 
 
-
+	def list_param_tensors(self):
+		'''Returns the list of tensors defining the parameters of the model'''
+		res=[self.E0_maskable, self.E0_nonmaskable]
+		if self.masked:
+			res+=self.latencies.list_param_tensors()
+			res+=self.maskingIOFunc.list_param_tensors()
+			res+=self.bw10Func.list_param_tensors()
+		return res
 
 
 	@classmethod

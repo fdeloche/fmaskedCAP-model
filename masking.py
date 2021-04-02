@@ -37,6 +37,9 @@ class SigmoidIOFunc:
 		else:
 			return self.mmax*torch.sigmoid(self.a*(I-self.mu))
 
+	def list_param_tensors(self):
+		return [self.mu, self.a, self.mmax]
+
 	def fit_data(self, I_values, m_values, init_with_new_values=True, set_mmax=False, constrained_at_Iref=False, Iref=-20, method='lm'):
 		'''
 		Sets mu and a to fit I_values (np array) and m_values (np array, masking amount values, max 100%).
@@ -188,6 +191,9 @@ class WeibullCDF_IOFunc:
 		else:
 			return self.mmax*(1-torch.exp( -(Delta_I/self.scale)**self.k))
 
+
+	def list_param_tensors(self):
+		return [self.I0, self.scale, self.k, self.mmax]
 
 	def fit_data(self, I_values, m_values, init_with_new_values=True,  constrained_at_Iref=False, Iref=-20):
 		'''

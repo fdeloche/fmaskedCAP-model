@@ -14,3 +14,7 @@ class constant_BW10:
 		return self.BW_10
 
 
+	def list_param_tensors(self):
+		return [self.BW_10]
+
+

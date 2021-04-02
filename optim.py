@@ -3,6 +3,7 @@ import torch
 import torch.fft
 
 import matplotlib.pyplot as pl 
+import matplotlib.colors as colors 
 
 from excitation import *
 from latencies import *
@@ -23,7 +24,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	sum_grad_E0=False,
 	plot_E0_graph=False, plot_masking_I0_graph=False, 
 	plot_Q10=False, fc_ref_Q10=0,
-	step_plots=1, axes=None, ind_plots=None, step0=0
+	step_plots=1, axes=None, ind_plots=None, step0=0, tot_steps=0, verbose=False
 	):
 	'''
 	optimization steps on model parameters (parameters of masking I/O curves, raw excitation pattern, tuning) based on square error after convolution (based on RFFT/IRFFT). 
@@ -43,6 +44,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		axes: list of axes on which the figures are plotted. If None (default), creates the axes
 		ind_plots: dictionnary for the subplots
 		step0: ref for step 0 (default: 0)
+		tot_steps: total number of steps (if optim_steps is called several times), for plotting purposes onely
+		verbose: prints error at end of optim steps
 	Returns:
 		axes: list of pyplot axes if plots
 		ind_plots: dictionnary for the subplots
@@ -52,6 +55,22 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	if plot_Q10:
 		assert fc_ref_Q10>0, "fc_ref_Q10 must be set when plot_Q10 is True"
 
+	if tot_steps==0:\
+		tot_steps=nb_steps
+		
+	cdict = {'red':   ((0.0,  0.22, 0.0),
+			   (0.5,  1.0, 1.0),
+			   (1.0,  0.89, 1.0)),
+
+	 'green': ((0.0,  0.49, 0.0),
+			   (0.5,  1.0, 1.0),
+			   (1.0,  0.12, 1.0)),
+
+	 'blue':  ((0.0,  0.72, 0.0),
+			   (0.5,  0.0, 0.0),
+			   (1.0,  0.11, 1.0))}
+
+	cmap = colors.LinearSegmentedColormap('custom', cdict)
 
 	if E.E0_maskable in alpha_dic:
 		#projection of gradient on first dimensions (Fourier basis)
@@ -80,6 +99,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 
 	for i in range(1, nb_steps+1):
 		step=step0+i
+		cstep=cmap(step/tot_steps)
 		excs = E.get_tensor() 
 
 		excs_fft = torch.fft.rfft(excs)
@@ -92,6 +112,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 
 		err=torch.sum( (CAPs- torch.tensor(signals_proc) )**2 )
 		
+		if i==nb_steps and verbose:
+			print(f"step {step}, err RMS: {torch.sqrt(err/(E.maskingConditions.n_conditions*len(E.t)))*1e3:.4f} (µV)")
 		err.backward()
 		
 		for tensor in alpha_dic:
@@ -102,13 +124,18 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					E.E0_maskable.data = (1-alpha*torch.sum(E.E0_maskable.grad))*E.E0_maskable.data
 				else:
 					E.E0_maskable.data -= alpha*proj_fft2(E.E0_maskable.grad)
-				E.E0_maskable.grad.zero_()
+				#E.E0_maskable.grad.zero_()
 				if not(isinstance(E.latencies, SingleLatency) or E.use_bincount):
 					E.E0_maskable.data= proj_E0(E.E0_maskable)
 			else:
 				alpha=alpha_dic[tensor]
 				tensor.data -= alpha*tensor.grad
+				#tensor.grad.zero_()
+
+		for tensor in E.list_param_tensors():
+			if tensor.requires_grad and tensor.grad is not None:
 				tensor.grad.zero_()
+
 
 		ind_plot=0
 
@@ -134,7 +161,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					f=E.bincount_f
 
 				if (i-1)%step_plots==0:
-					ax1.plot(f , E.E0_maskable.detach().numpy(), label=f'step {step}')
+					ax1.plot(f , E.E0_maskable.detach().numpy(), label=f'step {step}', color=cstep)
 					
 				if i==1 and axes is None:
 
@@ -145,11 +172,11 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				if i==nb_steps:
 					#ax1.legend()
 
-					ax1.set_ylim(bottom=0)
+					ax1.set_ylim([-0.2, 1.4])
 					pass
 			else:
 				if (i-1)%step_plots==0:
-					ax1.plot( E.t*1e3 , E.E0_maskable.detach().numpy(), label=f'step {step}')
+					ax1.plot( E.t*1e3 , E.E0_maskable.detach().numpy(), label=f'step {step}', color=cstep)
 					
 				if i==1 and axes is None:
 
@@ -179,7 +206,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					ax2 = axes[ind_plot-1]
 
 			if (i-1)%step_plots==0:
-				ax2.plot(I, E.maskingIOFunc(torch.tensor(I)).detach().numpy(), label=f'step {step}')
+				ax2.plot(I, E.maskingIOFunc(torch.tensor(I)).detach().numpy(), label=f'step {step}', color=cstep)
 			
 			if i==1 and axes is None:
 				ax2.set_title('Masking IO Function')
@@ -205,13 +232,15 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					ax3 = axes[ind_plot-1]
 
 			with torch.no_grad():
-				ax3.plot(step, fc_ref_Q10/E.bw10Func(fc_ref_Q10), '+')
+				ax3.plot(step, fc_ref_Q10/E.bw10Func(fc_ref_Q10), '+', color=cstep)
 			
 
 			if i==1 and axes is None:
 				ax3.set_title('Filter tuning')
 				ax3.set_xlabel('Step')
 				ax3.set_ylabel('Q10')
+			if i==1:
+				ax3.set_xlim(right=step+nb_steps)
 	if ind_plots is None:
 		ind_plots=ind_plots2
 		axes=axes2

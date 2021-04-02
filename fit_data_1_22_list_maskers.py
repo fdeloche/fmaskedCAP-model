@@ -13,8 +13,9 @@ ntch_8k_masker_list=['2_notch8000_bw2300_55dB',
 ntch_8k_re='.*notch8000_bw2300'
 
 
-vfreq_8k_fln_list=['1_hp_10000Hz', '2_hp_9000Hz', '3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-           '6_notch8000_bw2300_35dB', '8_notch8000_bw2300_26dB',
+vfreq_8k_fln_list=[
+#'1_hp_10000Hz', '2_hp_9000Hz', '3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
+'6_notch8000_bw2300_35dB', '8_notch8000_bw2300_26dB',
 '1-notch7600_bw1100.json', '2-notch7800_bw1300.json',
 '3-notch8000_bw1400.json',
 '4-notch8200_bw1300.json',
@@ -49,8 +50,9 @@ ntch_6k_masker_list=['2_notch6000_bw2000_55dB',
 
 ntch_6k_re='.*notch6000_bw2000'
 
-vfreq_6k_fln_list=['2_hp_9000Hz', '3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-'7_hp_4000Hz', '8_hp_3200Hz', 
+vfreq_6k_fln_list=[
+#'2_hp_9000Hz', '3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
+#'7_hp_4000Hz', '8_hp_3200Hz', 
            '6_notch8000_bw2300_35dB', '8_notch8000_bw2300_26dB',
 
 '6_notch6000_bw2000_35dB', 
@@ -104,8 +106,9 @@ ntch_5k_masker_list=['2_notch5000_bw2000_55dB',
 ntch_5k_re='.*notch5000_bw2000'
 
 
-vfreq_5k_fln_list=['3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz',
+vfreq_5k_fln_list=[
+#'3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
+#'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz',
 
 '6_notch6000_bw2000_35dB', 
 '9_notch6000_bw2000_26dB',
@@ -160,8 +163,9 @@ ntch_4k_masker_list=['2_notch4000_bw1700_55dB',
 
 ntch_4k_re='.*notch4000_bw1700'
 
-vfreq_4k_fln_list=['3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz', 
+vfreq_4k_fln_list=[
+#'3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
+#'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz', 
 
 '6_notch6000_bw2000_35dB', 
 '9_notch6000_bw2000_26dB',
