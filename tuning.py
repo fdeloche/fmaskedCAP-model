@@ -1,5 +1,5 @@
 import torch
-
+import numpy as np
 
 class constant_BW10:
 	def __init__(self, BW10_0, requires_grad=False):
@@ -17,4 +17,59 @@ class constant_BW10:
 	def list_param_tensors(self):
 		return [self.BW_10]
 
+
+
+#RBF network
+
+import torch.nn as nn
+
+class Q10RBFNet(nn.Module):
+    '''regression RBF neural net to compute log Q from f'''
+    def __init__(self, n, f_min=800, f_max=15000, sig=0.1, init_random=False):
+        '''
+        :param n: number of gaussians rbf (centers)
+        :param init_random: if True, random initialization of centers, if False, centers are set at regular intervals
+        :param sig: sigma for gaussian kernel (NB: inputs are normalized between 0 and 1)'''
+        super().__init__()
+
+        self.log_f_min = np.log10(f_min)
+        self.log_f_max = np.log10(f_max)
+        self.sig=sig
+        self.n_centers=n
+        self.sig2=sig**2
+        
+        def random_centers(m):
+            randT=torch.rand(1, m)
+            #if normalized coords used instead, not necessary :
+            #randT.mul_(torch.tensor(f_max-f_min))
+            #randT.add_(torch.tensor(f_min))
+            return randT
+        
+        def init_centers(m):
+            return torch.linspace(0, 1, m, requires_grad=True, dtype=torch.float)
+        
+        if init_random:
+            init_func = random_centers
+        else:
+            init_func = init_centers
+        self.centers = init_func(n)
+        self.l2 = nn.Linear(n, 1, bias=False)
+        
+    def normalized_coord(self, f):
+        '''NB: takes the log for f'''
+        f_norm = (torch.log10(f)-self.log_f_min)/(self.log_f_max-self.log_f_min)
+        return f_norm
+    
+    def real_coord(self, f_norm):
+        f = self.log_f_min + (self.log_f_max-self.log_f_min)*f_norm
+        return 10**f
+    
+       
+    def forward(self, f, verbose=False):
+        f_norm = self.normalized_coord(f)
+        f_norm.unsqueeze_(-1)
+        sq_distances = (self.centers-f_norm)**2
+        l1 = torch.exp(-sq_distances/(2*self.sig2))
+        out = self.l2(l1)
+        return out        
 
