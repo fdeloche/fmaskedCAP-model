@@ -1,7 +1,7 @@
 import numpy as np 
 import torch 
 import torch.fft
-
+import torch.distributed as dist 
 import matplotlib.pyplot as pl 
 import matplotlib.colors as colors 
 
@@ -24,7 +24,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	sum_grad_E0=False,
 	plot_E0_graph=False, plot_masking_I0_graph=False, 
 	plot_Q10=False, fc_ref_Q10=0,
-	step_plots=1, axes=None, ind_plots=None, step0=0, tot_steps=0, verbose=False
+	step_plots=1, axes=None, ind_plots=None, step0=0, tot_steps=0, verbose=False, 
+	Q10_distributed=False
 	):
 	'''
 	optimization steps on model parameters (parameters of masking I/O curves, raw excitation pattern, tuning) based on square error after convolution (based on RFFT/IRFFT). 
@@ -45,6 +46,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		ind_plots: dictionnary for the subplots
 		step0: ref for step 0 (default: 0)
 		tot_steps: total number of steps (if optim_steps is called several times), for plotting purposes onely
+		Q10_distributed: if True, forward gradient to main process for Q10 (then encoded by a RBF net)
 		verbose: prints error at end of optim steps
 	Returns:
 		axes: list of pyplot axes if plots
@@ -131,6 +133,10 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				alpha=alpha_dic[tensor]
 				tensor.data -= alpha*tensor.grad
 				#tensor.grad.zero_()
+
+			if Q10_distributed and tensor.data_ptr() == E.bw10Func.Q10RBFnet.l2.weight.data_ptr():
+				#forwards gradient (in addition to updating 'local' params)
+				dist.send( tensor.grad, 0, tag=1)
 
 		for tensor in E.list_param_tensors():
 			if tensor.requires_grad and tensor.grad is not None:
@@ -232,7 +238,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					ax3 = axes[ind_plot-1]
 
 			with torch.no_grad():
-				ax3.plot(step, fc_ref_Q10/E.bw10Func(fc_ref_Q10), '+', color=cstep)
+				ax3.plot(step, fc_ref_Q10/E.bw10Func(torch.tensor(fc_ref_Q10, dtype=torch.float32)), '+', color=cstep)
 			
 
 			if i==1 and axes is None:
