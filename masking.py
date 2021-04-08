@@ -107,20 +107,20 @@ class SigmoidIOFunc:
 		if constrained_at_Iref:
 			if method=='dogbox':
 				params, _= curve_fit(aux_f3, I_values, m_values,
-				 	p0= p0, method=method, jac=aux_jac3, bounds=([-100, 0], [200, np.infty]))
+					p0= p0, method=method, jac=aux_jac3, bounds=([-100, 0], [200, np.infty]))
 			else:
 				params, _= curve_fit(aux_f3, I_values, m_values,
-				 	p0= p0, method=method, jac=aux_jac3)
+					p0= p0, method=method, jac=aux_jac3)
 			mmax=1/aux_f(Iref[0], params[0], params[1])
 			self.mmax.data=torch.tensor(mmax)
 			print(f'fitting data (constraint =1 at I={Iref[0]:.1f}dB) :\n mu={params[0]:.2f}, a={params[1]:.4f}, mmax:{mmax:.3f}')
 		elif set_mmax:
 			params, _= curve_fit(aux_f2, I_values, m_values,
-			 	p0= p0, method='lm', jac=aux_jac2)
+				p0= p0, method='lm', jac=aux_jac2)
 			print(f'fitting data:\n mu={params[0]:.2f}, a={params[1]:.4f}, mmax:{params[2]:.3f}')
 		else:
 			params, _= curve_fit(aux_f, I_values, m_values,
-			 	p0= p0, method='lm', jac=aux_jac)
+				p0= p0, method='lm', jac=aux_jac)
 			print(f'fitting data:\n mu={params[0]:.2f}, a={params[1]:.4f}')
 		self.mu.data=torch.tensor(params[0])
 		self.a.data=torch.tensor(params[1])
@@ -136,6 +136,24 @@ class SigmoidIOFunc:
 		sig.fit_data(I_values, m_values)
 		return sig
 
+	def write_to_npz(self, filename):
+		def get_data(t):
+			return t.detach().numpy()
+
+		np.savez(filename, mu=get_data(self.mu),
+			a=get_data(self.a), Iref=self._Iref, mmax=get_data(self.mmax),
+			constrained_at_Iref=self.constrained_at_Iref)
+
+	@classmethod
+	def load_from_npz(cls, filename, requires_grad=False):
+		with np.load(filename) as f:
+			mu=f['mu']
+			a=f['a']
+			mmax=f['mmax']
+			Iref=f['Iref']
+			constrained_at_Iref=f['constrained_at_Iref']
+		return cls(mu, a, max_masking=mmax, requires_grad=requires_grad,
+			constrained_at_Iref=constrained_at_Iref, Iref=Iref)
 
 
 
@@ -143,15 +161,6 @@ class SigmoidIOFunc:
 
 
 
-
-
-def get_masking_amount(mdFunc, sq_exc, eps=1e-10):
-	'''
-	Args:
-		mdFunc: masking degree function
-		sq_exc: squared excitation associated with masking patterns
-	'''
-	return mdFunc(10*torch.log10(eps+sq_exc))
 
 SigmoidMaskingDegreeFunction=SigmoidIOFunc  #old name
 
@@ -263,13 +272,13 @@ class WeibullCDF_IOFunc:
 
 		if constrained_at_Iref:
 			params, _= curve_fit(aux_f3, I_values, m_values,
-			 	p0= p0, method='dogbox', jac=aux_jac3, ftol=0.1, 
-			 	bounds=([-np.inf, -np.inf, 1], [np.inf, np.inf, 20]))
+				p0= p0, method='dogbox', jac=aux_jac3, ftol=0.1, 
+				bounds=([-np.inf, -np.inf, 1], [np.inf, np.inf, 20]))
 			self.mmax.data=1/torch.tensor( aux_f(Iref, params[0], params[1], params[2] ))
 		else:
 			params, _= curve_fit(aux_f, I_values, m_values,
-			 	p0= p0, method='dogbox', jac=aux_jac, ftol=0.1, 
-			 	bounds=([-np.inf, -np.inf, 1], [np.inf, np.inf, 20]))
+				p0= p0, method='dogbox', jac=aux_jac, ftol=0.1, 
+				bounds=([-np.inf, -np.inf, 1], [np.inf, np.inf, 20]))
 
 		print(f'fitting data:\n I0={params[0]:.2f}, scale={params[1]:.2f}, k={params[2]:.2f}')
 		self.I0.data=torch.tensor(params[0])
@@ -284,6 +293,31 @@ class WeibullCDF_IOFunc:
 		wcdf=cls(0, 10, 2, requires_grad=requires_grad)
 		wcdf.fit_data(I_values, m_values)
 		return wcdf
+
+	def write_to_npz(self, filename):
+		def get_data(t):
+			return t.detach().numpy()
+
+		np.savez(filename, I0=get_data(self.I0),
+			scale=get_data(self.scale), k=get_data(self.k), Iref=self._Iref, mmax=get_data(self.mmax),
+			constrained_at_Iref=self.constrained_at_Iref)
+
+	@classmethod
+	def load_from_npz(cls, filename, requires_grad=False):
+		with np.load(filename) as f:
+			I0=f['I0']
+			scale=f['scale']
+			k=f['k']
+			mmax=f['mmax']
+			Iref=f['Iref']
+			constrained_at_Iref=f['constrained_at_Iref']
+		return cls(I0=I0, scale=scale, k=k, mmax=mmax, requires_grad=requires_grad,
+			constrained_at_Iref=constrained_at_Iref, Iref=Iref)
+
+
+
+
+
 
 
 def get_masking_amount(mdFunc, sq_exc, eps=1e-6):

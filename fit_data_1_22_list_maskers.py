@@ -24,6 +24,9 @@ vfreq_8k_fln_list=[
 '7-notch8100_bw1200.json',         
 '6_notch6000_bw2000_35dB', '9_notch6000_bw2000_26dB',
 '2-notch6200_bw1000.json', '3-notch6000_bw1100.json', '9-notch6300_bw1100.json'
+'6_notch5000_bw2000_35dB',
+'9_notch5000_bw2000_26dB',
+'4-notch4800_bw1400.json'
 ]
 
 vbw_8k_fln_list=['1-notch7600_bw1100.json',
