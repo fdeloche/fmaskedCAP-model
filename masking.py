@@ -309,7 +309,7 @@ class WeibullCDF_IOFunc:
 			scale=f['scale']
 			k=f['k']
 			mmax=f['mmax']
-			Iref=f['Iref']
+			Iref=float(f['Iref'])
 			constrained_at_Iref=f['constrained_at_Iref']
 		return cls(I0=I0, scale=scale, k=k, mmax=mmax, requires_grad=requires_grad,
 			constrained_at_Iref=constrained_at_Iref, Iref=Iref)
