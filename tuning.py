@@ -96,7 +96,7 @@ class Q10RBFNet(nn.Module):
 
 
 class Q10RBFNet_BW10:
-	'''twin class of Q10RBFNet when that returns the 10dB bandwidth when called'''
+	'''twin class of Q10RBFNet that returns the 10dB bandwidth when called'''
 
 	def __init__(self, Q10RBFnet):
 		self.Q10RBFnet=Q10RBFnet

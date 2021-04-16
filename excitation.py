@@ -51,14 +51,14 @@ def get_sq_masking_excitation_patterns_maskCond(f, bw10Func, maskCond, filter_mo
 
 class ExcitationPatterns:
 
-	def __init__(self, t, E0_maskable, E0_nonmaskable=None, requires_grad=False, 
+	def __init__(self, t, E0_maskable, E0_maskable_amp=1., E0_nonmaskable=None, requires_grad=False, 
 		use_bincount=False, bincount_fmin=200, bincount_fmax=12000):
 		'''
 		Note: excitation patterns are defined in time (same size as t) unless the latency model is SingleLatencies or the bincount mode is enabled, then defined in frequency
 		Args:
 			t: time vector (torch  or np array, converted to torch tensor)
 			E0_maskable: raw excitation pattern (numpy array or torch tensor), maskable part
-
+			E0_maskable_amp: amplitude factor for E0_maskable (default: 1)
 			E0_nonmaskable (optional): raw excitation pattern (numpy array or torch tensor), fixed part
 			requires_grad: if E0 tensors requires gradient mdFunc
 			use_bincount: if True, computes the excitation patterns with torch.bincount, thus releasing the 1 bin <-> one frequency constraint
@@ -72,6 +72,14 @@ class ExcitationPatterns:
 			self.E0_maskable = E0_maskable.clone().detach().requires_grad_(requires_grad=requires_grad)
 		else:
 			self.E0_maskable=torch.tensor(E0_maskable, requires_grad=requires_grad)
+		
+		if torch.is_tensor(E0_maskable_amp):
+			self.E0_maskable_amp = E0_maskable_amp.clone().detach().requires_grad_(requires_grad=requires_grad)
+		else:
+			self.E0_maskable_amp=torch.tensor(E0_maskable_amp, requires_grad=requires_grad)
+		
+
+
 		if E0_nonmaskable is None:
 			self.E0_nonmaskable=torch.zeros_like(self.E0_maskable)
 		else:		
@@ -79,6 +87,7 @@ class ExcitationPatterns:
 				self.E0_nonmaskable = E0_nonmaskable.clone().detach().requires_grad_(requires_grad=requires_grad)
 			else:
 				self.E0_nonmaskable=torch.tensor(E0_nonmaskable, requires_grad=requires_grad)
+		
 		self.masked=False
 		self.use_bincount=use_bincount
 		self.bincount_fmin=bincount_fmin
@@ -145,7 +154,7 @@ class ExcitationPatterns:
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
 			maskingAmount=self.maskingIOFunc(I)
 
-			res= torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
+			res= self.E0_maskable_amp*torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
 			if isinstance(self.latencies, SingleLatency):
 				ind=self.latencies.get_ind(self.t)
 				res2=torch.zeros( (res.shape[0], len(self.t)) )
@@ -257,7 +266,7 @@ class ExcitationPatterns:
 
 	def list_param_tensors(self):
 		'''Returns the list of tensors defining the parameters of the model'''
-		res=[self.E0_maskable, self.E0_nonmaskable]
+		res=[self.E0_maskable, self.E0_maskable_amp, self.E0_nonmaskable]
 		if self.masked:
 			res+=self.latencies.list_param_tensors()
 			res+=self.maskingIOFunc.list_param_tensors()
@@ -290,6 +299,6 @@ class ExcitationPatterns:
 	@classmethod
 	def copyRaw(cls, E, requires_grad=False):
 		'''creates a raw excitation pattern by making a copy from another ExcitationPatterns object. keeps the use_bincount properties'''
-		return cls(E.t, E.E0_maskable, E0_nonmaskable=E.E0_nonmaskable, requires_grad=requires_grad,
+		return cls(E.t, E.E0_maskable, E0_nonmaskable=E.E0_nonmaskable, E0_maskable_amp=E.E0_maskable_amp, requires_grad=requires_grad,
 			use_bincount=E.use_bincount, bincount_fmin=E.bincount_fmin, bincount_fmax=E.bincount_fmax)
 

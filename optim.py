@@ -25,7 +25,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	plot_E0_graph=False, plot_masking_I0_graph=False, 
 	plot_Q10=False, fc_ref_Q10=0,
 	step_plots=1, axes=None, ind_plots=None, step0=0, tot_steps=0, verbose=False, 
-	Q10_distributed=False
+	Q10_distributed=False, E0_distributed=False
 	):
 	'''
 	optimization steps on model parameters (parameters of masking I/O curves, raw excitation pattern, tuning) based on square error after convolution (based on RFFT/IRFFT). 
@@ -35,7 +35,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		alpha_dic: dictionnary of tensors (to be updated by gradient descent, requires_grad must be True) mapped to gradient descent step 
 		signals_proc: real CAP signals, must be of the size of excitations
 		nb_steps: number of gradient descent steps
-		sum_grad_E0: if True and E.E0_maskable in alpha_dic, apply gradient descent only on the mean amplitude (by summing gradients)
+		sum_grad_E0: if True and E.E0_maskable in alpha_dic, apply gradient descent only on the mean amplitude (by summing gradients) [note: normally not needed as now the model includes a paramter E0_maskable_amp]
 		n_dim_E0: if E0_maskable is in alpha_dic, the gradient will be projected on the n_dim_E0 first dimensions of the Fourier basis (rfft)
 		k_mode_E0: if E0_maskable is in alpha_dic, allows for the projection to be on the harmonics of the k-th mode
 		E0_t_min: (not applicable to single latency model or when use_bincount is True), if E0_maskable is in alpha_dic, restricts E0_maskable to [t_min, t_max]
@@ -46,7 +46,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		ind_plots: dictionnary for the subplots
 		step0: ref for step 0 (default: 0)
 		tot_steps: total number of steps (if optim_steps is called several times), for plotting purposes onely
-		Q10_distributed: if True, forward gradient to main process for Q10 (then encoded by a RBF net)
+		Q10_distributed: if True, forwards gradients to main process for Q10 (then encoded by a RBF net)
+		E0_distributed: if True, forwards gradients to main process for E0 (note: still applies projection to gradient if applicable)
 		verbose: prints error at end of optim steps
 	Returns:
 		axes: list of pyplot axes if plots
@@ -121,7 +122,11 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		for tensor in alpha_dic:
 			if tensor.data_ptr() == E.E0_maskable.data_ptr():
 
-				alpha=alpha_dic[E.E0_maskable]
+				alpha=alpha_dic[tensor]
+				if E0_distributed:
+					grad=proj_fft2(E.E0_maskable.grad)
+					dist.send( grad, 0, tag=2)
+
 				if sum_grad_E0:
 					E.E0_maskable.data = (1-alpha*torch.sum(E.E0_maskable.grad))*E.E0_maskable.data
 				else:
@@ -141,7 +146,6 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		for tensor in E.list_param_tensors():
 			if tensor.requires_grad and tensor.grad is not None:
 				tensor.grad.zero_()
-
 
 		ind_plot=0
 
