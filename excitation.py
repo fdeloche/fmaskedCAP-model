@@ -154,7 +154,7 @@ class ExcitationPatterns:
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
 			maskingAmount=self.maskingIOFunc(I)
 
-			res= self.E0_maskable_amp*torch.unsqueeze(self.E0_nonmaskable, 0)+torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
+			res= torch.unsqueeze(self.E0_nonmaskable, 0)+ self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
 			if isinstance(self.latencies, SingleLatency):
 				ind=self.latencies.get_ind(self.t)
 				res2=torch.zeros( (res.shape[0], len(self.t)) )
