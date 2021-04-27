@@ -343,58 +343,48 @@ def plot_figures_narrowband_analysis_deconv():
 
 # ### Latencies
 
-# #NB: some data not clear
-# t_max=np.array([43.5,43.5,45,42,45.5,46.5,48,51,56,65,74,82])
-# #t_max_bis=np.array([23,26,25.5,25.5,28.5,29])
-
-# t_max_C=np.array([44,51.5,47,46,52,54,49,52,65,73,77,96.5])   #mod 0
-
-# t_max_R=np.array([44,49.5,47.5,45,49.5,51,53.5,61,76.5,88,104,122])
+t_max=np.array([34,37,39,41,39.5,43,49,54,62,69.5,78,93])
 
 
-# #t_0lat=4e-3-3.6e-3+2e-3
-# t_0lat=4e-3+2e-3-6e-3
+#XXX data not for this expe !!!
+#t_max_C=np.array([44,51.5,47,46,52,54,49,52,65,73,77,96.5])   #mod 0
+#t_max_R=np.array([44,49.5,47.5,45,49.5,51,53.5,61,76.5,88,104,122])
+
+t_0lat=4e-3+1.8e-3-5.5e-3
+
+t_max=t_0lat+t_max*2*1e-5
+
+#t_max_bis=t_0lat+t_max_bis*2*1e-5
+freqs=np.array([9.5,8.5,7.5,6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1])
+
+def plot_estimated_latencies_deconv():
+	pl.figure()
+	pl.plot(freqs, t_max*1e3, '+', markersize=12, label='C+R')
+
+	#pl.plot(freqs[0:len(t_max_bis)], t_max_bis*1e3, '+', markersize=12, label='C+R (first peak?)')
+
+	pl.ylabel('Estimated latencies (ms)')
+	pl.xlabel('freq (kHz)')
+
+	pl.legend()
+	pl.show()
+#NB CM begins at 5.75 ms approx
+#peak convol begins at 4.8-3 ms = 1.8ms (C) approx
 
 
-# t_max=t_0lat+t_max*2*1e-5
-# t_max_C=t_0lat+t_max_C*2*1e-5
+# fit latencies power law
 
-# t_max_R=t_0lat+t_max_R*2*1e-5
+#above 4kHz
 
-# #t_max_bis=t_0lat+t_max_bis*2*1e-5
-# freqs=np.array([9.5,8.5,7.5,6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1])
+freqs_pts=freqs*1e3
+t_max_pts=t_max
 
-# def plot_estimated_latencies_deconv():
-# 	pl.figure()
-# 	pl.plot(freqs, t_max*1e3, '+', markersize=12, label='C+R')
-# 	pl.plot(freqs, t_max_C*1e3, '+', markersize=12, label='C')
-
-# 	pl.plot(freqs, t_max_R*1e3, '+', markersize=12, label='R')
-
-
-# 	#pl.plot(freqs[0:len(t_max_bis)], t_max_bis*1e3, '+', markersize=12, label='C+R (first peak?)')
-
-# 	pl.ylabel('Estimated latencies (ms)')
-# 	pl.xlabel('freq (kHz)')
-
-# 	pl.legend()
-# 	pl.show()
-# #NB CM begins at 6 ms approx
-# #peak convol begins at 5-3 ms = 2ms (C) approx
-
-
-# # fit latencies 2 power laws
-
-# #above 4kHz
-
-
-# freqs_pts=np.array([9.5,8.5,7.5,6.5,5.5,4.5])*1e3
-
-# inds=np.array([0,1,2, 4,5]) #HACK remove outlier 6.5 kHz
-# freqs_pts=freqs_pts[inds]
-# freqs_pts0=freqs_pts
-# t_max_pts=t_max[inds]
-# t_max_pts0=t_max_pts
+#freqs_pts=np.array([9.5,8.5,7.5,6.5,5.5,4.5])*1e3
+#inds=np.array([0,1,2, 4,5]) #HACK remove outlier 6.5 kHz
+#freqs_pts=freqs_pts[inds]
+#freqs_pts0=freqs_pts
+#t_max_pts=t_max[inds]
+#t_max_pts0=t_max_pts
 
 
 # lat=PowerLawLatencies(1e6, alpha=1, t0=4e-3, mode='left')
@@ -406,41 +396,32 @@ def plot_figures_narrowband_analysis_deconv():
 # #below 4kHz
 # freqs_pts=freqs[6:]*1e3
 # t_max_pts=t_max[6:]
-# lat=PowerLawLatencies()
-# lat.fit_data(t_max_pts, freqs_pts)
-
-# def plot_latencies_fit():
-
-# 	pl.figure()
-# 	freqs_lin=np.linspace(4, 10)*1e3
-# 	pl.plot(freqs_lin, lat(freqs_lin)*1e3)
-
-# 	pl.plot(freqs_pts, t_max_pts*1e3, '+', markeredgewidth=3, markersize=10)
-
-# 	freqs_lin=np.linspace(0.5, 5)*1e3
-# 	pl.plot(freqs_lin, lat(freqs_lin)*1e3, color='C2')
 
 
-# 	freqs_lin=np.linspace(0.5, 10)*1e3
-# 	pl.plot(freqs_lin, lat(freqs_lin)*1e3, color='C2', linestyle='--')
+lat=PowerLawLatencies()
+lat.fit_data(t_max_pts, freqs_pts)
 
-# 	pl.plot(freqs_pts, t_max_pts*1e3, '+', markeredgewidth=3, markersize=10)
+def plot_latencies_fit():
 
-# 	pl.show()
+	pl.figure()
+	freqs_lin=np.linspace(0.5, 10)*1e3
+	pl.plot(freqs_lin, lat(freqs_lin)*1e3)
 
-# 	pl.figure()
+	pl.plot(freqs_pts, t_max_pts*1e3, '+', markeredgewidth=3, markersize=10)
 
-# 	pl.plot(freqs_lin, (lat(freqs_lin)-lat.t0)*1e3, color='C2', linestyle='--')
+	pl.show()
 
-# 	pl.plot(freqs_pts0, (t_max_pts0-lat.t0.numpy())*1e3, '+', markeredgewidth=3, markersize=10)
+	pl.figure()
 
-# 	pl.plot(freqs_pts, (t_max_pts-lat.t0.numpy())*1e3, '+', markeredgewidth=3, markersize=10)
+	pl.plot(freqs_lin, (lat(freqs_lin)-lat.t0)*1e3, color='C2', linestyle='--')
 
-# 	pl.ylabel(' t - t_0 (ms)')
+	pl.plot(freqs_pts, (t_max_pts-lat.t0.numpy())*1e3, '+', markeredgewidth=3, markersize=10)
 
-# 	pl.xlabel(' f (Hz)')
+	pl.ylabel(' t - t_0 (ms)')
 
-# 	pl.xscale('log')
-# 	pl.yscale('log')
-# 	pl.show()
+	pl.xlabel(' f (Hz)')
+
+	pl.xscale('log')
+	pl.yscale('log')
+	pl.show()
 
