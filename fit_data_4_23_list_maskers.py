@@ -1,3 +1,9 @@
+#NOTE:masker names can be in good format or with the json extension
+#ex code correction:
+#masker_list=[st.replace('-', '_').replace('.json', '') for st in fln_list]
+
+import numpy as np
+
 #8k
 
 ntch_8k_masker_list=['2_notch8000_bw2300_55dB',
@@ -9,14 +15,17 @@ ntch_8k_masker_list=['2_notch8000_bw2300_55dB',
  '7_notch8000_bw2300_29dB',
  '8_notch8000_bw2300_26dB',
  '9_notch8000_bw2300_23dB',
- '10_notch8000_bw2300_17dB'  #new one,
+ '10_notch8000_bw2300_17dB',  #new one,
  '2-notch7300_1600_30dB.json', 
  '3-notch7300_1600_25dB.json', 
  '4-notch8300_2000_26dB.json',
  '5-notch8300_2000_23dB.json'
  ] 
 
-#ntch_8k_re='.*notch8000_bw2300'   #not used anymore
+
+attns_8k=np.array([55, 40,35,32,29,26,23, 17])
+
+ntch_8k_re='.*notch8000_bw2300'   #not used anymore
 
 
 vfreq_8k_fln_list=[
@@ -83,7 +92,11 @@ ntch_6k_masker_list=['2_notch6000_bw2000_55dB',
 '4-notch6500_1400_23dB.json',
 '5-notch7000_1600_26dB.json']
 
-#ntch_6k_re='.*notch6000_bw2000'  #not used anymore
+
+
+attns_6k=np.array([55, 45,40,35,32,29,26,23])
+
+ntch_6k_re='.*notch6000_bw2000'  #not used anymore
 
 vfreq_6k_fln_list=[
 #'2_hp_9000Hz', '3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
@@ -169,7 +182,9 @@ ntch_5k_masker_list=['2_notch5000_bw2000_55dB',
 '3-notch5300_1200_26dB.json'] 
 
 
-#ntch_5k_re='.*notch5000_bw2000'
+attns_5k=np.array([55, 45,40,35,32,29,26,23, 17])
+
+ntch_5k_re='.*notch5000_bw2000'
 
 
 vfreq_5k_fln_list=[
@@ -250,7 +265,10 @@ ntch_4k_masker_list=['2_notch4000_bw1700_55dB',
 '3-notch4300_1100_26dB.json',
 '4-notch4300_1100_23dB.json']
 
-#ntch_4k_re='.*notch4000_bw1700'
+
+attns_4k=np.array([55, 45,40,35,32,29,26,23, 17])
+
+ntch_4k_re='(.*notch4000_bw1700)|(.*notch400_bw1700)'
 
 vfreq_4k_fln_list=[
 #'3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
@@ -343,7 +361,9 @@ ntch_3k_masker_list=['2_notch3000_bw1500_55dB'
 '4-notch3400_900_23dB.json']
 
 
-#ntch_3k_re='.*notch3000_bw1500'
+attns_3k=np.array([55, 45,40,35,32,29,26,23, 17])
+
+ntch_3k_re='(.*notch3000_bw1500)|(.*notch300_bw1500)'
 
 vbw_3k_fln_list=['1-notch2900_bw600.json',
 '2-notch3000_bw700.json',
@@ -438,17 +458,22 @@ ntch_2200_masker_list=['2_notch2200_bw1500_55dB',
 '8_notch2200_bw1500_29dB',
 '9_notch2200_bw1500_26dB',
 '10_notch2200_bw1500_23dB',
-'11_notch2200_bw1500_17dB' #new one]
+'11_notch2200_bw1500_17dB' #new one
+]
 
-#ntch_2200_re='.*notch2200_bw1500'
+
+attns_2200=np.array([55, 45,40,35,32,29,26,23, 17])
+
+ntch_2200_re='.*notch2200_bw1500'
 
 
-vbw_2200_fln_lists=['1-notch2000_bw600.json', #modified
+vbw_2200_fln_list=['1-notch2000_bw600.json', #modified
 '2-notch2200_bw800.json',
 '3-notch2300_bw900.json',
 '3-notch2600_bw700.json', #modified
 '5-notch2400_bw900.json',
-'3-notch2600_bw700.json' #new one]
+'3-notch2600_bw700.json' #new one
+]
 
 
 
@@ -464,11 +489,15 @@ ntch_1500_masker_list=['31_notch1500_bw1000_55dB',
 '37_notch1500_bw1000_29dB',
 '38_notch1500_bw1000_26dB',
 '39_notch1500_bw1000_23dB',
-'40_notch1500_bw1000_17dB' #new one]
+'40_notch1500_bw1000_17dB' #new one
+]
 
-#ntch_1500_re='.*notch1500_bw1000' #not used anymore
 
-vbw_1500_fln_lists=['1-notch_1400_bw400.json',
+attns_1500=np.array([55, 45,40,35,32,29,26,23, 17])
+
+ntch_1500_re='.*notch1500_bw1000'
+
+vbw_1500_fln_list=['1-notch_1400_bw400.json',
 '2-notch1500_bw500.json',
 '3-notch1500_bw700.json',
 '4-notch1600_bw600.json',
@@ -484,8 +513,8 @@ ntch_masker_lists={8000:ntch_8k_masker_list, 6000:ntch_6k_masker_list,
  5000:ntch_5k_masker_list, 4000:ntch_4k_masker_list, 3000:ntch_3k_masker_list, 
  2200:ntch_2200_masker_list, 1500:ntch_1500_masker_list, }
 
-#ntch_regexps={8000:ntch_8k_re, 6000:ntch_6k_re, 5000:ntch_5k_re, 4000:ntch_4k_re,
-# 3000:ntch_3k_re, 2200:ntch_2200_re, 1500:ntch_1500_re}   #not used anymore
+ntch_regexps={8000:ntch_8k_re, 6000:ntch_6k_re, 5000:ntch_5k_re, 4000:ntch_4k_re,
+ 3000:ntch_3k_re, 2200:ntch_2200_re, 1500:ntch_1500_re}   
 
 vfreq_fln_lists={8000:vfreq_8k_fln_list, 6000:vfreq_6k_fln_list, 
    5000:vfreq_5k_fln_list, 4000:vfreq_4k_fln_list,
@@ -494,6 +523,14 @@ vfreq_fln_lists={8000:vfreq_8k_fln_list, 6000:vfreq_6k_fln_list,
 
 
 vbw_fln_lists={8000:vbw_8k_fln_list, 6000:vbw_6k_fln_list, 5000:vbw_5k_fln_list, 4000:vbw_4k_fln_list,
- 3000:vbw_3k_fln_list, 2200: vbw_2200_fln_lists, 1500:vbw_1500_fln_lists }
+ 3000:vbw_3k_fln_list, 2200: vbw_2200_fln_list, 1500:vbw_1500_fln_list }
 
+attns_arrays={
+8000:attns_8k,
+6000:attns_6k,
+5000:attns_5k,
+4000:attns_4k,
+3000:attns_3k,
+2200:attns_2200,
+1500:attns_1500}
 
