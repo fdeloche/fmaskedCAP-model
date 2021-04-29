@@ -80,8 +80,9 @@ class Q10RBFNet(nn.Module):
 		return out
 
 	def update_weights(self,src=0, tag=7):
-		'''update the weights with ones receive from another process in a distributed setting'''
-		dist.recv(self.l2.weight, src=src, tag=tag)
+		'''update the weights received from another node (distributed setting). asynchronous but waiting for the update'''
+		handle=dist.irecv(self.l2.weight, src=src, tag=tag)
+		handle.wait()
 
 	@classmethod
 	def create_from_jsonfile(cls, filename):

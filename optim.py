@@ -46,8 +46,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		ind_plots: dictionnary for the subplots
 		step0: ref for step 0 (default: 0)
 		tot_steps: total number of steps (if optim_steps is called several times), for plotting purposes onely
-		Q10_distributed: if True, forwards gradients to main process for Q10 (then encoded by a RBF net)
-		E0_distributed: if True, forwards gradients to main process for E0 (note: still applies projection to gradient if applicable)
+		Q10_distributed: if True, forwards gradients to main node for Q10 (then encoded by a RBF net)  [note: asynchronous communications]
+		E0_distributed: if True, forwards gradients to main node for E0 (note: still applies projection to gradient if applicable)
 		verbose: prints error at end of optim steps
 	Returns:
 		axes: list of pyplot axes if plots
@@ -125,7 +125,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				alpha=alpha_dic[tensor]
 				if E0_distributed:
 					grad=proj_fft2(E.E0_maskable.grad)
-					dist.send( grad, 0, tag=2)
+					hand = dist.isend( grad, 0, tag=2000+i)
+					hand.wait()
 
 				if sum_grad_E0:
 					E.E0_maskable.data = (1-alpha*torch.sum(E.E0_maskable.grad))*E.E0_maskable.data
@@ -141,7 +142,10 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 
 			if Q10_distributed and tensor.data_ptr() == E.bw10Func.Q10RBFnet.l2.weight.data_ptr():
 				#forwards gradient (in addition to updating 'local' params)
-				dist.send( tensor.grad, 0, tag=1)
+				hand = dist.isend( tensor.grad, 0, tag=1000+i)
+				hand.wait()
+
+
 
 		for tensor in E.list_param_tensors():
 			if tensor.requires_grad and tensor.grad is not None:
