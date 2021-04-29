@@ -80,7 +80,8 @@ def plot_main_CAPs(**kwargs):
 
 
 ### Windowing/processing
-#NB: 1st processing (windowing + filtering), 2nd processing (diff with broadband condition + smoothing)
+#NB: 1st processing (windowing + filtering), 
+# 2nd processing (diff with broadband condition + smoothing + corr drift)
 
 t0=5.7e-3
 t1=9e-3
@@ -137,17 +138,52 @@ def process_signal(sig, cumsum=cumsum_default, return_t=False):
 	else:
 		return sig2
 	
-def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0):
+
+t2, broadband_proc=process_signal(broadband_avg, cumsum=cumsum_default, return_t=True)
+nomasker_proc=process_signal(nomasker_avg)
+
+dt=t2[1]-t2[0]
+
+def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 	'''subtracts the broadband noise response
 	gauss_sigma: if diff of 0, smooths the signal with gaussian filter'''
 	
 	res = process_signal(sig-broadband_avg, cumsum=cumsum)
+
+	if corr_drift:
+		#HACK correction drift
+		sigma_2=0.15e-3
+		sigma_2/=dt
+		val2=gaussian_filter1d(res, sigma_2) 
+		ind0=135 
+		ind1=330  #480 - 150
+		dim=len(np.shape(res))
+
+		if dim==1:
+			pt0=val2[ind0] #5.8ms (#TODO correct for latencies?)
+			pt1=val2[ind1] #10ms
+		else:
+			pt0=val2[:, ind0]
+			pt1=val2[:, ind1]
+
+
+		corr_arr=np.zeros_like(res)
+		if dim==1:
+			corr_arr[0:ind0]=pt0
+			corr_arr[ind0:ind1]= np.linspace(pt0, pt1, num=ind1-ind0)
+			corr_arr[ind1::]= pt1
+		else:
+			corr_arr[:, 0:ind0]=pt0[:,np.newaxis]
+			diff_pt=(pt1-pt0)
+			corr_arr[:, ind0:ind1]=diff_pt[:,np.newaxis]*np.linspace(0, 1, num=ind1-ind0)
+			corr_arr[:, ind1::]= pt1[:,np.newaxis]
+
+
+		res-=corr_arr
+
 	if gauss_sigma !=0:
 		res = gaussian_filter1d(res, gauss_sigma)
 	return res
-
-t2, broadband_proc=process_signal(broadband_avg, cumsum=cumsum_default, return_t=True)
-nomasker_proc=process_signal(nomasker_avg)
 
 ### Estimation ur / raw excitation pattern
 
@@ -330,10 +366,10 @@ def plot_figures_narrowband_analysis_deconv():
 	(s10_proc-s11_proc, '1.5-1.8kHz'),
 	(s11_proc-s12_proc, '1.2-1.5kHz'),
 	(s12_proc, '-1.2kHz')]:
-	    E=deconv(sig, eps=1e-2)
-	    E=deconv_newton(E, sig, alpha=0.005, nb_steps=50, eps_ridge=2e-1, t0=4.3e-3, t1=7e-3)
-	    pl.plot(t2*1e3, E-0.25*i, label=label)
-	    i+=1
+		E=deconv(sig, eps=1e-2)
+		E=deconv_newton(E, sig, alpha=0.005, nb_steps=50, eps_ridge=2e-1, t0=4.3e-3, t1=7e-3)
+		pl.plot(t2*1e3, E-0.25*i, label=label)
+		i+=1
 
 	pl.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 	pl.xlim([4, 8])

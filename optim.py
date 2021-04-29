@@ -41,7 +41,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		E0_t_min: (not applicable to single latency model or when use_bincount is True), if E0_maskable is in alpha_dic, restricts E0_maskable to [t_min, t_max]
 		E0_t_max: (not applicable to single latency model or when use_bincount is True),), if E0_maskable is in alpha_dic, restricts E0_maskable to [t_min, t_max]
 		plot_graphs: monitors updated parameters
-		step_plots: plot every step_plots steps	
+		step_plots: plot every step_plots steps 
 		axes: list of axes on which the figures are plotted. If None (default), creates the axes
 		ind_plots: dictionnary for the subplots
 		step0: ref for step 0 (default: 0)
@@ -125,8 +125,12 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				alpha=alpha_dic[tensor]
 				if E0_distributed:
 					grad=proj_fft2(E.E0_maskable.grad)
-					hand = dist.isend( grad, 0, tag=2000+i)
-					hand.wait()
+					try:
+						hand = dist.isend( grad, 0, tag=2000+i)
+						hand.wait()
+					except RuntimeError as e:
+						print(e)
+						print(f'handle send grad E0 it {i} (step {step}) not completed before timeout')
 
 				if sum_grad_E0:
 					E.E0_maskable.data = (1-alpha*torch.sum(E.E0_maskable.grad))*E.E0_maskable.data
@@ -142,8 +146,13 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 
 			if Q10_distributed and tensor.data_ptr() == E.bw10Func.Q10RBFnet.l2.weight.data_ptr():
 				#forwards gradient (in addition to updating 'local' params)
-				hand = dist.isend( tensor.grad, 0, tag=1000+i)
-				hand.wait()
+				try:
+					hand = dist.isend( tensor.grad, 0, tag=1000+i)
+					hand.wait()
+				except RuntimeError as e:
+					print(e)
+					print(f'handle send grad Q10 it {i} (step {step}) not completed before timeout')
+
 
 
 
