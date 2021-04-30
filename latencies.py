@@ -138,6 +138,28 @@ class PowerLawLatencies:
 	def list_param_tensors(self):
 		return [self.A, self.alpha, self.t0]
 
+
+
+	def write_to_npz(self, filename):
+		def get_data(t):
+			return t.detach().numpy()
+
+		np.savez(filename, A=get_data(self.A), alpha=get_data(self.alpha),
+			t0=get_data(self.t0))
+
+
+	@classmethod
+	def load_from_npz(cls, filename, requires_grad=False):
+		with np.load(filename) as f:
+			A=f['A']
+			alpha=f['alpha']
+			t0=f['t0']
+		return cls(A=A, alpha=alpha, t0=t0,
+			requires_grad=requires_grad)
+
+
+
+
 class SingleLatency:
 	'''
 	Workaround class to model synchronous fibers
