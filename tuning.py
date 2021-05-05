@@ -5,6 +5,8 @@ import numpy as np
 
 import json 
 
+
+##### Q10 handlers #####
 class constant_BW10:
 	def __init__(self, BW10_0, requires_grad=False):
 		'''

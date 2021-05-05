@@ -21,7 +21,7 @@ def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian',
 	'''
 	m=500
 	f=torch.linspace(fmin, fmax, m)
-	sq_excitations = get_sq_masking_excitation_patterns_maskCond(f, BW10Func, maskingConditions, filter_model='gaussian')
+	sq_excitations = get_sq_masking_excitation_patterns_maskCond(f, BW10Func, maskingConditions, filter_model=filter_model)
 
 	pl.suptitle('Masker spectra and excitations')
 
@@ -55,7 +55,7 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 	'''
 	m=500
 	f=torch.linspace(fmin, fmax, m)
-	sq_excitations = get_sq_masking_excitation_patterns_maskCond(f, BW10Func, maskingConditions, filter_model='gaussian')
+	sq_excitations = get_sq_masking_excitation_patterns_maskCond(f, BW10Func, maskingConditions, filter_model=filter_model)
 
 	pl.suptitle('Amount of masking')
 

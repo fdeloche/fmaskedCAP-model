@@ -5,8 +5,10 @@ import numpy as np
 import scipy.signal as sg
 
 import functools
+import re 
 
 from latencies import *
+from filters import *
 
 #from scipy.stats import gamma
 
@@ -20,18 +22,24 @@ def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, amp_l
 		amp_list: list of Tensors (length list: n_bands, dim Tensors: nb_conditions) amp of each band 
 		f_low_list: list of Tensors (length list: n_bands, dim Tensors: nb_conditions) f_cut low for each band
 		f_high_list: list of Tensors (length list: n_bands, dim Tensors: nb_conditions) f_cut high
-		filter_model: 'gaussian' (default), only available for now  #TODO gammatone filters
+		filter_model: 'gaussian' (default), 'gammatone_k' k-th order gammatone
 	Returns:
 		squared excitation patterns associated to the masking conditions (tensor shape (n_conditions, n_freq))
 	'''
 
 	bw10=bw10Func(f)
 	bw10_inv=1/bw10
+	F=None
 	if filter_model=='gaussian': 
+		F=GaussianFilter.int_standard_sq  #integrates frequency amplitude squared x=f/bw_10
 
-		cte=2*np.sqrt(2*np.log(10)) #sig_f=bw10/(2*2.14...)
-		def F(x):
-			return 1/2+1/2*torch.erf(x*cte/np.sqrt(2))   
+	m=re.match('gammatone_([1-9]+)', filter_model)
+	if m:
+		k=int(m.group(1))
+		F=functools.partial(GammatoneFilter.int_standard_sq, k)
+		
+	assert F is not None, "filter model not recognized"
+
 
 	exc=torch.zeros(n_conditions, f.shape[0])
 
