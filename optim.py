@@ -52,13 +52,14 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	Returns:
 		axes: list of pyplot axes if plots
 		ind_plots: dictionnary for the subplots
+		err_list: list of errors across iterations
 	'''
 	assert (axes is None) == (ind_plots is None)
 
 	if plot_Q10:
 		assert fc_ref_Q10>0, "fc_ref_Q10 must be set when plot_Q10 is True"
 
-	if tot_steps==0:\
+	if tot_steps==0:
 		tot_steps=nb_steps
 		
 	cdict = {'red':   ((0.0,  0.22, 0.0),
@@ -74,6 +75,9 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 			   (1.0,  0.11, 1.0))}
 
 	cmap = colors.LinearSegmentedColormap('custom', cdict)
+
+	err_list=[]
+
 
 	if E.E0_maskable in alpha_dic:
 		#projection of gradient on first dimensions (Fourier basis)
@@ -115,6 +119,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 
 		err=torch.sum( (CAPs- torch.tensor(signals_proc) )**2 )
 		
+		err_list.append(err)
+
 		if i==nb_steps and verbose:
 			print(f"step {step}, err RMS: {torch.sqrt(err/(E.maskingConditions.n_conditions*len(E.t)))*1e3:.4f} (µV)")
 		err.backward()
@@ -267,7 +273,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	if ind_plots is None:
 		ind_plots=ind_plots2
 		axes=axes2
-	return axes, ind_plots
+	return axes, ind_plots, err_list
 
 
 

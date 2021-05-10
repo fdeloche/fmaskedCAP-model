@@ -314,7 +314,13 @@ class WeibullCDF_IOFunc:
 		return cls(I0=I0, scale=scale, k=k, mmax=mmax, requires_grad=requires_grad,
 			constrained_at_Iref=constrained_at_Iref, Iref=Iref)
 
-
+	def __repr__(self):
+		st=f'Weibull CDF function, I0={self.I0.detach().numpy():.3f}, scale={self.scale.detach().numpy():.3f}, k={self.k.detach().numpy():.3f}'
+		if self.constrained_at_Iref:
+			st+=f' Iref:{self._Iref:.3f}'
+		else:
+			st+=f' mmax:{self.mmax.detach().numpy():.3f}'
+		return st
 
 
 
