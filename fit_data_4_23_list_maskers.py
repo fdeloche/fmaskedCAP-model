@@ -450,7 +450,7 @@ vfreq_3k_fln_list=['4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
 # 2.2khz
 
 ntch_2200_masker_list=['2_notch2200_bw1500_55dB',
-'3_notch2200_bw1500_50dB',
+#'3_notch2200_bw1500_50dB',
 '4_notch2200_bw1500_45dB',
 '5_notch2200_bw1500_40dB',
 '6_notch2200_bw1500_35dB',
