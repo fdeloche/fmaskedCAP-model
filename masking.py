@@ -31,7 +31,7 @@ class SigmoidIOFunc:
 		self.mmax=torch.tensor(max_masking, requires_grad=requires_grad)
 
 
-	def __call__(self, I):
+	def __call__(self, I, f=0):
 		if self.constrained_at_Iref:
 			return torch.sigmoid(self.a*(I-self.mu))/torch.sigmoid(self.a*(self._Iref-self.mu))
 		else:
@@ -192,7 +192,7 @@ class WeibullCDF_IOFunc:
 
 
 
-	def __call__(self, I):
+	def __call__(self, I, f=0):
 		Delta_I=torch.maximum((I-self.I0), torch.tensor(0.))
 		if self.constrained_at_Iref:
 			Delta_I_ref=torch.maximum((self._Iref-self.I0), torch.tensor(0.))
@@ -326,13 +326,13 @@ class WeibullCDF_IOFunc:
 
 
 
-def get_masking_amount(mdFunc, sq_exc, eps=1e-6):
+def get_masking_amount(mdFunc, sq_exc, f=0., eps=1e-6):
 	'''
 	Args:
 		mdFunc: masking degree function
 		sq_exc: squared excitation associated with masking patterns
 	'''
-	return mdFunc(10*torch.log10(eps+sq_exc))
+	return mdFunc(10*torch.log10(eps+sq_exc), f)
 
 ###########  Masking conditions (maskers) ###########
 
@@ -500,11 +500,11 @@ class MaskingConditions:
 
 
 
-def plotMaskingDegreeFunc(maskingDegreeFunction):
+def plotMaskingDegreeFunc(maskingDegreeFunction, f=0.):
 	I=torch.linspace(0, 100, 500)
 
 	pl.figure()
-	pl.plot(I, maskingDegreeFunction(I)*100)
+	pl.plot(I, maskingDegreeFunction(I, f)*100)
 	pl.xlabel('Spectral intensity (dB)')
 	pl.ylabel('masking degree (%)')
 	pl.ylim([0, 105])

@@ -78,7 +78,7 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 		ax.set_title(maskingConditions.names[i], fontsize=10)
 		#ax.plot(f, maskerSpectrum, '--')
 		I=10*torch.log10(sq_exc+eps)
-		ax.plot(f, maskingIO(I)*100)
+		ax.plot(f, maskingIO(I, f)*100)
 		ax.set_xlabel('f')
 		ax.set_ylabel('masking amount (%)')
 		ax.set_ylim([0, 100.])

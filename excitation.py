@@ -160,7 +160,7 @@ class ExcitationPatterns:
 			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
 		
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
-			maskingAmount=self.maskingIOFunc(I)
+			maskingAmount=self.maskingIOFunc(I, f)
 
 			res= torch.unsqueeze(self.E0_nonmaskable, 0)+ self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
 			if isinstance(self.latencies, SingleLatency):
@@ -231,7 +231,7 @@ class ExcitationPatterns:
 		with torch.no_grad():
 			sq_masking_exc_patterns=self.get_tensor()
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
-			maskingAmount=self.maskingIOFunc(I)
+			maskingAmount=self.maskingIOFunc(I, f)
 			maskingAmount=maskingAmount.clone().numpy()
 
 		return functools.partial(proj, maskingAmount, eps=eps)

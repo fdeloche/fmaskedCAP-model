@@ -49,6 +49,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		Q10_distributed: if True, forwards gradients to main node for Q10 (then encoded by a RBF net)  [note: asynchronous communications]
 		E0_distributed: if True, forwards gradients to main node for E0 (note: still applies projection to gradient if applicable)
 		verbose: prints error at end of optim steps
+		fc_ref_Q10: CF (ref frequency for Q10). also used for plotting i/o func if dependent on frequency
 	Returns:
 		axes: list of pyplot axes if plots
 		ind_plots: dictionnary for the subplots
@@ -235,7 +236,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					ax2 = axes[ind_plot-1]
 
 			if (i-1)%step_plots==0:
-				ax2.plot(I, E.maskingIOFunc(torch.tensor(I)).detach().numpy(), label=f'step {step}', color=cstep)
+				ax2.plot(I, E.maskingIOFunc(torch.tensor(I), 
+					torch.tensor(fc_ref_Q10, dtype=torch.float32))).detach().numpy(), label=f'step {step}', color=cstep)
 			
 			if i==1 and axes is None:
 				ax2.set_title('Masking IO Function')
