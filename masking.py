@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 import json 
+import rbf
 
 from scipy.optimize import curve_fit
 
@@ -173,15 +174,16 @@ class WeibullCDF_IOFunc:
 	def __init__(self, I0=0., scale=40., k=10., requires_grad=False, mmax=1., constrained_at_Iref=False, Iref=-20):
 		'''
 		Args:
-			theta: localization parameter (max intensity associated with 0% masking)
+			I0: localization parameter (max intensity associated with 0% masking)
 			scale: scale parameter (63% masking intensity reached at I0+scale)
 			k: shape parameter
 			mmax: maximum masking
 			constrained_at_Iref: if True, constrains the function to equal 1 at Iref.  (in this case, mmax is superfluous)
 			Iref: Iref in dB in the case of 'constrained_at_Iref
-		
+			
 		'''
 		self.I0=torch.tensor(I0, requires_grad=requires_grad)
+		self.constant_I0=True #does not depend on f by default		
 		self.scale=torch.tensor(scale, requires_grad=requires_grad)	
 		self.k=torch.tensor(k, requires_grad=requires_grad)
 
@@ -191,18 +193,33 @@ class WeibullCDF_IOFunc:
 		self.mmax=torch.tensor(mmax, requires_grad=requires_grad)
 
 
+	def set_I0_w_RBFNet(self, rbfNet):
+		'''set I0 as a function of f with a rbf network'''
+		self.constant_I0=False
+		self.rbfNet=rbfNet
+
+
 
 	def __call__(self, I, f=0):
-		Delta_I=torch.maximum((I-self.I0), torch.tensor(0.))
+		if self.constant_I0:
+			I0=self.I0
+		else:
+			I0=rbfNet(f)
+		Delta_I=torch.maximum((I-I0), torch.tensor(0.))
 		if self.constrained_at_Iref:
-			Delta_I_ref=torch.maximum((self._Iref-self.I0), torch.tensor(0.))
+			Delta_I_ref=torch.maximum((self._Iref-I0), torch.tensor(0.))
 			return (1-torch.exp( -(Delta_I/self.scale)**self.k))/(1-torch.exp( -(Delta_I_ref/self.scale)**self.k))
 		else:
 			return self.mmax*(1-torch.exp( -(Delta_I/self.scale)**self.k))
 
 
 	def list_param_tensors(self):
-		return [self.I0, self.scale, self.k, self.mmax]
+		params=[self.scale, self.k, self.mmax]
+		if self.constant_I0:
+			params.append(self.I0)
+		else:
+			params.append(self.rbfNet.l2.weight)
+		return params
 
 	def fit_data(self, I_values, m_values, init_with_new_values=True,  constrained_at_Iref=False, Iref=-20):
 		'''

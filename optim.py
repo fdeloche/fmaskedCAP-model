@@ -237,7 +237,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 
 			if (i-1)%step_plots==0:
 				ax2.plot(I, E.maskingIOFunc(torch.tensor(I), 
-					torch.tensor(fc_ref_Q10, dtype=torch.float32))).detach().numpy(), label=f'step {step}', color=cstep)
+					torch.tensor(fc_ref_Q10, dtype=torch.float32)).detach().numpy(), label=f'step {step}', color=cstep)
 			
 			if i==1 and axes is None:
 				ax2.set_title('Masking IO Function')
