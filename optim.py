@@ -8,6 +8,7 @@ import matplotlib.colors as colors
 from excitation import *
 from latencies import *
 
+import rbf
 
 '''
 #not needed anymore
@@ -25,7 +26,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	plot_E0_graph=False, plot_masking_I0_graph=False, 
 	plot_Q10=False, fc_ref_Q10=0,
 	step_plots=1, axes=None, ind_plots=None, step0=0, tot_steps=0, verbose=False, 
-	Q10_distributed=False, E0_distributed=False
+	Q10_distributed=False, E0_distributed=False, I0_distributed=False
 	):
 	'''
 	optimization steps on model parameters (parameters of masking I/O curves, raw excitation pattern, tuning) based on square error after convolution (based on RFFT/IRFFT). 
@@ -48,6 +49,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		tot_steps: total number of steps (if optim_steps is called several times), for plotting purposes onely
 		Q10_distributed: if True, forwards gradients to main node for Q10 (then encoded by a RBF net)  [note: asynchronous communications]
 		E0_distributed: if True, forwards gradients to main node for E0 (note: still applies projection to gradient if applicable)
+		I0_distributed: if True, forwards gradients to main node for I0 (for weibull cdf, encoded by a RBF net)
 		verbose: prints error at end of optim steps
 		fc_ref_Q10: CF (ref frequency for Q10). also used for plotting i/o func if dependent on frequency
 	Returns:
@@ -159,6 +161,16 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				except RuntimeError as e:
 					print(e)
 					print(f'handle send grad Q10 it {i} (step {step}) not completed before timeout')
+
+
+			if I0_distributed and tensor.data_ptr() == E.maskingIOFunc.rbfNet.l2.weight.data_ptr():
+				#forwards gradient (in addition to updating 'local' params)
+				try:
+					hand = dist.isend( tensor.grad, 0, tag=3000+i)
+					hand.wait()
+				except RuntimeError as e:
+					print(e)
+					print(f'handle send grad RBFbet I0 it {i} (step {step}) not completed before timeout')
 
 
 
