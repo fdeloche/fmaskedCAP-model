@@ -172,9 +172,6 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					print(e)
 					print(f'handle send grad RBFbet I0 it {i} (step {step}) not completed before timeout')
 
-
-
-
 		for tensor in E.list_param_tensors():
 			if tensor.requires_grad and tensor.grad is not None:
 				tensor.grad.zero_()
@@ -248,8 +245,9 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					ax2 = axes[ind_plot-1]
 
 			if (i-1)%step_plots==0:
-				ax2.plot(I, E.maskingIOFunc(torch.tensor(I), 
-					torch.tensor(fc_ref_Q10, dtype=torch.float32)).detach().numpy(), label=f'step {step}', color=cstep)
+				m_amount=E.maskingIOFunc(torch.tensor(I), 
+					torch.tensor(fc_ref_Q10, dtype=torch.float32))
+				ax2.plot(I, m_amount.detach().numpy(), label=f'step {step}', color=cstep)
 			
 			if i==1 and axes is None:
 				ax2.set_title('Masking IO Function')

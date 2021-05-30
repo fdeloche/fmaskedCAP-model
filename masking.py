@@ -200,11 +200,19 @@ class WeibullCDF_IOFunc:
 
 
 
-	def __call__(self, I, f=0):
+	def __call__(self, I, f=torch.tensor([0.]) ):
 		if self.constant_I0:
 			I0=self.I0
 		else:
-			I0=rbfNet(f)
+			if len(f.shape)==0:
+				f=torch.unsqueeze(f, -1)
+			I0=self.rbfNet(f)
+			#I0=torch.squeeze(I0, -1)
+			#I0=torch.unsqueeze(I0, 0)
+			if len(I.shape)>1:
+				I0=torch.transpose(I0, 0, 1) #out_dim (1) becomes batch dim
+			else:
+				I0=torch.squeeze(I0, -1)
 		Delta_I=torch.maximum((I-I0), torch.tensor(0.))
 		if self.constrained_at_Iref:
 			Delta_I_ref=torch.maximum((self._Iref-I0), torch.tensor(0.))
@@ -332,7 +340,8 @@ class WeibullCDF_IOFunc:
 			constrained_at_Iref=constrained_at_Iref, Iref=Iref)
 
 	def __repr__(self):
-		st=f'Weibull CDF function, I0={self.I0.detach().numpy():.3f}, scale={self.scale.detach().numpy():.3f}, k={self.k.detach().numpy():.3f}'
+		I0_str=f'{self.I0.detach().numpy():.3f}' if self.constant_I0 else '(set by RBF)'
+		st=f'Weibull CDF function, I0={I0_str}, scale={self.scale.detach().numpy():.3f}, k={self.k.detach().numpy():.3f}'
 		if self.constrained_at_Iref:
 			st+=f' Iref:{self._Iref:.3f}'
 		else:
