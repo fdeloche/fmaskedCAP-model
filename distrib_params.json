@@ -1,0 +1,14 @@
+{
+    "expe_name": "1-22",
+    "E0_distributed": true,
+    "Q10_disbtributed": true,
+    "I0_distributed": true,
+    "n_workers": "4",
+    "write_results": true,
+    "CFs": [
+        5000,
+        6000,
+        8000
+    ],
+    "results_folder0": "./results/fit1-22-distrib/"
+}
