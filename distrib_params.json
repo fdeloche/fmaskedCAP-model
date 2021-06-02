@@ -10,5 +10,6 @@
         6000,
         8000
     ],
-    "results_folder0": "./results/fit1-22-distrib/"
+    "results_folder0": "./results/fit1-22-distrib/",
+    "load_json_optim_params": true
 }
