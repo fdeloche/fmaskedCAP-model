@@ -25,6 +25,8 @@ from ur import *
 
 from data import CAPData
 
+import config_mode
+
 ### Import data
 
 data_folder='./Data/SP-2021_04_23-Q393_fmaskedCAP_data/'
@@ -40,7 +42,12 @@ listFiles = os.listdir(data_folder)
 
 cumsum_default=False
 
-capData=CAPData(data_folder, listFiles, begin_ind=28, end_ind=1884, mode='C+R')
+
+assert config_mode.mode is not None, 'cap mode (config_mode.mode) not set'
+
+capMode=config_mode.mode
+
+capData=CAPData(data_folder, listFiles, begin_ind=28, end_ind=1884, mode=capMode)
 
 ### Main signals
 

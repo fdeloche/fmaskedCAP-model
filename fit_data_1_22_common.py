@@ -25,6 +25,8 @@ from tuning import *
 from test import *
 from ur import *
 
+import config_mode
+
 from data import CAPData
 
 ### Import data
@@ -42,7 +44,11 @@ listFiles = os.listdir(data_folder)
 
 cumsum_default=False
 
-capData=CAPData(data_folder, listFiles, begin_ind=50, end_ind=1525, mode='C+R')
+assert config_mode.mode is not None, 'cap mode (config_mode.mode) not set'
+
+capMode=config_mode.mode
+
+capData=CAPData(data_folder, listFiles, begin_ind=50, end_ind=1525, mode=config_mode.mode)
 
 ### Main signals
 
