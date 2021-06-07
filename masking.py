@@ -535,3 +535,84 @@ def plotMaskingDegreeFunc(maskingDegreeFunction, f=0.):
 	pl.ylabel('masking degree (%)')
 	pl.ylim([0, 105])
 	pl.show()
+
+
+
+#util function to find iso-masking level curves
+
+def aux_rec_dich(I_left, I_right, f_func, level, eps=0.001):
+	'''
+	Dichotomy search, assumes the function is monotonous.
+	Returns:
+		I such that f(I)=level
+	''' 
+	center=(I_left+I_right)/2
+	val=f_func(center)
+	err=val-level
+	if np.abs(err)<eps:
+		return center
+	elif err<0:
+		return aux_rec_dich(center, I_right, f_func, level, eps=eps)
+	else:
+		return aux_rec_dich(I_left, center, f_func, level, eps=eps)
+
+
+
+def isomasking_curves_wbcdf(f_min, f_max, num_f, num_levels, I0_func, scale_func, 
+	k_func, constrained_at_Iref=False, Iref=100, eps=0.001):
+	'''
+	Args:
+		f_min:
+		f_max:
+		num_f: number of points between f_min and f_max
+		num_levels: number of levels between 0% and 100%
+		I0_func: callable for I0 as a function of CF
+		scale_func: callable for scale
+		k_func: callable for k
+		constrained_at_Iref: passes the argument to WeibullCDF
+		Iref: passes the argument to WeibullCDF. is used as upper value for the search
+	Returns:
+		array: f linspace
+		array: level linspace
+		array array: 2d array (size: num_levels, num_f) of masker PSD for each masking level
+
+	'''
+	f_arr=np.linspace(f_min, f_max, num=num_f)
+	level_arr=np.linspace(0, 1, num=num_levels)
+	res=np.zeros((num_levels, num_f))
+	for i, f in enumerate(f_arr):
+		I0=I0_func(f)
+		f_func=wb_cdf=WeibullCDF_IOFunc(I0, scale_func(f), k_func(f),
+		 constrained_at_Iref=constrained_at_Iref, Iref=Iref)
+		I_left=I0
+		I_right=Iref
+		for j in range(num_levels//2):
+			level_j=level_arr[j]
+			I_j=aux_rec_dich(I_left, I_right, f_func, level_j, eps=eps)
+
+			I_left=I_j
+
+			level_mj=level_arr[num_levels-1-j]
+			I_mj=aux_rec_dich(I_left, I_right, f_func, level_mj, eps=eps)
+			
+			I_right=I_mj
+
+			res[j, i]=I_j
+			res[num_levels-1-j, i]=I_mj
+		if (num_levels%2)==1: #consider the case when j=num_levels//2 if odd
+			j=num_levels//2
+			level_j=level_arr[j]
+			I_j=aux_rec_dich(I_left, I_right, f_func, level_j, eps=eps)
+
+			res[j, i]=I_j
+
+	return f_arr, level_arr, res
+
+
+
+
+
+
+
+
+
