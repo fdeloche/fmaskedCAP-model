@@ -87,8 +87,10 @@ def plot_main_CAPs(**kwargs):
 
 
 ### Windowing/processing
-#NB: 1st processing (windowing + filtering), 
-# 2nd processing (diff with broadband condition + smoothing + corr drift)
+#NB: 1st processing (filtering), 
+# 2nd processing (diff with broadband condition + smoothing + corr drift) + windowing
+# /!\ windowing in 2nd processing as it must be done after correction for drift
+
 
 t0=5.7e-3
 t1=9e-3
@@ -101,6 +103,7 @@ win0=sg.tukey(ind1-ind0, alpha=0.4)
 
 win=np.zeros_like(broadband_avg)
 win[ind0:ind1]=win0
+
 
 def plot_CAP_with_window(**kwargs):
 	pl.figure(**kwargs)
@@ -118,8 +121,9 @@ def plot_CAP_with_window(**kwargs):
 
 
 def process_signal(sig, cumsum=cumsum_default, return_t=False):
-	sig2=sig*win
-	
+	#sig2=sig*win  #done in process2
+	sig2=sig
+
 	t0=3e-3
 	t1=13e-3
 
@@ -151,6 +155,19 @@ nomasker_proc=process_signal(nomasker_avg)
 
 dt=t2[1]-t2[0]
 
+t0=(5.7-3)*1e-3
+t1=(9-3)*1e-3
+ind0=int(t0*48828)
+
+ind0=int(t0*48828)
+ind1=int(t1*48828)
+
+win20=sg.tukey(ind1-ind0, alpha=0.4)
+
+win2=np.zeros_like(broadband_proc)
+win2[ind0:ind1]=win20
+
+
 def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 	'''subtracts the broadband noise response
 	gauss_sigma: if diff of 0, smooths the signal with gaussian filter'''
@@ -162,12 +179,12 @@ def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 		sigma_2=0.15e-3
 		sigma_2/=dt
 		val2=gaussian_filter1d(res, sigma_2) 
-		ind0=135 
+		ind0=180 
 		ind1=330  #480 - 150
 		dim=len(np.shape(res))
 
 		if dim==1:
-			pt0=val2[ind0] #5.8ms (#TODO correct for latencies?)
+			pt0=val2[ind0] #6.8ms (#TODO correct for latencies?)
 			pt1=val2[ind1] #10ms
 		else:
 			pt0=val2[:, ind0]
@@ -190,6 +207,9 @@ def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 
 	if gauss_sigma !=0:
 		res = gaussian_filter1d(res, gauss_sigma)
+
+	res*=win2
+
 	return res
 
 ### Estimation ur / raw excitation pattern
@@ -204,7 +224,7 @@ sig=capData.get_signal_by_name('8_notch4000_bw1700_29dB')
 sig2=process_signal2(sig)
 
 #ur0=sig2-broadband_proc
-gauss_sigma=(0.5e-4)/(t2[1]-t2[0])
+gauss_sigma=(1e-4)/(t2[1]-t2[0])
 ur0=process_signal2(sig, gauss_sigma=gauss_sigma)
 ur0=np.roll(ur0, -100)
 
