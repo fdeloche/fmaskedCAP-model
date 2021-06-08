@@ -3,13 +3,18 @@
     "E0_distributed": true,
     "Q10_disbtributed": true,
     "I0_distributed": true,
-    "n_workers": "4",
+    "n_workers": "7",
     "write_results": true,
     "CFs": [
+        2200,
+        3000,
+        4000,
         5000,
         6000,
         8000
     ],
     "results_folder0": "./results/fit1-22-distrib/",
-    "load_json_optim_params": true
+    "load_json_optim_params": true,
+    "results_name": "test-0607c",
+    "results_folder": "./results/fit1-22-test-0607c/"
 }

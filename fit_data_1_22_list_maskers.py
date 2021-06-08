@@ -246,9 +246,9 @@ vbw_3k_fln_list=['1-notch2900_bw600.json',
 '7-notch3100_bw1000.json']
 
 
-vfreq_3k_fln_list=['4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz', '10_hp_1800Hz', '11_hp_1500Hz', 
-'12_hp_1200Hz',
+vfreq_3k_fln_list=[#'4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
+#'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz', '10_hp_1800Hz', '11_hp_1500Hz', 
+#'12_hp_1200Hz',
 
 '8-notch5800_bw1400',
 
