@@ -1,7 +1,7 @@
 {
     "n_it": 100,
     "nb_steps": 3,
-    "n_dim": 7,
+    "n_dim": 4,
     "alpha": {
         "I0": 15,
         "I0RBFweights": 0.15,
