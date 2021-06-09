@@ -238,7 +238,7 @@ def plotExcitationPatternsSingleLat(E, plot_raw_excitation=False, axlist=None, m
 
 	return axlist2
 
-def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=8, ylim=None, reg_ex=None, title='Simulated CAPs (+ excitation patterns)'):
+def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=8, ylim=None, reg_ex=None, title='Simulated CAPs (+ excitation patterns)', plot_excitations=True, plotargs={}):
 	'''
 	Args:
 		E:ExcitationPatterns object
@@ -265,12 +265,15 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 					continue 
 			ax= pl.subplot((nb_plots+1)//2, 2, ind+1) if axlist is None else axlist[2*i]
 			ax.set_title(maskingConditions.names[i], fontsize=10)
-			p=ax.plot(E.t*1e3, exc, linestyle='--', linewidth=1.5)
+			if plot_excitations:
+				p=ax.plot(E.t*1e3, exc, linestyle='--', linewidth=1.5, **plotargs)
+				if len(plotargs)==0:
+					plotargs= {"color":p[0].get_color()}
 			ax2=ax.twinx()  if axlist is None else axlist[2*i+1]
 
 			if not CAParray is None:
 				CAP=CAParray[i]
-				ax2.plot(E.t*1e3, CAP, color=p[0].get_color()) 
+				ax2.plot(E.t*1e3, CAP, **plotargs) 
 				ax2.grid(False)
 			else:
 				exc_np = exc.detach().numpy()
@@ -279,7 +282,7 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 				ind_time=np.sum(t<(t[0]+shift))
 				ind_time=min(ind_time, len(CAP)-len(E.t))
 				CAP=CAP[ind_time:ind_time+len(E.t)]
-				ax2.plot(E.t*1e3, CAP, color=p[0].get_color()) 
+				ax2.plot(E.t*1e3, CAP,  **plotargs) 
 			ax2.grid(False)
 			ax.set_xlabel('Time (ms)')
 			axlist2.append(ax)
@@ -292,7 +295,10 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 	else:
 		ax = pl.gca() if axlist is None else axlist[0]
 		ax.plot(E.t*1e3, E.E0_nonmaskable, label='non maskable part', linestyle='--')
-		p=ax.plot(E.t*1e3, E.E0_maskable, label='maskable part', linestyle='--', linewidth=1.5)
+		if plot_excitations:
+			p=ax.plot(E.t*1e3, E.E0_maskable, label='maskable part', linestyle='--', linewidth=1.5, **plotargs)
+			if len(plotargs)==0:
+				plotargs= {"color":p[0].get_color()}		
 		E0=E.E0_nonmaskable+E.E0_maskable
 		ax2=ax.twinx()  if axlist is None else axlist[1]
 		exc_np = E0.detach().numpy()			
@@ -301,7 +307,7 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 		ind_time=np.sum(t<(t[0]+shift))
 		ind_time=min(ind_time, len(CAP)-len(E.t))
 		CAP=CAP[ind_time:ind_time+len(E.t)]
-		ax2.plot(E.t*1e3, CAP, color=p[0].get_color())
+		ax2.plot(E.t*1e3, CAP,  **plotargs)
 		ax2.grid(False)
 		ax.set_xlabel('Time (ms)')
 		ax.legend()
