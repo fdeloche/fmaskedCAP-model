@@ -1,8 +1,8 @@
 {
-    "expe_name": "1-22",
+    "expe_name": "4-23",
     "E0_distributed": true,
     "Q10_disbtributed": true,
-    "I0_distributed": true,
+    "I0_distributed": false,
     "n_workers": "7",
     "write_results": true,
     "CFs": [
@@ -13,8 +13,8 @@
         6000,
         8000
     ],
-    "results_folder0": "./results/fit1-22-distrib/",
+    "results_folder0": "./results/fit4-23-distrib/",
     "load_json_optim_params": true,
-    "results_name": "test-0608b",
-    "results_folder": "./results/fit1-22-test-0608b/"
+    "results_name": "test-0609",
+    "results_folder": "./results/fit4-23-test-0609/"
 }
