@@ -194,11 +194,12 @@ class SingleLatency:
 Eggermont1976clickLatencies80dB=PowerLawLatencies.fromPts(5.3e-3, 1e3, 2e-3, 5e3, name="Eggermont 1976 click 80dB")
 
 
-def plotLatencies(lat, ax=None):
+def plotLatencies(lat, ax=None, logscale=False):
 	'''
 	Args:
 		lat: latencies object
-		axes: axe where the figure is plotted, default None
+		axes: axe on which the figure is plotted, default None
+		logscale: if True, t-t0 and f axis will be on log scale
 	Return:
 		ax
 	'''
@@ -224,9 +225,19 @@ def plotLatencies(lat, ax=None):
 
 	ax = pl.figure() if ax is None else pl.figure(ax.number)
 	pl.title(f'Latencies')
-	pl.plot((t0+t)*1e3, f*1e-3, label= lat.name)
-	pl.xlabel('t (ms)')
-	pl.xlim([0, 10])
+	if logscale:
+		pl.plot(t*1e3, f*1e-3, label= lat.name)
+	else:
+		pl.plot((t0+t)*1e3, f*1e-3, label= lat.name)
+	if logscale:
+
+		pl.xlabel('t-t_0 (ms)')
+
+		pl.xscale('log')
+		pl.yscale('log')
+	else:
+		pl.xlabel('t (ms)')
+		pl.xlim([0, 10])
 	pl.ylabel('f (kHz)')
 	pl.legend()
 	return ax

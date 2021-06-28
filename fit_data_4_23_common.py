@@ -337,44 +337,55 @@ s11_proc=process_signal2(s11, gauss_sigma=gauss_sigma)
 s12_proc=process_signal2(s12, gauss_sigma=gauss_sigma)
 	
 
+
 def plot_figures_narrowband_analysis():
 	pl.figure()
-	pl.plot(s1_proc)
-	pl.plot(s2_proc)
-	pl.plot(s3_proc)
-	pl.plot(s4_proc)
-	pl.plot(s5_proc)
-	pl.plot(s6_proc)
-	pl.plot(s7_proc)
-	pl.plot(s8_proc)
-	pl.plot(s9_proc)
-	pl.plot(s10_proc)
-	pl.plot(s11_proc)
-	pl.plot(s12_proc)
+	pl.plot(t2*1e3, s1_proc*1e3, label='high pass 10kHz')
+	pl.plot(t2*1e3, s2_proc*1e3, label='high pass 9kHz')
+	pl.plot(t2*1e3, s3_proc*1e3, label='high pass 8kHz')
+	pl.plot(t2*1e3, s4_proc*1e3, label='high pass 7kHz')
+	pl.plot(t2*1e3, s5_proc*1e3, label='high pass 6kHz')
+	pl.plot(t2*1e3, s6_proc*1e3, label='high pass 5kHz')
+	pl.plot(t2*1e3, s7_proc*1e3, label='high pass 4kHz')
+	pl.plot(t2*1e3, s8_proc*1e3, label='high pass 3.2 kHz')
+	pl.plot(t2*1e3, s9_proc*1e3, label='high pass 2.4 kHz')
+	pl.plot(t2*1e3, s10_proc*1e3, label='high pass 1.8 kHz')
+	pl.plot(t2*1e3, s11_proc*1e3, label='high pass 1.5 kHz')
+	pl.plot(t2*1e3, s12_proc*1e3, label='high pass 1.2 kHz')
+	pl.xlabel('t (ms)')
+	pl.ylabel('Amplitude difference (μV)')
+	pl.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 	pl.show()
 
 	pl.figure()
-	pl.plot(t2*1e3,s1_proc-s2_proc, label='9-10kHz')
-	pl.plot(t2*1e3,s2_proc-s3_proc, label='8-9kHz')
-	pl.plot(t2*1e3,s3_proc-s4_proc, label='7-8kHz')
-	pl.plot(t2*1e3,s4_proc-s5_proc, label='6-7kHz')
-	pl.plot(t2*1e3,s5_proc-s6_proc, label='5-6kHz')
-	pl.plot(t2*1e3,s6_proc-s7_proc, label='4-5kHz')
+	pl.plot(t2*1e3,(s1_proc-s2_proc)*1e3, label='9-10kHz')
+	pl.plot(t2*1e3,(s2_proc-s3_proc)*1e3, label='8-9kHz')
+	pl.plot(t2*1e3,(s3_proc-s4_proc)*1e3, label='7-8kHz')
+	pl.plot(t2*1e3,(s4_proc-s5_proc)*1e3, label='6-7kHz')
+	pl.plot(t2*1e3,(s5_proc-s6_proc)*1e3, label='5-6kHz')
+	pl.plot(t2*1e3,(s6_proc-s7_proc)*1e3, label='4-5kHz')
+	pl.xlabel('t (ms)')
+	pl.ylabel('Amplitude difference (μV)')
+
 	pl.xlim([3,12])
 	pl.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 	pl.show()
 
 
-
 	pl.figure()
-	pl.plot(t2*1e3,s6_proc-s7_proc, label='4-5kHz')
-	pl.plot(t2*1e3,s7_proc-s8_proc, label='3.2-4kHz')
-	pl.plot(t2*1e3,s8_proc-s9_proc, label='2.4-3.2kHz')
-	pl.plot(t2*1e3,s9_proc-s10_proc, label='1.8-2.4kHz')
-	pl.plot(t2*1e3,s10_proc-s11_proc, label='1.5-1.8kHz')
-	pl.plot(t2*1e3,s11_proc-s12_proc, label='1.2-1.5kHz')
-	pl.plot(t2*1e3,s12_proc, label='-1.2kHz')
+	pl.plot(t2*1e3,(s6_proc-s7_proc)*1e3, label='4-5kHz')
+	pl.plot(t2*1e3,(s7_proc-s8_proc)*1e3, label='3.2-4kHz')
+	pl.plot(t2*1e3,(s8_proc-s9_proc)*1e3, label='2.4-3.2kHz')
+	pl.plot(t2*1e3,(s9_proc-s10_proc)*1e3, label='1.8-2.4kHz')
+	pl.plot(t2*1e3,(s10_proc-s11_proc)*1e3, label='1.5-1.8kHz')
+	pl.plot(t2*1e3,(s11_proc-s12_proc)*1e3, label='1.2-1.5kHz')
+	pl.plot(t2*1e3,s12_proc*1e3, label='-1.2kHz')
 	pl.xlim([3,12])
+
+	pl.xlabel('t (ms)')
+	pl.ylabel('Amplitude difference (μV)')
+
+
 	pl.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 	pl.show()
 
@@ -393,11 +404,11 @@ def plot_figures_narrowband_analysis_deconv():
 	(s10_proc-s11_proc, '1.5-1.8kHz'),
 	(s11_proc-s12_proc, '1.2-1.5kHz'),
 	(s12_proc, '-1.2kHz')]:
-		E=deconv(sig, eps=1e-2)
-		E=deconv_newton(E, sig, alpha=0.005, nb_steps=50, eps_ridge=2e-1, t0=4.3e-3, t1=7e-3)
-		pl.plot(t2*1e3, E-0.25*i, label=label)
-		i+=1
-
+	    E=deconv(sig, eps=1e-2)
+	    E=deconv_newton(E, sig, alpha=0.005, nb_steps=50, eps_ridge=2e-1, t0=4.3e-3, t1=7e-3)
+	    pl.plot(t2*1e3, E-0.25*i, label=label)
+	    i+=1
+	pl.xlabel('t (ms)')
 	pl.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 	pl.xlim([4, 8])
 	pl.show()
