@@ -437,6 +437,8 @@ t_max_pts0=t_max_pts
 lat=PowerLawLatencies(1e6, alpha=1, t0=4e-3, mode='left')
 lat.fit_data(t_max_pts, freqs_pts, init_with_new_values=False, bounds=[0.5, 2])
 
+
+
 lat_above4k=lat
 
 
