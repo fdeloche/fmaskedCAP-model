@@ -450,8 +450,8 @@ def plot_estimated_latencies_deconv():
 
 #above 4kHz
 
-freqs_pts=freqs*1e3
-t_max_pts=t_max
+freqs_pts0=freqs_pts=freqs*1e3
+t_max_pts0=t_max_pts=t_max
 
 #freqs_pts=np.array([9.5,8.5,7.5,6.5,5.5,4.5])*1e3
 #inds=np.array([0,1,2, 4,5]) #HACK remove outlier 6.5 kHz

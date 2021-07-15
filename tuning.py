@@ -24,6 +24,23 @@ class constant_BW10:
 		return [self.BW_10]
 
 
+class Q10PowerLaw:
+	'''class for Q10 following a power law Q10(f)= Q10_0 (f/f_0)^beta'''
+
+	def __init__(self, Q10_0, f_0, beta, requires_grad=False):
+		self.Q10_0=torch.tensor(Q10_0, requires_grad=requires_grad)
+		self.f_0=torch.tensor(f_0, requires_grad=requires_grad)
+		self.beta=torch.tensor(beta, requires_grad=requires_grad)
+
+	def get_Q10(self, f):
+		return self.Q10_0*(f/self.f_0)**self.beta
+
+	def __call__(self, f):
+		Q10=self.get_Q10(f)
+		return f/Q10
+
+	def list_param_tensors(self):
+		return [self.Q10_0, self.f_0, self.beta]  #
 
 #RBF network
 
@@ -113,3 +130,4 @@ class Q10RBFNet_BW10:
 
 	def list_param_tensors(self):
 		return [self.Q10RBFnet.l2.weight]  #
+
