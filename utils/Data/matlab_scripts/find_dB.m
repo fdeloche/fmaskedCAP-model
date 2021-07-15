@@ -81,7 +81,7 @@ f=linspace(0, fs, ind_1-ind_0+1);
 % plot(f, sqrt(mean(abs(freq_res).^2, 1)) )
 
 nPairs=p.data_struct.Stimuli.RunStimuli_params.nPairs;
-m_tapers=12;
+m_tapers=4;
 sumrep=0;
 for i=1:2*nPairs
     x=All_V(i, ind_0:ind_1);
@@ -89,9 +89,9 @@ for i=1:2*nPairs
     sumrep= sumrep + rep;
     
     f=linspace(0, fs/2, length(rep));
-    plot(f, rep)
+    plot(f, 10*log10(rep))
     hold on
 end
 
-plot(f, sumrep/nPairs)
+plot(f, 10*log10(sumrep/nPairs))
 
