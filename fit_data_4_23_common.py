@@ -156,7 +156,7 @@ nomasker_proc=process_signal(nomasker_avg)
 dt=t2[1]-t2[0]
 
 t0=(5.7-3)*1e-3
-t1=(9-3)*1e-3
+t1=(10-3)*1e-3
 ind0=int(t0*48828)
 
 ind0=int(t0*48828)
@@ -179,12 +179,12 @@ def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 		sigma_2=0.15e-3
 		sigma_2/=dt
 		val2=gaussian_filter1d(res, sigma_2) 
-		ind0=180 
+		ind0=160 
 		ind1=330  #480 - 150
 		dim=len(np.shape(res))
 
 		if dim==1:
-			pt0=val2[ind0] #6.8ms (#TODO correct for latencies?)
+			pt0=val2[ind0] #6.4ms (NB: at onset for 8 kHz, 0.5ms before for the lowest CFs)
 			pt1=val2[ind1] #10ms
 		else:
 			pt0=val2[:, ind0]

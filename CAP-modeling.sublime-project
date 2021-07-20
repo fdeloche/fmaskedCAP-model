@@ -1,5 +1,12 @@
 {
-	"build_systems":
+
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+"build_systems":
 	[
 		{
 			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
@@ -9,10 +16,4 @@
 		}
 	],
 	"conda_environment": "/home/fdeloche/anaconda3/envs/torch",
-	"folders":
-	[
-		{
-			"path": "."
-		}
-	]
 }

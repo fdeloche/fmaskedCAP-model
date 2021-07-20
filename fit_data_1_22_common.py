@@ -87,7 +87,7 @@ def plot_main_CAPs(**kwargs):
 #NB: 1st processing (windowing + filtering), 2nd processing (diff with broadband condition + smoothing)
 
 t0=5.7e-3
-t1=9e-3
+t1=10e-3
 ind0=int(t0*48828)
 
 ind0=int(t0*48828)
