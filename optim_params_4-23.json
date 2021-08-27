@@ -1,5 +1,5 @@
 {
-    "n_it": 120,
+    "n_it":120,
     "nb_steps": 3,
     "n_dim": 4,
     "alpha": {

@@ -14,8 +14,9 @@
         6000,
         8000
     ],
-    "results_folder0": "./results/fit4-23-test-0719",
+    "results_folder0": "./results/fit1-22-test-0719d",
     "load_json_optim_params": true,
-    "results_name": "test-0719d",
-    "results_folder": "./results/fit1-22-test-0719d/"
+    "load_wbcdf": true,
+    "results_name": "test-0720b",
+    "results_folder": "./results/fit1-22-test-0720b/"
 }
