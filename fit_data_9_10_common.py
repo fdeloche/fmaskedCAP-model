@@ -33,8 +33,9 @@ data_folder='./Data/AS-2021_09_10-Q342_fmaskedCAP_normal'
 
 fs=48828
 
-I0 = 104 +11 - 30 #intensity ref for masker    #100 dB rms=1  +11 dB amp 5   (/sqrt(2))   #-28 dB masker atten
+I0 = 106 +11 - 30 #intensity ref for masker    #106 dB rms=1  +11 dB amp 5   (/sqrt(2))   #-30 dB masker atten
 I0 = 10*np.log10( 10**(I0/10)/(fs/2) ) #spectral density
+
 
 print(f'reference masker power spectral density (0 attn): {I0:.2f} dB')
 
@@ -193,7 +194,7 @@ sig=capData.get_signal_by_name('8_notch4000_bw1700_29dB')
 sig2=process_signal2(sig)
 
 #ur0=sig2-broadband_proc
-gauss_sigma=(1e-4)/(t2[1]-t2[0])
+gauss_sigma=(0.2e-4)/(t2[1]-t2[0])
 ur0=process_signal2(sig, gauss_sigma=gauss_sigma)
 ur0=np.roll(ur0, -100)
 

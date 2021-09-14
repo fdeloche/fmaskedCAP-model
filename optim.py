@@ -237,7 +237,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 			else:
 				ind_plot=ind_plots['I0']
 			if i==1:
-				I=np.linspace(-30, 20)
+				I=np.linspace(-25, 40)
 				if axes is None:
 					ax2 = pl.subplot(nb_plots, 1, ind_plot)
 					axes2.append(ax2)

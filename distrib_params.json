@@ -1,5 +1,5 @@
 {
-    "expe_name": "1-22",
+    "expe_name": "9-10",
     "E0_distributed": true,
     "Q10_distributed": true,
     "I0_distributed": false,
@@ -16,7 +16,7 @@
     ],
     "results_folder0": "./results/fit1-22-test-0719d",
     "load_json_optim_params": true,
-    "load_wbcdf": true,
-    "results_name": "test-0720b",
-    "results_folder": "./results/fit1-22-test-0720b/"
+    "load_wbcdf": false,
+    "results_name": "test-0914",
+    "results_folder": "./results/fit9-10-test-0914/"
 }
