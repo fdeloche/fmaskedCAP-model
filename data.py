@@ -21,7 +21,7 @@ class CAPData:
 	'''
 
 
-	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty, old_format=False, mode='C+R'):
+	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty, old_format=False, mode='C+R', pic_numbers_ignore=None):
 		'''
 		Args:
 			root_folder: root folder for .mat files
@@ -30,6 +30,7 @@ class CAPData:
 			end_ind: max pic number
 			old_format:old format of .mat files
 			mode: 'C+R', 'C' 'R' (check C and R? #TODO )
+			pic_numbers_ignore: list of pic numbers to ignore
 		'''  
 
 		assert mode in ['C+R', 'C', 'R']
@@ -55,7 +56,7 @@ class CAPData:
 				continue
 
 			p, name = split_name(fln)
-			if p>=begin_ind and p<=end_ind:
+			if p>=begin_ind and p<=end_ind and not (p in pic_numbers_ignore):
 
 				if name not in filtered_map_table:
 					filtered_map_table[name]=[p]
