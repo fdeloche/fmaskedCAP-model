@@ -26,7 +26,8 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 	plot_E0_graph=False, plot_masking_I0_graph=False, 
 	plot_Q10=False, fc_ref_Q10=0,
 	step_plots=1, axes=None, ind_plots=None, step0=0, tot_steps=0, verbose=False, 
-	Q10_distributed=False, E0_distributed=False, I0_distributed=False
+	Q10_distributed=False, E0_distributed=False, I0_distributed=False,
+	debug_grad_excs=False
 	):
 	'''
 	optimization steps on model parameters (parameters of masking I/O curves, raw excitation pattern, tuning) based on square error after convolution (based on RFFT/IRFFT). 
@@ -52,6 +53,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		I0_distributed: if True, forwards gradients to main node for I0 (for weibull cdf, encoded by a RBF net)
 		verbose: prints error at end of optim steps
 		fc_ref_Q10: CF (ref frequency for Q10). also used for plotting i/o func if dependent on frequency
+		debug_grad_excs: if True, plot gradients for excs
 	Returns:
 		axes: list of pyplot axes if plots
 		ind_plots: dictionnary for the subplots
@@ -81,6 +83,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 
 	err_list=[]
 
+	ind_plot=0
 
 	if E.E0_maskable in alpha_dic:
 		#projection of gradient on first dimensions (Fourier basis)
@@ -99,7 +102,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				return E0*filter_t
 
 	if ind_plots is None:
-		nb_plots=sum([plot_E0_graph, plot_masking_I0_graph, plot_Q10])
+		nb_plots=sum([plot_E0_graph, plot_masking_I0_graph, plot_Q10, debug_grad_excs])
 	else:
 		nb_plots=len(ind_plots)
 
@@ -111,6 +114,28 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 		step=step0+i
 		cstep=cmap(step/tot_steps)
 		excs = E.get_tensor() 
+
+
+		#for debug purpose
+		if debug_grad_excs:
+
+			ind_plot+=1
+			if i==1:
+				if axes is None:
+					ax0 = pl.subplot(nb_plots, 1, ind_plot)
+					axes2.append(ax0)
+				else:
+					ax0 = axes[ind_plot-1]
+			ax0.plot(E.t*1e3, excs[0], color='C0')
+			ax0.plot(E.t*1e3, excs[1], color='C1')
+			ax0.plot(E.t*1e3, excs[2], color='C2')
+
+			def plot_grad_excs(grad):
+				ax0.plot(E.t*1e3, grad[0], color='C0')
+				ax0.plot(E.t*1e3, grad[1], color='C1')
+				ax0.plot(E.t*1e3, grad[2], color='C2')
+
+			excs.register_hook(plot_grad_excs)
 
 		excs_fft = torch.fft.rfft(excs)
 		if i==1:
@@ -176,7 +201,6 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 			if tensor.requires_grad and tensor.grad is not None:
 				tensor.grad.zero_()
 
-		ind_plot=0
 
 		if plot_E0_graph:
 			if ind_plots is None:
