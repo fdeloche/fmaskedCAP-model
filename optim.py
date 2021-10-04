@@ -126,14 +126,21 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 					axes2.append(ax0)
 				else:
 					ax0 = axes[ind_plot-1]
-			ax0.plot(E.t*1e3, excs[0], color='C0')
-			ax0.plot(E.t*1e3, excs[1], color='C1')
-			ax0.plot(E.t*1e3, excs[2], color='C2')
+			ax0.set_title('Gradients excitations')
+			arr=excs[0].detach().numpy()
+			ax0.plot(E.t*1e3, arr/np.amax(np.abs(arr)), color='C0')
+			arr=excs[1].detach().numpy()
+			ax0.plot(E.t*1e3, arr/np.amax(np.abs(arr)), color='C1')
+			arr=excs[2].detach().numpy()
+			ax0.plot(E.t*1e3, arr/np.amax(np.abs(arr)), color='C2')
 
 			def plot_grad_excs(grad):
-				ax0.plot(E.t*1e3, grad[0], color='C0')
-				ax0.plot(E.t*1e3, grad[1], color='C1')
-				ax0.plot(E.t*1e3, grad[2], color='C2')
+				arr=grad[0].detach().numpy()
+				ax0.plot(E.t*1e3, arr/np.amax(np.abs(arr)), color='C0', linestyle='--')
+				arr=grad[1].detach().numpy()
+				ax0.plot(E.t*1e3, arr/np.amax(np.abs(arr)), color='C1', linestyle='--')
+				arr=grad[2].detach().numpy()
+				ax0.plot(E.t*1e3, arr/np.amax(np.abs(arr)), color='C2', linestyle='--')
 
 			excs.register_hook(plot_grad_excs)
 
