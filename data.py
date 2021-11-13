@@ -21,7 +21,8 @@ class CAPData:
 	'''
 
 
-	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty, old_format=False, mode='C+R', pic_numbers_ignore=None):
+	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty, old_format=False, mode='C+R', 
+		pic_numbers_ignore=[]):
 		'''
 		Args:
 			root_folder: root folder for .mat files
