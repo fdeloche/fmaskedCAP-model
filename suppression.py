@@ -43,9 +43,9 @@ class SuppressionAmount:
 		self.freq_factor=freq_factor
 		self.filter_model=filter_model
 
-	def __call__(self, f, maskCond):
-		I_supp_sq=get_sq_masking_excitation_patterns_maskCond(f*self.freq_factor, self.suppBW10Func, 
+	def __call__(self, f, maskCond, eps=1e-6):
+		exc_sq=get_sq_masking_excitation_patterns_maskCond(f*self.freq_factor, self.suppBW10Func, 
 			maskCond, filter_model=self.filter_model)
-		I_supp=torch.sqrt(I_supp_sq)
+		I_supp=10*torch.log10(exc_sq+eps)
 		return self.suppFunc(I_supp)
 
