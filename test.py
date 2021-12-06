@@ -15,7 +15,7 @@ import re
 def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian', fmin=800, fmax=8000, axlist=None, reg_ex=None):
 	'''
 	Args:
-		axlist:list of axes where to plot. If none creates a list of axes
+		axlist:list of axes for the plots. If none creates a list of axes
 	Returns:
 		the list of axes corresponding to the figures plotted
 	'''
