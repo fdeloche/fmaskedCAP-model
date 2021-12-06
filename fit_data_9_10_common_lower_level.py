@@ -14,8 +14,6 @@ import os
 
 #import copy
 
-from Fit_data_1_22_aux import apply_filter
-
 from masking import *
 from latencies import *
 from excitation import *
@@ -25,18 +23,19 @@ from tuning import *
 from test import *
 from ur import *
 
-import config_mode
-
 from data import CAPData
+
+import config_mode
 
 ### Import data
 
-data_folder='./Data/SP-2021_01_22_Q395_fmaskedCAP'
+data_folder='./Data/AS-2021_09_10-Q342_fmaskedCAP_normal'
 
 fs=48828
 
-I0 = 100 +10 - 32 #intensity ref for masker    #100 dB rms=1  +10 dB amp 5   (/sqrt(2))   #-32 dB masker atten
+I0 = 106 +11 - 38 #intensity ref for masker    #106 dB rms=1  +11 dB amp 5   (/sqrt(2))   #-38 dB masker atten
 I0 = 10*np.log10( 10**(I0/10)/(fs/2) ) #spectral density
+
 
 print(f'reference masker power spectral density (0 attn): {I0:.2f} dB')
 
@@ -44,11 +43,12 @@ listFiles = os.listdir(data_folder)
 
 cumsum_default=False
 
+
 assert config_mode.mode is not None, 'cap mode (config_mode.mode) not set'
 
 capMode=config_mode.mode
 
-capData=CAPData(data_folder, listFiles, begin_ind=50, end_ind=1525, mode=config_mode.mode)
+capData=CAPData(data_folder, listFiles, begin_ind=1757, end_ind=3109, mode=capMode, pic_numbers_ignore=[2027,2028,2029])
 
 ### Main signals
 
@@ -61,10 +61,11 @@ broadband3=capData.get_signal_by_name('broadband_noise_bis_bis')
 
 broadband_avg=(broadband1+broadband2+broadband3)/3
 
-nomasker1=capData.get_signal_by_name('nomasker_bis')
+nomasker1=capData.get_signal_by_name('nomasker')
+nomasker2=capData.get_signal_by_name('nomasker_bis')
 
-nomasker_avg=(nomasker1)
-
+nomasker_avg=nomasker1+nomasker2
+nomasker_avg/=2
 
 def plot_main_CAPs(**kwargs):
 	pl.figure(**kwargs)
@@ -76,6 +77,9 @@ def plot_main_CAPs(**kwargs):
 
 	pl.plot(t*1e3, nomasker1*1e3, label='no masker')
 
+
+	pl.plot(t*1e3, nomasker2*1e3, label='no masker bis')
+
 	pl.xlabel('t (ms)')
 	pl.ylabel('Amplitude (μV)')
 	#pl.xlim([0.004, 0.007])
@@ -84,9 +88,11 @@ def plot_main_CAPs(**kwargs):
 
 
 ### Windowing/processing
-#NB: 1st processing (windowing + filtering), 2nd processing (diff with broadband condition + smoothing)
+#NB: 1st processing (filtering), 
+# 2nd processing (diff with broadband condition + smoothing) + windowing
 
-t0=5.7e-3
+
+t0=6e-3
 t1=10e-3
 ind0=int(t0*48828)
 
@@ -97,6 +103,7 @@ win0=sg.tukey(ind1-ind0, alpha=0.4)
 
 win=np.zeros_like(broadband_avg)
 win[ind0:ind1]=win0
+
 
 def plot_CAP_with_window(**kwargs):
 	pl.figure(**kwargs)
@@ -113,13 +120,10 @@ def plot_CAP_with_window(**kwargs):
 	pl.show()
 
 
-def process_signal(sig, cumsum=cumsum_default, return_t=False, applyfilter=True):
-	
-	
-	if applyfilter:
-		sig=apply_filter(sig)
-	sig2=sig*win
-	
+def process_signal(sig, cumsum=cumsum_default, return_t=False):
+	#sig2=sig*win  #done in process2
+	sig2=sig
+
 	t0=3e-3
 	t1=13e-3
 
@@ -145,36 +149,38 @@ def process_signal(sig, cumsum=cumsum_default, return_t=False, applyfilter=True)
 	else:
 		return sig2
 	
-def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, applyfilter=True):
+
+t2, broadband_proc=process_signal(broadband_avg, cumsum=cumsum_default, return_t=True)
+nomasker_proc=process_signal(nomasker_avg)
+
+dt=t2[1]-t2[0]
+
+t0=(5.7-3)*1e-3
+t1=(10-3)*1e-3
+ind0=int(t0*48828)
+
+ind0=int(t0*48828)
+ind1=int(t1*48828)
+
+win20=sg.tukey(ind1-ind0, alpha=0.4)
+
+win2=np.zeros_like(broadband_proc)
+win2[ind0:ind1]=win20
+
+
+def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 	'''subtracts the broadband noise response
 	gauss_sigma: if diff of 0, smooths the signal with gaussian filter'''
 	
-	res = process_signal(sig-broadband_avg, cumsum=cumsum, applyfilter=applyfilter)
+	res = process_signal(sig-broadband_avg, cumsum=cumsum)
+
+
 	if gauss_sigma !=0:
 		res = gaussian_filter1d(res, gauss_sigma)
+
+	res*=win2
+
 	return res
-
-def plot_CAP_w_wo_filter():
-	for plot_time in [False, True]:
-		pl.figure()
-		for applyfilter in [False, True]:
-			t2, broadband_proc=process_signal(broadband_avg, cumsum=cumsum_default, return_t=True, applyfilter=applyfilter)
-			nomasker_proc=process_signal(nomasker_avg, applyfilter=applyfilter)
-			
-			if plot_time:
-				pl.plot(t2*1e3, nomasker_proc-broadband_proc, label= 'with filter' if applyfilter else 'without filter')
-			else:
-				sig2_fft= np.fft.rfft(nomasker_proc-broadband_proc)
-
-				f=np.linspace(0, 48828/2, len(sig2_fft))
-				pl.plot(f, np.abs(sig2_fft), label='with filter' if applyfilter else 'without filter')
-				pl.xlim([0, 6000])
-
-	pl.legend()
-	pl.show()
-	
-t2, broadband_proc=process_signal(broadband_avg, cumsum=cumsum_default, return_t=True, applyfilter=True)
-nomasker_proc=process_signal(nomasker_avg, applyfilter=True)
 
 ### Estimation ur / raw excitation pattern
 
@@ -185,11 +191,11 @@ sig=capData.get_signal_by_name('8_notch4000_bw1700_29dB')
 #sig=capData.get_signal_by_name('9_notch3000_bw1500_29dB')
 #sig=capData.get_signal_by_name('8_notch2200_bw1500_29dB') #medium freq
 
-sig2=process_signal2(sig, applyfilter=False)
+sig2=process_signal2(sig)
 
 #ur0=sig2-broadband_proc
-gauss_sigma=(0.5e-4)/(t2[1]-t2[0])*1./3   #*1./3 change of strategy (10/01/2021)
-ur0=process_signal2(sig, gauss_sigma=gauss_sigma, applyfilter=True)
+gauss_sigma=(0.2e-4)/(t2[1]-t2[0])
+ur0=process_signal2(sig, gauss_sigma=gauss_sigma)
 ur0=np.roll(ur0, -100)
 
 def deconv(released_sig, ur0=ur0, eps=1e-2):
@@ -243,20 +249,46 @@ def plot_raw_excitation_deconv():
 	pl.show()
 
 
-### Narrowband analysis
+# ### Narrowband analysis
 
-s1=capData.get_signal_by_name('1_hp_10000Hz')
-s2=capData.get_signal_by_name('2_hp_9000Hz')
-s3=capData.get_signal_by_name('3_hp_8000Hz')
-s4=capData.get_signal_by_name('4_hp_7000Hz')
-s5=capData.get_signal_by_name('5_hp_6000Hz')
-s6=capData.get_signal_by_name('6_hp_5000Hz')
-s7=capData.get_signal_by_name('7_hp_4000Hz')
-s8=capData.get_signal_by_name('8_hp_3200Hz')
-s9=capData.get_signal_by_name('9_hp_2400Hz')
-s10=capData.get_signal_by_name('10_hp_1800Hz')
-s11=capData.get_signal_by_name('11_hp_1500Hz')
-s12=capData.get_signal_by_name('12_hp_1200Hz')
+
+#HACK capData for level above
+capData2=CAPData(data_folder, listFiles, begin_ind=6, end_ind=1756, mode=capMode, pic_numbers_ignore=[672,673,674,675,676,678])
+
+
+broadband1_level_above=capData2.get_signal_by_name('broadband_noise')
+broadband2_level_above=capData2.get_signal_by_name('broadband_noise_bis')
+broadband3_level_above=capData2.get_signal_by_name('broadband_noise_bis_bis')
+
+broadband_avg_level_above=(broadband1_level_above+broadband2_level_above+broadband3_level_above)/3
+
+
+def process_signal2_level_above(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
+	'''subtracts the broadband noise response
+	gauss_sigma: if diff of 0, smooths the signal with gaussian filter'''
+	
+	res = process_signal(sig-broadband_avg_level_above, cumsum=cumsum)
+
+
+	if gauss_sigma !=0:
+		res = gaussian_filter1d(res, gauss_sigma)
+
+	res*=win2
+
+	return res
+
+s1=capData2.get_signal_by_name('1_hp_10000Hz')
+s2=capData2.get_signal_by_name('2_hp_9000Hz')
+s3=capData2.get_signal_by_name('3_hp_8000Hz')
+s4=capData2.get_signal_by_name('4_hp_7000Hz')
+s5=capData2.get_signal_by_name('5_hp_6000Hz')
+s6=capData2.get_signal_by_name('6_hp_5000Hz')
+s7=capData2.get_signal_by_name('7_hp_4000Hz')
+s8=capData2.get_signal_by_name('8_hp_3200Hz')
+s9=capData2.get_signal_by_name('9_hp_2400Hz')
+s10=capData2.get_signal_by_name('10_hp_1800Hz')
+s11=capData2.get_signal_by_name('11_hp_1500Hz')
+s12=capData2.get_signal_by_name('12_hp_1200Hz')
 
 s1_proc=process_signal(s1)
 s2_proc=process_signal(s2)
@@ -287,19 +319,20 @@ s12_proc=process_signal(s12)
 # pl.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 # pl.show()
 
-s1_proc=process_signal2(s1, gauss_sigma=gauss_sigma)
-s2_proc=process_signal2(s2, gauss_sigma=gauss_sigma)
-s3_proc=process_signal2(s3, gauss_sigma=gauss_sigma)
-s4_proc=process_signal2(s4, gauss_sigma=gauss_sigma)
-s5_proc=process_signal2(s5, gauss_sigma=gauss_sigma)
-s6_proc=process_signal2(s6, gauss_sigma=gauss_sigma)
-s7_proc=process_signal2(s7, gauss_sigma=gauss_sigma)
-s8_proc=process_signal2(s8, gauss_sigma=gauss_sigma)
-s9_proc=process_signal2(s9, gauss_sigma=gauss_sigma)
-s10_proc=process_signal2(s10, gauss_sigma=gauss_sigma)
-s11_proc=process_signal2(s11, gauss_sigma=gauss_sigma)
-s12_proc=process_signal2(s12, gauss_sigma=gauss_sigma)
+s1_proc=process_signal2_level_above(s1, gauss_sigma=gauss_sigma)
+s2_proc=process_signal2_level_above(s2, gauss_sigma=gauss_sigma)
+s3_proc=process_signal2_level_above(s3, gauss_sigma=gauss_sigma)
+s4_proc=process_signal2_level_above(s4, gauss_sigma=gauss_sigma)
+s5_proc=process_signal2_level_above(s5, gauss_sigma=gauss_sigma)
+s6_proc=process_signal2_level_above(s6, gauss_sigma=gauss_sigma)
+s7_proc=process_signal2_level_above(s7, gauss_sigma=gauss_sigma)
+s8_proc=process_signal2_level_above(s8, gauss_sigma=gauss_sigma)
+s9_proc=process_signal2_level_above(s9, gauss_sigma=gauss_sigma)
+s10_proc=process_signal2_level_above(s10, gauss_sigma=gauss_sigma)
+s11_proc=process_signal2_level_above(s11, gauss_sigma=gauss_sigma)
+s12_proc=process_signal2_level_above(s12, gauss_sigma=gauss_sigma)
 	
+
 
 def plot_figures_narrowband_analysis():
 	pl.figure()
@@ -378,25 +411,14 @@ def plot_figures_narrowband_analysis_deconv():
 
 
 
-### Latencies
+# ### Latencies
 
-#NB: some data not clear
-t_max=np.array([43.5,43.5,45,42,45.5,46.5,48,51,56,65,74,82])
-#t_max_bis=np.array([23,26,25.5,25.5,28.5,29])
-
-t_max_C=np.array([44,51.5,47,46,52,54,49,52,65,73,77,96.5])   #mod 0
-
-t_max_R=np.array([44,49.5,47.5,45,49.5,51,53.5,61,76.5,88,104,122])
+t_max=np.array([35,41,48,44,48,44,44,50,65,65,79,92])
 
 
-#t_0lat=4e-3-3.6e-3+2e-3
-t_0lat=4e-3+2e-3-6e-3
-
+t_0lat=4e-3+2e-3-5.7e-3
 
 t_max=t_0lat+t_max*2*1e-5
-t_max_C=t_0lat+t_max_C*2*1e-5
-
-t_max_R=t_0lat+t_max_R*2*1e-5
 
 #t_max_bis=t_0lat+t_max_bis*2*1e-5
 freqs=np.array([9.5,8.5,7.5,6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1])
@@ -404,10 +426,6 @@ freqs=np.array([9.5,8.5,7.5,6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1])
 def plot_estimated_latencies_deconv():
 	pl.figure()
 	pl.plot(freqs, t_max*1e3, '+', markersize=12, label='C+R')
-	pl.plot(freqs, t_max_C*1e3, '+', markersize=12, label='C')
-
-	pl.plot(freqs, t_max_R*1e3, '+', markersize=12, label='R')
-
 
 	#pl.plot(freqs[0:len(t_max_bis)], t_max_bis*1e3, '+', markersize=12, label='C+R (first peak?)')
 
@@ -416,52 +434,41 @@ def plot_estimated_latencies_deconv():
 
 	pl.legend()
 	pl.show()
-#NB CM begins at 6 ms approx
-#peak convol begins at 5-3 ms = 2ms (C) approx
+#NB CM begins at 5.7 ms approx
+#peak convol begins at 5-3 ms = 2ms approx
 
 
-# fit latencies 2 power laws
+# fit latencies power law
 
-#above 4kHz
+freqs_pts0=freqs_pts=freqs*1e3
+t_max_pts0=t_max_pts=t_max
 
-
-freqs_pts=np.array([9.5,8.5,7.5,6.5,5.5,4.5])*1e3
-
-inds=np.array([0,1,2, 4,5]) #HACK remove outlier 6.5 kHz
+inds=np.array([0,3,5,6,7,8,10,11]) #HACK remove 'outliers'
 freqs_pts=freqs_pts[inds]
 freqs_pts0=freqs_pts
 t_max_pts=t_max[inds]
 t_max_pts0=t_max_pts
 
 
-lat=PowerLawLatencies(1e6, alpha=1, t0=4e-3, mode='left')
-lat.fit_data(t_max_pts, freqs_pts, init_with_new_values=False, bounds=[0.5, 2])
+# lat=PowerLawLatencies(1e6, alpha=1, t0=4e-3, mode='left')
+# lat.fit_data(t_max_pts, freqs_pts, init_with_new_values=False, bounds=[0.5, 2])
+
+# lat_above4k=lat
 
 
+# #below 4kHz
+# freqs_pts=freqs[6:]*1e3
+# t_max_pts=t_max[6:]
 
-lat_above4k=lat
 
-
-#below 4kHz
-freqs_pts=freqs[6:]*1e3
-t_max_pts=t_max[6:]
 lat=PowerLawLatencies()
 lat.fit_data(t_max_pts, freqs_pts)
 
 def plot_latencies_fit():
 
 	pl.figure()
-	freqs_lin=np.linspace(4, 10)*1e3
-	pl.plot(freqs_lin, lat(freqs_lin)*1e3)
-
-	pl.plot(freqs_pts, t_max_pts*1e3, '+', markeredgewidth=3, markersize=10)
-
-	freqs_lin=np.linspace(0.5, 5)*1e3
-	pl.plot(freqs_lin, lat(freqs_lin)*1e3, color='C2')
-
-
 	freqs_lin=np.linspace(0.5, 10)*1e3
-	pl.plot(freqs_lin, lat(freqs_lin)*1e3, color='C2', linestyle='--')
+	pl.plot(freqs_lin, lat(freqs_lin)*1e3)
 
 	pl.plot(freqs_pts, t_max_pts*1e3, '+', markeredgewidth=3, markersize=10)
 
@@ -470,8 +477,6 @@ def plot_latencies_fit():
 	pl.figure()
 
 	pl.plot(freqs_lin, (lat(freqs_lin)-lat.t0)*1e3, color='C2', linestyle='--')
-
-	pl.plot(freqs_pts0, (t_max_pts0-lat.t0.numpy())*1e3, '+', markeredgewidth=3, markersize=10)
 
 	pl.plot(freqs_pts, (t_max_pts-lat.t0.numpy())*1e3, '+', markeredgewidth=3, markersize=10)
 

@@ -12,7 +12,8 @@ from filters import *
 
 #from scipy.stats import gamma
 
-def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, amp_list, f_low_list, f_high_list, filter_model='gaussian'):
+def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, 
+	amp_list, f_low_list, f_high_list, filter_model='gaussian'):
 	'''
 	Args:
 		f: Tensor of frequencies at which the excitation is computed 

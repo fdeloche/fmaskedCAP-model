@@ -12,16 +12,18 @@ import re
 
 
 
-def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian', fmin=800, fmax=8000, axlist=None, reg_ex=None):
+def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian', fmin=800, fmax=8000, 
+	axlist=None, reg_ex=None, freq_factor=1):
 	'''
 	Args:
 		axlist:list of axes for the plots. If none creates a list of axes
+		freq_factor: computes excitation with f*freq_factor (default: 1)
 	Returns:
 		the list of axes corresponding to the figures plotted
 	'''
 	m=500
 	f=torch.linspace(fmin, fmax, m)
-	sq_excitations = get_sq_masking_excitation_patterns_maskCond(f, BW10Func, maskingConditions, filter_model=filter_model)
+	sq_excitations = get_sq_masking_excitation_patterns_maskCond(freq_factor*f, BW10Func, maskingConditions, filter_model=filter_model)
 
 	pl.suptitle('Masker spectra and excitations')
 
@@ -46,9 +48,11 @@ def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian',
 	return axlist2
 
 
-def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-6, filter_model='gaussian', fmin=800, fmax=8000, axlist=None, max_plots=8, reg_ex=None):
+def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-6, filter_model='gaussian', fmin=800, fmax=8000, 
+	suppressionAmount=None, refMaskers=None, axlist=None, max_plots=8, reg_ex=None):
 	'''
 	Args:
+		refMaskers: masking Conditions (same number of conds as maskingConditions) serving as reference maskers. 
 		axlist:list of axes for the plots. If none creates a list of axes
 	Returns:
 		the list of axes corresponding to the figures plotted
@@ -56,6 +60,14 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 	m=500
 	f=torch.linspace(fmin, fmax, m)
 	sq_excitations = get_sq_masking_excitation_patterns_maskCond(f, BW10Func, maskingConditions, filter_model=filter_model)
+	if not(refMaskers is None):
+		sq_excitations_ref = get_sq_masking_excitation_patterns_maskCond(f, BW10Func, refMaskers, filter_model=filter_model)
+
+
+	if suppressionAmount is not None:
+		suppAmount=suppressionAmount(f, maskingConditions)
+		if not(refMaskers is None):
+			suppAmountRefMaskers=suppressionAmount(f, refMaskers)
 
 	pl.suptitle('Amount of masking')
 
@@ -78,11 +90,29 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 		ax.set_title(maskingConditions.names[i], fontsize=10)
 		#ax.plot(f, maskerSpectrum, '--')
 		I=10*torch.log10(sq_exc+eps)
-		ax.plot(f, maskingIO(I, f)*100)
+		I2 = I if suppressionAmount is None else I - suppAmount[i]
+		if not(refMaskers is None):
+			sq_exc_ref=sq_excitations_ref[i]
+			Iref=10*torch.log10(sq_exc_ref+eps)
+			I2ref =  Iref if suppressionAmount is None else Iref - suppAmountRefMaskers[i]
+
+			#ax.plot(f, maskingIO(I2, f)*100, label='masking amount')
+
+			#ax.plot(f, maskingIO(I2ref, f)*100, label='masking amount')
+			ax.plot(f, (maskingIO(I2, f)-maskingIO(I2ref, f))*100, label='masking amount')
+			ax.set_ylim([-100, 100.])
+		else:
+			ax.plot(f, maskingIO(I2, f)*100, label='masking amount')
+			ax.set_ylim([0, 100.])
 		ax.set_xlabel('f')
-		ax.set_ylabel('masking amount (%)')
-		ax.set_ylim([0, 100.])
+		ax.set_ylabel('Masking amount (%)')
 		axlist2.append(ax)
+		if not(suppressionAmount is None):
+			ax.twinx()
+			ax.plot(f, suppAmount[i], label='suppression amount', linestyle='--')
+			if not(refMaskers is None):
+				ax.plot(f, suppAmountRefMaskers[i], label='suppression amount', linestyle='--')
+			#ax.set_ylabel('Suppression amount (dB)')
 		ind+=1
 	return axlist2
 
