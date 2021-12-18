@@ -40,3 +40,14 @@ dic_ref_maskers={
  '23_notch4800_bw900': '21_notch5300_bw1800_nonotch',
  '24_notch4800_bw800': '21_notch5300_bw1800_nonotch',
  }
+
+
+#more explicit labels for hp6200 gradual amp
+labels_gradual_amp={
+ '11_hp6200_gradualamp':  '11_hp6200_gradualamp_bw1000',
+ '12_hp6200_gradualamp':  '12_hp6200_gradualamp_bw700',
+ '13_hp6200_gradualamp':  '13_hp6200_gradualamp_bw1400',
+ '14_hp6200_gradualamp':  '14_hp6200_gradualamp_bw1200',
+ '15_hp6200_gradualamp':  '15_hp6200_gradualamp_nonotch',
+ '16_hp6200_gradualamp':  '16_hp6200_gradualamp_nonotch_27dB',
+}
