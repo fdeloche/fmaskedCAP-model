@@ -51,4 +51,19 @@ Using `Fit data.ipynb`
 * NB: you can run `plot_figures_narrowband_analysis_deconv()` to help you report values for latencies
 * shift latencies
 	* reference click for later experiments, reference CM for earlier experiments
-* 
+* make sure estim ur ok (with proj)
+* estim I/O func : you can change init params in `init_params/[expe_name]/[CF]_init_params.json` or hard coded (if condition) in jupyter notebook
+	* you can use `utils/test weibull.ipynb` to help you find good params. or you can use interact mode with  plots in main notebook (after optim, uncomment @interact_manual)
+	* ex file:
+
+```json
+{
+"I0": -11,
+"scale": 30,
+"k": 4
+}
+```
+
+ * optim params: in `optim_params_[expe_name].json` or `optim_params.json`
+
+	

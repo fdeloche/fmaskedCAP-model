@@ -92,9 +92,8 @@ def plot_main_CAPs(**kwargs):
 #NB: 1st processing (filtering), 
 # 2nd processing (diff with broadband condition + smoothing) + windowing
 
-
-t0=6e-3
-t1=10e-3
+t0=5.7e-3
+t1=9.4e-3  #previously: 10e-3  (last part not very reliable)
 ind0=int(t0*48828)
 
 ind0=int(t0*48828)
@@ -156,8 +155,8 @@ nomasker_proc=process_signal(nomasker_avg)
 
 dt=t2[1]-t2[0]
 
-t0=(5.7-3)*1e-3
-t1=(10-3)*1e-3
+t0=t0-3e-3
+t1=t1-3e-3
 ind0=int(t0*48828)
 
 ind0=int(t0*48828)

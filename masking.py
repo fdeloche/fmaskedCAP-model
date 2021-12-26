@@ -179,8 +179,7 @@ class WeibullCDF_IOFunc:
 			k: shape parameter
 			mmax: maximum masking
 			constrained_at_Iref: if True, constrains the function to equal 1 at Iref.  (in this case, mmax is superfluous)
-			Iref: Iref in dB in the case of 'constrained_at_Iref
-			
+			Iref: Iref in dB in the case of 'constrained_at_Iref'
 		'''
 		self.I0=torch.tensor(I0, requires_grad=requires_grad)
 		self.constant_I0=True #does not depend on f by default		
@@ -193,10 +192,14 @@ class WeibullCDF_IOFunc:
 		self.mmax=torch.tensor(mmax, requires_grad=requires_grad)
 
 
-	def set_I0_w_RBFNet(self, rbfNet):
-		'''set I0 as a function of f with a rbf network'''
+	def set_I0_w_RBFNet(self, rbfNet, plus_lambda=False):
+		'''set I0 as a function of f with a rbf network
+		Args:
+			rbfNet: RBF network, see rbf.py
+			plus_lambda: if True, the RBF network output is considered to be (I0+scale)  (63% of max value whatever the value of k)'''
 		self.constant_I0=False
 		self.rbfNet=rbfNet
+		self.plus_lambda=plus_lambda
 
 
 
@@ -207,6 +210,8 @@ class WeibullCDF_IOFunc:
 			if len(f.shape)==0:
 				f=torch.unsqueeze(f, -1)
 			I0=self.rbfNet(f)
+			if self.plus_lambda:
+				I0+=self.scale
 			#I0=torch.squeeze(I0, -1)
 			#I0=torch.unsqueeze(I0, 0)
 			if len(I.shape)>1:
