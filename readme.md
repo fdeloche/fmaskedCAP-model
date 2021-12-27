@@ -66,4 +66,13 @@ Using `Fit data.ipynb`
 
  * optim params: in `optim_params_[expe_name].json` or `optim_params.json`
 
-	
+#### Multiples CFs
+
+* You can use `run_distributed.ipynb` which provides `papermill` commands (with `screen`)
+* advise:
+	* first run with '_distributed' params deactivated 
+		* in particular: first estim of I/O functions
+	* second run with '_distributed' params activated  + `load_wbcdf=True`
+		* you can try `I0_distributed` true (advised: `plus_lambda=True` the distrib param corresponds to 63% value of max wb cdf) or False
+		* for E0 distrib, an important parameter is `n_dim`
+* `run_distributed.ipynb` copy param files in results_folder specific to the run, but you need to copy the .ipynb files `fitdata[CF].ipynb` in the results folder if you want to keep track of optim plots.

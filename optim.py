@@ -242,7 +242,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				if i==nb_steps:
 					#ax1.legend()
 
-					ax1.set_ylim([-0.2, 1.4])
+					ax1.set_ylim([-0.2, 2.5])
 					pass
 			else:
 				if (i-1)%step_plots==0:

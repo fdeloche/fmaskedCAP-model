@@ -97,7 +97,7 @@ ntch_6k_masker_list=[#'2_notch6000_bw2000_55dB',
 
 
 
-attns_6k=np.array([45,40,35,32,29,26,23])
+attns_6k=np.array([45,40,35,32,29,26,23,17])
 
 ntch_6k_re='.*notch6000_bw2000'  #not used anymore
 

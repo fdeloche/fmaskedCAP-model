@@ -211,7 +211,7 @@ class WeibullCDF_IOFunc:
 				f=torch.unsqueeze(f, -1)
 			I0=self.rbfNet(f)
 			if self.plus_lambda:
-				I0+=self.scale
+				I0-=self.scale
 			#I0=torch.squeeze(I0, -1)
 			#I0=torch.unsqueeze(I0, 0)
 			if len(I.shape)>1:

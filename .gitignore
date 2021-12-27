@@ -36,3 +36,5 @@ __pycache__/
 *.sublime-workspace
 
 fitdata*
+optim_params*
+distrib_params.json
