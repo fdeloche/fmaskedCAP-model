@@ -14,9 +14,9 @@
         5000,
         6000
     ],
-    "results_folder0": "./results/fit1-22-test-0719d",
+    "results_folder0": "./results/fit12-13-122721-run0",
     "load_json_optim_params": true,
-    "load_wbcdf": false,
-    "results_name": "122721-run0",
-    "results_folder": "./results/fit12-13-122721-run0/"
+    "load_wbcdf": true,
+    "results_name": "010321-testerrs",
+    "results_folder": "./results/fit12-13-010321-testerrs/"
 }

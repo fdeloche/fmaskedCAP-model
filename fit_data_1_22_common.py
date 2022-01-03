@@ -93,7 +93,8 @@ ind0=int(t0*48828)
 ind0=int(t0*48828)
 ind1=int(t1*48828)
 
-win0=sg.tukey(ind1-ind0, alpha=0.4)
+alpha_tukey=0.4
+win0=sg.tukey(ind1-ind0, alpha=alpha_tukey)
 
 win=np.zeros_like(broadband_avg)
 win[ind0:ind1]=win0
