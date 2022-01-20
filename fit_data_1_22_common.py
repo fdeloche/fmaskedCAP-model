@@ -93,7 +93,8 @@ ind0=int(t0*48828)
 ind0=int(t0*48828)
 ind1=int(t1*48828)
 
-win0=sg.tukey(ind1-ind0, alpha=0.4)
+alpha_tukey=0.4
+win0=sg.tukey(ind1-ind0, alpha=alpha_tukey)
 
 win=np.zeros_like(broadband_avg)
 win[ind0:ind1]=win0
@@ -188,7 +189,10 @@ sig=capData.get_signal_by_name('8_notch4000_bw1700_29dB')
 sig2=process_signal2(sig, applyfilter=False)
 
 #ur0=sig2-broadband_proc
-gauss_sigma=(0.5e-4)/(t2[1]-t2[0])*1./3   #*1./3 change of strategy (10/01/2021)
+
+#gauss_sigma=(0.5e-4)/(t2[1]-t2[0])*1./3
+gauss_sigma=(0.3e-4)/(t2[1]-t2[0]) #01/19/22
+
 ur0=process_signal2(sig, gauss_sigma=gauss_sigma, applyfilter=True)
 ur0=np.roll(ur0, -100)
 

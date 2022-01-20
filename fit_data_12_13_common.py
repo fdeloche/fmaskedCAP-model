@@ -29,12 +29,13 @@ import config_mode
 
 ### Import data
 
-data_folder='./Data/SP-2021_04_23-Q393_fmaskedCAP_data/'
+data_folder='./Data/AS-2021_12_13-ChinQ336_fmaskedCAP_normal'
 
 fs=48828
 
-I0 = 101.8 +11 - 28 #intensity ref for masker    #100 dB rms=1  +11 dB amp 5   (/sqrt(2))   #-28 dB masker atten
+I0 = 106 - 30 #intensity ref for masker    #105.62 dB rms=1   #-30 dB masker atten   #NO +11 dB amp 5   (/sqrt(2))
 I0 = 10*np.log10( 10**(I0/10)/(fs/2) ) #spectral density
+
 
 print(f'reference masker power spectral density (0 attn): {I0:.2f} dB')
 
@@ -47,7 +48,8 @@ assert config_mode.mode is not None, 'cap mode (config_mode.mode) not set'
 
 capMode=config_mode.mode
 
-capData=CAPData(data_folder, listFiles, begin_ind=28, end_ind=1884, mode=capMode)
+capData=CAPData(data_folder, listFiles, begin_ind=7, end_ind=1486, \
+	mode=capMode, pic_numbers_ignore=[71])
 
 ### Main signals
 
@@ -88,12 +90,10 @@ def plot_main_CAPs(**kwargs):
 
 ### Windowing/processing
 #NB: 1st processing (filtering), 
-# 2nd processing (diff with broadband condition + smoothing + corr drift) + windowing
-# /!\ windowing in 2nd processing as it must be done after correction for drift
-
+# 2nd processing (diff with broadband condition + smoothing) + windowing
 
 t0=5.7e-3
-t1=9e-3
+t1=9.4e-3  #previously: 10e-3  (last part not very reliable)
 ind0=int(t0*48828)
 
 ind0=int(t0*48828)
@@ -101,7 +101,6 @@ ind1=int(t1*48828)
 
 alpha_tukey=0.4
 win0=sg.tukey(ind1-ind0, alpha=alpha_tukey)
-
 
 win=np.zeros_like(broadband_avg)
 win[ind0:ind1]=win0
@@ -157,8 +156,8 @@ nomasker_proc=process_signal(nomasker_avg)
 
 dt=t2[1]-t2[0]
 
-t0=(5.7-3)*1e-3
-t1=(10-3)*1e-3
+t0=t0-3e-3
+t1=t1-3e-3
 ind0=int(t0*48828)
 
 ind0=int(t0*48828)
@@ -176,36 +175,6 @@ def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 	
 	res = process_signal(sig-broadband_avg, cumsum=cumsum)
 
-	if corr_drift:
-		#HACK correction drift
-		sigma_2=0.15e-3
-		sigma_2/=dt
-		val2=gaussian_filter1d(res, sigma_2) 
-		ind0=160 
-		ind1=330  #480 - 150
-		dim=len(np.shape(res))
-
-		if dim==1:
-			pt0=val2[ind0] #6.4ms (NB: at onset for 8 kHz, 0.5ms before for the lowest CFs)
-			pt1=val2[ind1] #10ms
-		else:
-			pt0=val2[:, ind0]
-			pt1=val2[:, ind1]
-
-
-		corr_arr=np.zeros_like(res)
-		if dim==1:
-			corr_arr[0:ind0]=pt0
-			corr_arr[ind0:ind1]= np.linspace(pt0, pt1, num=ind1-ind0)
-			corr_arr[ind1::]= pt1
-		else:
-			corr_arr[:, 0:ind0]=pt0[:,np.newaxis]
-			diff_pt=(pt1-pt0)
-			corr_arr[:, ind0:ind1]=diff_pt[:,np.newaxis]*np.linspace(0, 1, num=ind1-ind0)
-			corr_arr[:, ind1::]= pt1[:,np.newaxis]
-
-
-		res-=corr_arr
 
 	if gauss_sigma !=0:
 		res = gaussian_filter1d(res, gauss_sigma)
@@ -219,18 +188,24 @@ def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 ### XXX depends on what is the focus (CF dependent)
 
 #sig=capData.get_signal_by_name('7_notch8000_bw2300_29dB')  #high freq
-sig=capData.get_signal_by_name('8_notch4000_bw1700_29dB')
+#sig=capData.get_signal_by_name('8_notch6000_bw2000_29dB')
+#sig=capData.get_signal_by_name('8_notch4000_bw1700_29dB')
 #sig=capData.get_signal_by_name('9_notch3000_bw1500_29dB')
 #sig=capData.get_signal_by_name('8_notch2200_bw1500_29dB') #medium freq
+
+
+ur0_masker_name='8_notch6000_bw2000_29dB'
+sig=capData.get_signal_by_name(ur0_masker_name)
+
 
 sig2=process_signal2(sig)
 
 #ur0=sig2-broadband_proc
-#gauss_sigma=(1e-4)/(t2[1]-t2[0])*1./3 
+
 gauss_sigma=(0.3e-4)/(t2[1]-t2[0]) #01/19/22
 
 ur0=process_signal2(sig, gauss_sigma=gauss_sigma)
-ur0=np.roll(ur0, -100)
+ur0=np.roll(ur0, -50)   #100 ->50
 
 def deconv(released_sig, ur0=ur0, eps=1e-2):
 	
@@ -245,14 +220,15 @@ E0=deconv(masked_sig)
 
 #estimation with projection
 
-def proj_E(E, t0=4e-3, t1=8e-3):
+def proj_E(E, t0=3.5e-3, t1=6.5e-3):
 	'''
 	constraints u between t0 and t1'''
 	proj=t2>t0
 	proj*=t2<t1
 	return E*proj
 
-def deconv_newton(E0, released_sig, ur0=ur0, alpha=0.02, nb_steps=20, eps_ridge=1e-1, verbose=False, t0=4e-3, t1=7e-3):
+def deconv_newton(E0, released_sig, ur0=ur0, alpha=0.02, nb_steps=20, eps_ridge=1e-1, 
+	verbose=False, t0=3.5e-3, t1=6.5e-3):
 	E=proj_E(E0, t0=t0, t1=t1)
 
 	released_sig_fft=np.fft.rfft(released_sig)
@@ -275,6 +251,11 @@ def deconv_newton(E0, released_sig, ur0=ur0, alpha=0.02, nb_steps=20, eps_ridge=
 E=deconv_newton(E0, masked_sig, verbose=False)
 
 def plot_raw_excitation_deconv():
+	pl.figure()
+	pl.title(f'ur0 ({ur0_masker_name})')
+	pl.plot(t2-t2[0], ur0)
+	pl.show()
+
 	pl.figure()
 	pl.plot(t2*1e3, E0, label=f'E0 (simple deconv)')
 	pl.plot(t2*1e3, E, label=f'E0 (w/ proj)')
@@ -409,31 +390,27 @@ def plot_figures_narrowband_analysis_deconv():
 	(s11_proc-s12_proc, '1.2-1.5kHz'),
 	(s12_proc, '-1.2kHz')]:
 	    E=deconv(sig, eps=1e-2)
-	    E=deconv_newton(E, sig, alpha=0.005, nb_steps=50, eps_ridge=2e-1, t0=4.3e-3, t1=7e-3)
+	    E=deconv_newton(E, sig, alpha=0.005, nb_steps=50, eps_ridge=2e-1, t0=3.5e-3, t1=6.5e-3)
 	    pl.plot(t2*1e3, E-0.25*i, label=label)
 	    i+=1
 	pl.xlabel('t (ms)')
 	pl.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-	pl.xlim([4, 8])
+	pl.xlim([3, 8])
 	pl.show()
 
 
 
 # ### Latencies
 
-t_max=np.array([34,37,39,41,39.5,43,49,54,62,69.5,78,93])
+t_max=np.array([37, 38.6, 39.5, 38.5, 38.3, 39.7, 41.7, 44.6, 51])
 
 
-#XXX data not for this expe !!!
-#t_max_C=np.array([44,51.5,47,46,52,54,49,52,65,73,77,96.5])   #mod 0
-#t_max_R=np.array([44,49.5,47.5,45,49.5,51,53.5,61,76.5,88,104,122])
+t_0lat=3e-3-4.8e-3
 
-t_0lat=4e-3+1.8e-3-5.5e-3
-
-t_max=t_0lat+t_max*2*1e-5
+t_max=t_0lat+t_max*1e-4
 
 #t_max_bis=t_0lat+t_max_bis*2*1e-5
-freqs=np.array([9.5,8.5,7.5,6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1])
+freqs=np.array([6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1])  #note: no signal 8khz, very weak 9-10 kHz
 
 def plot_estimated_latencies_deconv():
 	pl.figure()
@@ -446,19 +423,16 @@ def plot_estimated_latencies_deconv():
 
 	pl.legend()
 	pl.show()
-#NB CM begins at 5.75 ms approx
-#peak convol begins at 4.8-3 ms = 1.8ms (C) approx
+#NB click at 4.8 ms approx
+#peak convol begins at 3 ms (nb: previously, 2ms)
 
 
 # fit latencies power law
 
-#above 4kHz
-
 freqs_pts0=freqs_pts=freqs*1e3
 t_max_pts0=t_max_pts=t_max
 
-#freqs_pts=np.array([9.5,8.5,7.5,6.5,5.5,4.5])*1e3
-#inds=np.array([0,1,2, 4,5]) #HACK remove outlier 6.5 kHz
+#inds=np.array([0,3,5,6,7,8,10,11]) #HACK remove 'outliers'
 #freqs_pts=freqs_pts[inds]
 #freqs_pts0=freqs_pts
 #t_max_pts=t_max[inds]

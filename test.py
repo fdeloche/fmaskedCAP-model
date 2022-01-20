@@ -16,7 +16,7 @@ def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian',
 	axlist=None, reg_ex=None, freq_factor=1):
 	'''
 	Args:
-		axlist:list of axes where to plot. If none creates a list of axes
+		axlist:list of axes for the plots. If none creates a list of axes
 		freq_factor: computes excitation with f*freq_factor (default: 1)
 	Returns:
 		the list of axes corresponding to the figures plotted
@@ -344,3 +344,43 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 		axlist2.append(ax)
 		axlist2.append(ax2)
 	return axlist2
+
+
+
+def get_sq_err_CAPs(E, u, CAParray, t0, t1):
+	'''
+	Computes mean square error of the CAPs between t0 and t1 (ref t array: E.t) . 
+	Returns:
+	 	tuple (errs, sig_rms_sq) array of mean squared errors and array of mean squared values for CAParray signals
+	'''
+	assert E.masked
+
+	sq_errs=[]
+	sig_rms_sqs=[]
+
+	excs = E.get_tensor() 
+	maskingConditions = E.maskingConditions
+
+	t=E.t.numpy()
+	ind0=np.sum(t<t0)
+	ind1=np.sum(t<t1)
+
+	for i, exc in zip(range(maskingConditions.n_conditions), excs):
+
+
+		CAP0=CAParray[i]
+
+		exc_np = exc.detach().numpy()
+		CAP=np.convolve(exc_np, u, mode='full')
+
+
+
+		CAP0=CAP0[ind0:ind1]
+		CAP=CAP[ind0:ind1]
+
+		sq_err=np.mean( (CAP0-CAP)**2)
+		sq_errs.append(sq_err)
+
+		sig_rms_sq=np.mean( CAP0**2)
+		sig_rms_sqs.append(sig_rms_sq)
+	return sq_errs, sig_rms_sqs

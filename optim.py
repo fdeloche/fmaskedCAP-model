@@ -23,7 +23,7 @@ def complex_multiplication(t1, t2):
 
 def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0=1, E0_t_min=0, E0_t_max=np.infty,
 	sum_grad_E0=False,
-	plot_E0_graph=False, plot_masking_I0_graph=False, 
+	plot_E0_graph=False, plot_E0_amp_graph=False, plot_masking_I0_graph=False, 
 	plot_Q10=False, fc_ref_Q10=0,
 	step_plots=1, axes=None, ind_plots=None, step0=0, tot_steps=0, verbose=False, 
 	Q10_distributed=False, E0_distributed=False, I0_distributed=False,
@@ -102,7 +102,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				return E0*filter_t
 
 	if ind_plots is None:
-		nb_plots=sum([plot_E0_graph, plot_masking_I0_graph, plot_Q10, debug_grad_excs])
+		nb_plots=sum([plot_E0_graph, plot_E0_amp_graph, plot_masking_I0_graph, plot_Q10, debug_grad_excs])
 	else:
 		nb_plots=len(ind_plots)
 
@@ -242,7 +242,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				if i==nb_steps:
 					#ax1.legend()
 
-					ax1.set_ylim([-0.2, 1.4])
+					ax1.set_ylim([-0.2, 2.5])
 					pass
 			else:
 				if (i-1)%step_plots==0:
@@ -257,6 +257,29 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				if i==nb_steps:
 					#ax1.legend()
 					pass
+
+
+		#E0_amp
+		if plot_E0_amp_graph:
+			if ind_plots is None:
+				ind_plot+=1
+				if i==1:
+					ind_plots2['E0_amp']=ind_plot
+			else:
+				ind_plot=ind_plots['E0_amp']
+
+			if i==1:
+				if axes is None:
+					ax1bis = pl.subplot(nb_plots, 1, ind_plot)
+					axes2.append(ax1bis)
+				else:
+					ax1bis = axes[ind_plot-1]
+
+			ax1bis.plot(step, E.E0_maskable_amp.detach().numpy(), '+', color=cstep)
+			if i==1 and axes is None:
+				ax1bis.set_title('E0 amp')
+				ax1bis.set_xlabel('Step')
+				ax1bis.set_ylabel('E0_amp')
 
 
 		if plot_masking_I0_graph:

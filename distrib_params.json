@@ -1,9 +1,10 @@
 {
-    "expe_name": "9-10_bis",
+    "expe_name": "12-13",
     "E0_distributed": true,
     "Q10_distributed": true,
-    "I0_distributed": false,
-    "n_workers": "8",
+    "I0_distributed": true,
+    "plus_lambda": true,
+    "n_workers": "7",
     "write_results": true,
     "CFs": [
         1500,
@@ -11,12 +12,11 @@
         3000,
         4000,
         5000,
-        6000,
-        8000
+        6000
     ],
-    "results_folder0": "./results/fit1-22-test-0719d",
+    "results_folder0": "./results/fit12-13-122721-run0",
     "load_json_optim_params": true,
-    "load_wbcdf": false,
-    "results_name": "test-0920b",
-    "results_folder": "./results/fit9-10_bis-test-0920b/"
+    "load_wbcdf": true,
+    "results_name": "010322-run3",
+    "results_folder": "./results/fit12-13-010322-run3/"
 }
