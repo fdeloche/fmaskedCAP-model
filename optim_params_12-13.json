@@ -1,5 +1,5 @@
 {
-    "n_it":20,
+    "n_it":120,
     "nb_steps": 3,
     "n_dim": 7,
     "alpha": {
@@ -10,7 +10,7 @@
         "sigm_mu":0.3,
         "sigm_a":0.15,
         "E0_amp": 40,
-        "Q10RBFweights": 1,
+        "Q10RBFweights": 1.5,
         "Q10": 5e7,
         "E0": 20
     }

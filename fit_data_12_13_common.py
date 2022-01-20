@@ -201,7 +201,9 @@ sig=capData.get_signal_by_name(ur0_masker_name)
 sig2=process_signal2(sig)
 
 #ur0=sig2-broadband_proc
-gauss_sigma=(0.4e-4)/(t2[1]-t2[0])
+
+gauss_sigma=(0.3e-4)/(t2[1]-t2[0]) #01/19/22
+
 ur0=process_signal2(sig, gauss_sigma=gauss_sigma)
 ur0=np.roll(ur0, -50)   #100 ->50
 

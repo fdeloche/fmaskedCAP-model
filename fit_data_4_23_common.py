@@ -226,7 +226,9 @@ sig=capData.get_signal_by_name('8_notch4000_bw1700_29dB')
 sig2=process_signal2(sig)
 
 #ur0=sig2-broadband_proc
-gauss_sigma=(1e-4)/(t2[1]-t2[0])*1./3   #*1./3 change of strategy (10/01/2021)
+#gauss_sigma=(1e-4)/(t2[1]-t2[0])*1./3 
+gauss_sigma=(0.3e-4)/(t2[1]-t2[0]) #01/19/22
+
 ur0=process_signal2(sig, gauss_sigma=gauss_sigma)
 ur0=np.roll(ur0, -100)
 
