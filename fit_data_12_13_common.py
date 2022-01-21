@@ -100,7 +100,7 @@ ind0=int(t0*48828)
 ind1=int(t1*48828)
 
 alpha_tukey=0.4
-win0=sg.tukey(ind1-ind0, alpha=alpha_tukey)
+win0=sg.tukey(ind1-ind0, alpha=alpha_tukey)  #NB: same tukey window defined later for 2nd processing (truncated version)
 
 win=np.zeros_like(broadband_avg)
 win[ind0:ind1]=win0
