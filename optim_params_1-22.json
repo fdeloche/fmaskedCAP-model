@@ -3,15 +3,15 @@
     "nb_steps": 3,
     "n_dim": 7,
     "alpha": {
-        "I0": 15,
+        "I0": 3,
         "I0RBFweights": 0.15,
-        "scale": 1.5,
+        "scale": 5,
         "k": 15,
         "sigm_mu":0.3,
         "sigm_a":0.15,
         "E0_amp": 1.5,
-        "Q10RBFweights": 0.5,
+        "Q10RBFweights": 0.1,
         "Q10": 5e7,
-        "E0": 1
+        "E0": 50.0
     }
 }

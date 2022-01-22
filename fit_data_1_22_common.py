@@ -84,7 +84,9 @@ def plot_main_CAPs(**kwargs):
 
 
 ### Windowing/processing
-#NB: 1st processing (windowing + filtering), 2nd processing (diff with broadband condition + smoothing)
+#NB: 1st processing (filtering)
+# 2nd processing (windowing + diff with broadband condition + smoothing)
+# windowing done in 2nd processing to be consistent with what was done for next expes
 
 t0=5.7e-3
 t1=10e-3
@@ -119,8 +121,9 @@ def process_signal(sig, cumsum=cumsum_default, return_t=False, applyfilter=True)
 	
 	if applyfilter:
 		sig=apply_filter(sig)
-	sig2=sig*win
-	
+	#sig2=sig*win
+	sig2=sig
+
 	t0=3e-3
 	t1=13e-3
 
@@ -146,6 +149,25 @@ def process_signal(sig, cumsum=cumsum_default, return_t=False, applyfilter=True)
 	else:
 		return sig2
 	
+	
+t2, broadband_proc=process_signal(broadband_avg, cumsum=cumsum_default, return_t=True, applyfilter=True)
+nomasker_proc=process_signal(nomasker_avg, applyfilter=True)
+
+#Tukey window defined a 2nd time
+dt=t2[1]-t2[0]
+
+t0=t0-3e-3
+t1=t1-3e-3
+
+ind0=int(t0*48828)
+ind1=int(t1*48828)
+
+win20=sg.tukey(ind1-ind0, alpha=alpha_tukey)
+
+win2=np.zeros_like(broadband_proc)
+win2[ind0:ind1]=win20
+
+
 def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, applyfilter=True):
 	'''subtracts the broadband noise response
 	gauss_sigma: if diff of 0, smooths the signal with gaussian filter'''
@@ -153,7 +175,12 @@ def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, applyfilter=True)
 	res = process_signal(sig-broadband_avg, cumsum=cumsum, applyfilter=applyfilter)
 	if gauss_sigma !=0:
 		res = gaussian_filter1d(res, gauss_sigma)
+
+	res*=win2
 	return res
+
+
+
 
 def plot_CAP_w_wo_filter():
 	for plot_time in [False, True]:
@@ -173,9 +200,6 @@ def plot_CAP_w_wo_filter():
 
 	pl.legend()
 	pl.show()
-	
-t2, broadband_proc=process_signal(broadband_avg, cumsum=cumsum_default, return_t=True, applyfilter=True)
-nomasker_proc=process_signal(nomasker_avg, applyfilter=True)
 
 ### Estimation ur / raw excitation pattern
 

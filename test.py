@@ -303,7 +303,7 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 
 			if not CAParray is None:
 				CAP=CAParray[i]
-				ax2.plot(E.t*1e3, CAP, **plotargs) 
+				ax2.plot(E.t*1e3, CAP*1e3, **plotargs) 
 				ax2.grid(False)
 			else:
 				exc_np = exc.detach().numpy()
@@ -312,7 +312,7 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 				ind_time=np.sum(t<(t[0]+shift))
 				ind_time=min(ind_time, len(CAP)-len(E.t))
 				CAP=CAP[ind_time:ind_time+len(E.t)]
-				ax2.plot(E.t*1e3, CAP,  **plotargs) 
+				ax2.plot(E.t*1e3, CAP*1e3,  **plotargs) 
 			ax2.grid(False)
 			ax.set_xlabel('Time (ms)')
 			axlist2.append(ax)
@@ -337,7 +337,7 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 		ind_time=np.sum(t<(t[0]+shift))
 		ind_time=min(ind_time, len(CAP)-len(E.t))
 		CAP=CAP[ind_time:ind_time+len(E.t)]
-		ax2.plot(E.t*1e3, CAP,  **plotargs)
+		ax2.plot(E.t*1e3, CAP*1e3,  **plotargs)
 		ax2.grid(False)
 		ax.set_xlabel('Time (ms)')
 		ax.legend()
