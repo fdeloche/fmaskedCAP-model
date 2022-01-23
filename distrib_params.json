@@ -1,18 +1,24 @@
 {
-    "expe_name": "1-22",
-    "E0_distributed": false,
-    "Q10_distributed": false,
-    "I0_distributed": false,
-    "plus_lambda": false,
-    "n_workers": "2",
+    "expe_name": "4-23",
+    "E0_distributed": true,
+    "Q10_distributed": true,
+    "I0_distributed": true,
+    "plus_lambda": true,
+    "n_workers": "8",
     "write_results": true,
     "CFs": [
+        1500,
+        2200,
+        3000,
+        4000,
+        5000,
+        6000,
         8000
     ],
-    "results_folder0": "./results/fit1-22-012122-run0",
+    "results_folder0": "./results/fit4-23-012222-run0",
     "load_json_optim_params": true,
-    "load_wbcdf": false,
+    "load_wbcdf": true,
     "save_figs": true,
-    "results_name": "012122-run0",
-    "results_folder": "./results/fit1-22-012122-run0/"
+    "results_name": "012222-run4",
+    "results_folder": "./results/fit4-23-012222-run4/"
 }
