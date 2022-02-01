@@ -1,5 +1,5 @@
 {
-    "expe_name": "4-23",
+    "expe_name": "1-22",
     "E0_distributed": true,
     "Q10_distributed": true,
     "I0_distributed": true,
@@ -15,10 +15,10 @@
         6000,
         8000
     ],
-    "results_folder0": "./results/fit4-23-012222-run0",
+    "results_folder0": "./results/fit1-22-012122-run0",
     "load_json_optim_params": true,
     "load_wbcdf": true,
     "save_figs": true,
-    "results_name": "012222-run4",
-    "results_folder": "./results/fit4-23-012222-run4/"
+    "results_name": "013122-run7",
+    "results_folder": "./results/fit1-22-013122-run7/"
 }
