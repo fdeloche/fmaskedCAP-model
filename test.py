@@ -10,7 +10,7 @@ from ur import *
 from tuning import *
 import re
 
-
+from scipy.ndimage import gaussian_filter1d
 
 def plotMaskingExcitations(BW10Func, maskingConditions, filter_model='gaussian', fmin=800, fmax=8000, 
 	axlist=None, reg_ex=None, freq_factor=1):
@@ -268,13 +268,17 @@ def plotExcitationPatternsSingleLat(E, plot_raw_excitation=False, axlist=None, m
 
 	return axlist2
 
-def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=8, ylim=None, reg_ex=None, title='Simulated CAPs (+ excitation patterns)', plot_excitations=True, plotargs={}):
+def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0,
+	max_plots=8, ylim=None, reg_ex=None, title='Simulated CAPs (+ excitation patterns)', 
+	plot_excitations=True, sig_exc=0., plotargs={}):
 	'''
 	Args:
 		E:ExcitationPatterns object
 		u: unitary response (numpy array)
 		CAParray: array of CAP signals (if the convolution is done outside the function), must be of size (nb_conditions, len(E.t)) . either CAParray or u must be given
 		axlist:list of axes for the plots. If none creates a list of axes
+		plot_excitations: if True, also plots exc patterns (dashed line)
+		sig_exc: gauss_sig applied to excitation patterns (!: in bins, not time). if 0., no filtering
 		shift:time shift for the convolution
 		ylim: interval to pass to matplotlib (opt.)
 		reg_ex: regular expression to filter masker names (opt.)
@@ -296,7 +300,8 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0, max_plots=
 			ax= pl.subplot((nb_plots+1)//2, 2, ind+1) if axlist is None else axlist[2*i]
 			ax.set_title(maskingConditions.names[i], fontsize=10)
 			if plot_excitations:
-				p=ax.plot(E.t*1e3, exc, linestyle='--', linewidth=1.5, **plotargs)
+				exc2= exc if sig_exc == 0. else gaussian_filter1d(exc, sig_exc)
+				p=ax.plot(E.t*1e3, exc2, linestyle='--', linewidth=1.5, **plotargs)
 				if len(plotargs)==0:
 					plotargs= {"color":p[0].get_color()}
 			ax2=ax.twinx()  if axlist is None else axlist[2*i+1]
