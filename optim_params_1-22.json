@@ -1,7 +1,6 @@
 {
     "n_it": 120,
     "nb_steps": 3,
-    "n_dim": 7,
     "n_dim": 10,
     "n_dim_init": 4,
     "alpha": {
