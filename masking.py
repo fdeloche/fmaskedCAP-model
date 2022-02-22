@@ -369,7 +369,7 @@ def get_masking_amount(mdFunc, sq_exc, f=0., eps=1e-6):
 
 class MaskingConditions:
 	'''
-	Masking conditions (representing Gaussian noises defined by bands)
+	Masking conditions (representing Gaussian noise maskers defined by bands)
 	Attributes:
 		n_bands: max number of bands
 		n_conditions: number of masking conditions
@@ -377,9 +377,10 @@ class MaskingConditions:
 		f_low_list: torch tensors (dim: nb_conditions) of low cut-off frequencies by bands
 		f_high_list: torch tensors (dim: nb_conditions) of high cut-off frequencies by bands
 		amp0: amplitude of reference (amp=1 defined in maskers means that amplitude is amp0) (default: 1). Taken in account when returning tensors
+		mat_release: (mat_ref_maskers) matrix to compute the release of masking. Default:None (considering the broandband noise condition as reference)
 	'''
 
-	def __init__(self, stim_dic_list=[]):
+	def __init__(self, stim_dic_list=[], mat_release=None):
 		'''
 		Args:
 			stim_dic_list: list of (nested) dictionaries with items: n_bands, bands (amp, fc_low, fc_high)
@@ -392,6 +393,7 @@ class MaskingConditions:
 		self._f_high_list=[]
 		self.names=[]
 		self.amp0=1
+		self.mat_release=mat_release
 		self.add_conditions(stim_dic_list)
 
 	def add_conditions(self, stim_dic_list):

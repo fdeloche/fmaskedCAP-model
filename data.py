@@ -18,6 +18,8 @@ class CAPData:
 		CAP_signals: (numpy array, of size (n_conditions, n_samples))
 		t: numpy array, in s
 		map_table: mapping masker filename -> pic numbers
+		map_table_ref_maskers: mapping masker filename -> ref masker filename. If None (default), the broadband noise condition is considered as reference
+		mat_ref_maskers: matrix M related to map_table_ref_maskers. The release will be of the form R=M R_0. None by default
 	'''
 
 
@@ -185,11 +187,30 @@ class CAPData:
 		self.map_table=filtered_map_table
 		self.nb_maskers=len(self.maskerNames)
 
+
+		self.map_table_ref_maskers=None
+		self.mat_ref_maskers=None
+
+
+	def set_ref_maskers(self, map_table_ref_maskers):
+		'''
+		Args:
+			map_table_ref_maskers: mapping masker filename -> ref masker filename
+		'''
+		self.map_table_ref_maskers=map_table_ref_maskers
+		
+		mat=np.eye(len(self.maskerNames))
+		for masker, ref_masker in map_table_ref_maskers.items():
+			i=self.maskerNames.find(masker)
+			j=self.maskerNames.find(ref_masker)
+			mat[i][j]-=1
+		self.mat_ref_maskers=mat
+
 	@property
 	def maskingConditions(self):
 		#similar to cached_property
 		if not hasattr(self, '_maskingConditions'):
-			self._maskingConditions=MaskingConditions(stim_dic_list=self.list_stim_dic)
+			self._maskingConditions=MaskingConditions(stim_dic_list=self.list_stim_dic, mat_release=self.mat_ref_maskers)
 		return self._maskingConditions
 
 	def get_signal_by_name(self, maskerName):
@@ -205,8 +226,9 @@ class CAPData:
 		list_ind_batches=np.reshape(list_ind, (s//batch_size, batch_size))
 		obj=self
 		for indices in list_ind_batches:
+			mat_release=self.mat_ref_maskers(np.ix_(indices, indices))
 			batch = ([obj.maskerNames[ind] for ind in indices], 
-				MaskingConditions([obj.list_stim_dic[ind] for ind in indices]),  obj.CAP_signals[indices])
+				MaskingConditions([obj.list_stim_dic[ind] for ind in indices], mat_release=mat_release),  obj.CAP_signals[indices])
 			yield batch
 
 
@@ -217,9 +239,11 @@ class CAPData:
 			if re.match(reg_expr, maskerName):
 				inds.append(ind)
 		inds=sorted(inds, key= lambda ind: self.maskerNames[ind]) 
+		
+		mat_release=self.mat_ref_maskers(np.ix_(inds, inds))
 		obj=self
 		batch = ([obj.maskerNames[ind] for ind in inds], 
-				MaskingConditions([obj.list_stim_dic[ind] for ind in inds]),  obj.CAP_signals[inds])
+				MaskingConditions([obj.list_stim_dic[ind] for ind in inds, mat_release=mat_release]),  obj.CAP_signals[inds])
 		return batch
 
 

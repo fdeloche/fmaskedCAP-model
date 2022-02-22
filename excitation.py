@@ -13,7 +13,7 @@ from filters import *
 #from scipy.stats import gamma
 
 def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, 
-	amp_list, f_low_list, f_high_list, filter_model='gaussian'):
+	amp_list, f_low_list, f_high_list, filter_model='gaussian', mat_release=None):
 	'''
 	Args:
 		f: Tensor of frequencies at which the excitation is computed 
@@ -163,7 +163,11 @@ class ExcitationPatterns:
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
 			maskingAmount=self.maskingIOFunc(I, f)
 
-			res= torch.unsqueeze(self.E0_nonmaskable, 0)+ self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
+			if self.maskingConditions.mat_release == None:  #considering broadband noise masker as reference (by convention, masking=100%)
+				res= torch.unsqueeze(self.E0_nonmaskable, 0)+ self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
+			else: 
+				res= torch.unsqueeze(self.E0_nonmaskable, 0)
+				res-= self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(torch.dot(self.maskingConditions.mat_release, maskingAmount))
 			if isinstance(self.latencies, SingleLatency):
 				ind=self.latencies.get_ind(self.t)
 				res2=torch.zeros( (res.shape[0], len(self.t)) )
