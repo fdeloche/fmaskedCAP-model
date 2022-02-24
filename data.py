@@ -24,19 +24,35 @@ class CAPData:
 
 
 	def __init__(self, root_folder, filenames, begin_ind=0, end_ind=np.infty, old_format=False, mode='C+R', 
-		pic_numbers_ignore=[]):
+		pic_numbers_ignore=[], verbose=True):
 		'''
 		Args:
 			root_folder: root folder for .mat files
 			filenames: list of *.mat files with CAPs and info on maskers
 			begin_ind: min pic number
-			end_ind: max pic number
+			end_ind: max pic number  (note:begin_ind and end_ind can also be a list or tuple of indices of same length)
 			old_format:old format of .mat files
 			mode: 'C+R', 'C' 'R' (check C and R? #TODO )
 			pic_numbers_ignore: list of pic numbers to ignore
+			verbose: print warning if file does not match reg filter
 		'''  
 
 		assert mode in ['C+R', 'C', 'R']
+
+		#converts begin_ind and end_ind in lists if necessary
+		if isinstance(begin_ind, list) or isinstance(begin_ind, tuple):
+			begin_ind_list=begin_ind
+		else:
+			begin_ind_list=(begin_ind,)
+		if isinstance(end_ind, list) or isinstance(end_ind, tuple):
+			end_ind_list=end_ind
+		else:
+			end_ind_list=(end_ind, )
+
+		assert len(begin_ind_list) == len(end_ind_list), 'begin_ind and end_ind lists must of same length' 
+
+
+
 
 		listFilesMat=filenames
 		data_folder=root_folder
@@ -55,18 +71,22 @@ class CAPData:
 
 			m=re.match('p([0-9]{4})_fmasked_CAP_(.*).mat', fln)
 			if not m:
-				print(f'warning: {fln} did not match reg filter')
+				if verbose:
+					print(f'warning: {fln} did not match reg filter')
 				continue
 
 			p, name = split_name(fln)
-			if p>=begin_ind and p<=end_ind and not (p in pic_numbers_ignore):
 
-				if name not in filtered_map_table:
-					filtered_map_table[name]=[p]
-				else:
-					li=filtered_map_table[name]
-					li.append(p)
-					filtered_map_table[name]=li
+			for begin_ind, end_ind in zip(begin_ind_list, end_ind_list):
+				if p>=begin_ind and p<=end_ind and not (p in pic_numbers_ignore):
+
+					if name not in filtered_map_table:
+						filtered_map_table[name]=[p]
+					else:
+						li=filtered_map_table[name]
+						li.append(p)
+						filtered_map_table[name]=li
+					break
 			picnum_to_filename[p]=fln
 
 
@@ -201,8 +221,8 @@ class CAPData:
 		
 		mat=np.eye(len(self.maskerNames))
 		for masker, ref_masker in map_table_ref_maskers.items():
-			i=self.maskerNames.find(masker)
-			j=self.maskerNames.find(ref_masker)
+			i=self.maskerNames.index(masker)
+			j=self.maskerNames.index(ref_masker)
 			mat[i][j]-=1
 		self.mat_ref_maskers=mat
 
@@ -243,7 +263,7 @@ class CAPData:
 		mat_release=self.mat_ref_maskers(np.ix_(inds, inds))
 		obj=self
 		batch = ([obj.maskerNames[ind] for ind in inds], 
-				MaskingConditions([obj.list_stim_dic[ind] for ind in inds, mat_release=mat_release]),  obj.CAP_signals[inds])
+				MaskingConditions([obj.list_stim_dic[ind] for ind in inds], mat_release=mat_release),  obj.CAP_signals[inds])
 		return batch
 
 
