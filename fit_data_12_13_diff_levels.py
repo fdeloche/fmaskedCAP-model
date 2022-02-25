@@ -45,6 +45,10 @@ assert CF==5000, 'CF must be 5kHz (only data at that CF'
 print(f'reference masker power spectral density (0 attn): {I0:.2f} dB')
 
 
+import_results_folder='./results/fit12-13-021122-run5/'
+import_ur=True 
+import_weights=True
+
 ### capData
 
 
@@ -115,6 +119,22 @@ t=capData.t
 
 
 sig_ex=capData.get_signal_by_name('3_hp6000_narrowband5kHz_35dB')
+
+
+def plot_main_CAPs(**kwargs):
+	pl.figure(**kwargs)
+	pl.plot(t*1e3, sig_ex*1e3, label='3_hp6000_narrowband5kHz_35dB')
+
+	sig_ex2=capData.get_signal_by_name('8_hp6000_narrowband5kHz_20dB')
+	pl.plot(t*1e3, sig_ex2*1e3, label='8_hp6000_narrowband5kHz_20dB')
+
+	pl.xlabel('t (ms)')
+	pl.ylabel('Amplitude (μV)')
+	#pl.xlim([0.004, 0.007])
+	pl.legend()
+	pl.show()
+
+
 
 ### Windowing/processing
 #NB: 1st processing (filtering), 
@@ -194,13 +214,13 @@ ind1=int(t1*48828)
 
 win20=sg.tukey(ind1-ind0, alpha=alpha_tukey)
 
-win2=np.zeros_like(broadband_proc)
+win2=np.zeros_like(sig_ex_proc)
 win2[ind0:ind1]=win20
 
 
 def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 	'''
-	Note: before, the response corresponding to the broadband noise masker was subtracted. Now substraction should be done through of matrix with ref maskers
+	Note: before, the response corresponding to the broadband noise masker was subtracted. Now substraction is done through multiplication with matrix build with ref maskers (outside function, see CAPData in data.py)
 
 	gauss_sigma: if diff of 0, smooths the signal with gaussian filter'''
 	
@@ -214,12 +234,18 @@ def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 
 	return res
 
+# ur
 
+data_ur=np.load(f'{import_results_folder}/ur_{CF}.npz')
+ur0, t_conv= data_ur['ur'], data_ur['t2']
 
 # latencies
 
+lat=PowerLawLatencies.load_from_npz(f'{import_results_folder}/lat_{CF}.npz')
+
 # weights
 
-# ur
+data_weights= np.load(f'{import_results_folder}/E0_{CF}.npz')
+weights_f, weights_E0, weights_E0_amp=data_weights['f'], data_weights['E0'], data_weights['E0_amp']
 
 #Q10?

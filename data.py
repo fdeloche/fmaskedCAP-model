@@ -239,31 +239,41 @@ class CAPData:
 		return self.CAP_signals[ind]
 	
 	def batch_generator(self, batch_size):
-		'''return batches of size batch_size with tuples (maskerNames, maskingConditions, CAPsignals)'''
+		'''return batches of size batch_size with tuples (maskerNames, maskingConditions, CAPsignals). Applies substraction of CAP signals if mat_ref_maskers is not None '''
 		list_ind=np.random.permutation(self.nb_maskers)
 		s=self.nb_maskers-(self.nb_maskers%batch_size)
 		list_ind=list_ind[0:s]
-		list_ind_batches=np.reshape(list_ind, (s//batch_size, batch_size))
 		obj=self
+		list_ind_batches=np.reshape(list_ind, (s//batch_size, batch_size))
 		for indices in list_ind_batches:
-			mat_release=self.mat_ref_maskers(np.ix_(indices, indices))
+			capSigs=obj.CAP_signals[indices]
+			if not self.mat_ref_maskers is None:
+				mat_release=self.mat_ref_maskers(np.ix_(indices, indices))
+				capSigs=np.dot(mat_release, capSigs)
+			else:
+				mat_release=None
 			batch = ([obj.maskerNames[ind] for ind in indices], 
-				MaskingConditions([obj.list_stim_dic[ind] for ind in indices], mat_release=mat_release),  obj.CAP_signals[indices])
+				MaskingConditions([obj.list_stim_dic[ind] for ind in indices], mat_release=mat_release), capSigs)
 			yield batch
 
 
 	def get_batch_re(self, reg_expr):
-		'''return a batch (maskerNames, maskingConditions, CAPsignals) with maskers corresponding to a regular expression'''
+		'''return a batch (maskerNames, maskingConditions, CAPsignals) with maskers corresponding to a regular expression. Applies substraction of CAP signals if mat_ref_maskers is not None.'''
 		inds=[]
 		for ind, maskerName in enumerate(self.maskerNames):
 			if re.match(reg_expr, maskerName):
 				inds.append(ind)
 		inds=sorted(inds, key= lambda ind: self.maskerNames[ind]) 
 		
-		mat_release=self.mat_ref_maskers(np.ix_(inds, inds))
 		obj=self
+		capSigs=obj.CAP_signals[indices]
+		if not self.mat_ref_maskers is None:
+			mat_release=self.mat_ref_maskers(np.ix_(inds, inds))
+			capSigs=np.dot(mat_release, capSigs)
+		else:
+			mat_release=None
 		batch = ([obj.maskerNames[ind] for ind in inds], 
-				MaskingConditions([obj.list_stim_dic[ind] for ind in inds], mat_release=mat_release),  obj.CAP_signals[inds])
+				MaskingConditions([obj.list_stim_dic[ind] for ind in inds], mat_release=mat_release),  capSigs)
 		return batch
 
 
