@@ -266,7 +266,7 @@ class CAPData:
 		inds=sorted(inds, key= lambda ind: self.maskerNames[ind]) 
 		
 		obj=self
-		capSigs=obj.CAP_signals[indices]
+		capSigs=obj.CAP_signals[inds]
 		if not self.mat_ref_maskers is None:
 			mat_release=self.mat_ref_maskers(np.ix_(inds, inds))
 			capSigs=np.dot(mat_release, capSigs)
