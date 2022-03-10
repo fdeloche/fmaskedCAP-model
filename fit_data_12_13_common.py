@@ -401,15 +401,17 @@ def plot_figures_narrowband_analysis_deconv():
 
 # ### Latencies
 
-t_max=np.array([37, 38.6, 39.5, 38.5, 38.3, 39.7, 41.7, 44.6, 51])
+#t_max=np.array([37, 38.6, 39.5, 38.5, 38.3, 39.7, 41.7, 44.6, 51])
+t_max= np.array([33.6, 33.8, 34.4, 34.5, 35, 38, 42, 44.7, 50.5])  #redoing analysis (proper narrowband analysis method 03-09-22)
 
+#t_0lat=3e-3-4.8e-3
+t_0lat=5e-3-4.8e-3
 
-t_0lat=3e-3-4.8e-3
-
-t_max=t_0lat+t_max*1e-4
+#t_max=t_0lat+t_max*1e-4
+t_max=t_0lat+t_max*5e-3/83
 
 #t_max_bis=t_0lat+t_max_bis*2*1e-5
-freqs=np.array([6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1])  #note: no signal 8khz, very weak 9-10 kHz
+freqs=np.array([6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1]) 
 
 def plot_estimated_latencies_deconv():
 	pl.figure()

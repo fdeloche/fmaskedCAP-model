@@ -1,21 +1,23 @@
 {
     "expe_name": "12-13",
-    "E0_distributed": false,
-    "Q10_distributed": false,
+    "E0_distributed": true,
+    "Q10_distributed": true,
     "I0_distributed": false,
     "plus_lambda": false,
-    "n_workers": "5",
+    "n_workers": "7",
     "write_results": true,
     "CFs": [
+        1500,
         2200,
         3000,
         4000,
-        5000
+        5000,
+        6000
     ],
-    "results_folder0": "./results/fit4-23-012222-run0",
+    "results_folder0": "./results/fit12-13-122721-run0",
     "load_json_optim_params": true,
-    "load_wbcdf": false,
+    "load_wbcdf": true,
     "save_figs": true,
-    "results_name": "030822-run0",
-    "results_folder": "./results/fit12-13-030822-run0/"
+    "results_name": "030922-run6",
+    "results_folder": "./results/fit12-13-030922-run6/"
 }
