@@ -1,4 +1,7 @@
 CF=5000 #HACK for now
+
+#Note: list maskers at end of file
+
 import config_mode
 config_mode.mode='C+R'
 
@@ -137,7 +140,7 @@ def plot_main_CAPs(**kwargs):
 
 
 ### Windowing/processing
-#NB: 1st processing (filtering), 
+#NB: 1st processing (truncating), 
 # 2nd processing (diff with broadband condition + smoothing) + windowing
 
 t0=5.7e-3
@@ -170,9 +173,8 @@ def plot_CAP_with_window(**kwargs):
 	pl.legend()
 	pl.show()
 
-cumsum_default=False
 
-def process_signal(sig, cumsum=cumsum_default, return_t=False):
+def process_signal(sig,  return_t=False):
 	#sig2=sig*win  #done in process2
 	sig2=sig
 
@@ -185,15 +187,9 @@ def process_signal(sig, cumsum=cumsum_default, return_t=False):
 	dim = len(np.shape(sig2))
 	if dim ==1:
 		sig2=sig2[ind0:ind1]
-		if cumsum:
-			sig2=np.cumsum(sig2)
-			sig2[0:-50]*=sg.tukey(len(sig2)-50, 0.3)
-			sig2[-50:]=0
+
 	else:
-		sig2=sig2[:, ind0:ind1]
-		if cumsum:
-			sig2=np.cumsum(sig2)
-			
+		sig2=sig2[:, ind0:ind1]		
 	
 	if return_t:
 		t=np.linspace(t0, t1, ind1-ind0)
@@ -202,7 +198,7 @@ def process_signal(sig, cumsum=cumsum_default, return_t=False):
 		return sig2
 	
 
-t2, sig_ex_proc=process_signal(sig_ex, cumsum=cumsum_default, return_t=True)
+t2, sig_ex_proc=process_signal(sig_ex, return_t=True)
 
 dt=t2[1]-t2[0]
 
@@ -218,13 +214,13 @@ win2=np.zeros_like(sig_ex_proc)
 win2[ind0:ind1]=win20
 
 
-def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
+def process_signal2(sig, gauss_sigma=0, corr_drift=True):
 	'''
 	Note: before, the response corresponding to the broadband noise masker was subtracted. Now substraction is done through multiplication with matrix build with ref maskers (outside function, see CAPData in data.py)
 
 	gauss_sigma: if diff of 0, smooths the signal with gaussian filter'''
 	
-	res = process_signal(sig, cumsum=cumsum)
+	res = process_signal(sig)
 
 
 	if gauss_sigma !=0:
@@ -233,6 +229,10 @@ def process_signal2(sig, cumsum=cumsum_default, gauss_sigma=0, corr_drift=True):
 	res*=win2
 
 	return res
+
+
+
+gauss_sigma=(0.3e-4)/(t2[1]-t2[0]) #01/19/22
 
 # ur
 
@@ -249,3 +249,83 @@ data_weights= np.load(f'{import_results_folder}/E0_{CF}.npz')
 weights_f, weights_E0, weights_E0_amp=data_weights['f'], data_weights['E0'], data_weights['E0_amp']
 
 #Q10?
+
+
+
+#### List maskers
+
+
+# dic_ref_maskers={
+#  '1_hp6000_narrowband5kHz_45dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '2_hp6000_narrowband5kHz_40dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '3_hp6000_narrowband5kHz_35dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '4_hp6000_narrowband5kHz_32dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '5_hp6000_narrowband5kHz_29dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '6_hp6000_narrowband5kHz_26dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '7_hp6000_narrowband5kHz_23dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '8_hp6000_narrowband5kHz_20dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '9_hp6000_narrowband5kHz_17dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '10_hp6000_narrowband5kHz_14dB':  '8_hp6000_narrowband5kHz_20dB',
+#  '11_hp6200_gradualamp':  '15_hp6200_gradualamp',
+#  '12_hp6200_gradualamp':  '15_hp6200_gradualamp',
+#  '13_hp6200_gradualamp':  '15_hp6200_gradualamp',
+#  '14_hp6200_gradualamp':  '15_hp6200_gradualamp',
+#  '15_hp6200_gradualamp':  '15_hp6200_gradualamp',
+#  '16_hp6200_gradualamp':  '15_hp6200_gradualamp',
+#  '17_notch5300_bw1000': '21_notch5300_bw1800_nonotch',
+#  '18_notch5300_bw1200': '21_notch5300_bw1800_nonotch',
+#  '19_notch5300_bw1400': '21_notch5300_bw1800_nonotch',
+#   '20_notch5300_bw1800_attn24': '21_notch5300_bw1800_nonotch',
+#  '21_notch5300_bw1800_nonotch': '21_notch5300_bw1800_nonotch',
+#  '22_notch5k': '21_notch5300_bw1800_nonotch',
+#  '23_notch4800_bw900': '21_notch5300_bw1800_nonotch',
+#  '24_notch4800_bw800': '21_notch5300_bw1800_nonotch',
+#  }
+
+#follows same format as maskers for previous expes for consistency (even if names are not very accurate)
+
+
+ntch_5k_masker_list=['1_hp6000_narrowband5kHz_45dB',
+'2_hp6000_narrowband5kHz_40dB',
+'3_hp6000_narrowband5kHz_35dB',
+'4_hp6000_narrowband5kHz_32dB',
+'5_hp6000_narrowband5kHz_29dB',
+'6_hp6000_narrowband5kHz_26dB',
+'7_hp6000_narrowband5kHz_23dB',
+'8_hp6000_narrowband5kHz_20dB',
+'9_hp6000_narrowband5kHz_17dB',
+'10_hp6000_narrowband5kHz_14dB']
+
+
+attns_5k=np.array([45,40,35,32,29,26,23, 17, 14])
+
+ntch_masker_lists={5000: ntch_5k_masker_list}
+
+attns_arrays={
+5000:attns_5k}
+
+
+
+### Test masking releases/ ref maskers
+# sig=capData.get_signal_by_name('3_hp6000_narrowband5kHz_35dB')
+
+# sig2=capData.get_signal_by_name('8_hp6000_narrowband5kHz_20dB')
+
+# sig3=capData.get_signal_by_name('3_hp6000_narrowband5kHz_35dB', subtract_ref=True)
+
+# reg_exp='(3_hp6000_narrowband5kHz_35dB)|(8_hp6000_narrowband5kHz_20dB)'
+# test_maskerNames, test_maskingConds, test_signals =capData.get_batch_re(reg_exp, subtract_ref=True)
+
+# index0=test_maskerNames.index('3_hp6000_narrowband5kHz_35dB')
+# index1=test_maskerNames.index('8_hp6000_narrowband5kHz_20dB')
+
+# sig4=test_signals[index0]
+
+# sig5=test_signals[index1]
+
+# pl.plot(t, sig-sig2)
+# pl.plot(t, sig3+1e-4)
+
+# pl.plot(t, sig4+5e-4)
+
+# #pl.plot(t, sig5+10e-4)

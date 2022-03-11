@@ -75,12 +75,12 @@ class ExcitationPatterns:
 			bincount_fax: if use_bincount True, considers frequencies in [fmin, fmax]
 		'''
 		if not(torch.is_tensor(t)):
-			t=torch.tensor(t)
+			t=torch.tensor(t,  dtype=torch.float32)
 		self.t=t
 		if torch.is_tensor(E0_maskable):
 			self.E0_maskable = E0_maskable.clone().detach().requires_grad_(requires_grad=requires_grad)
 		else:
-			self.E0_maskable=torch.tensor(E0_maskable, requires_grad=requires_grad)
+			self.E0_maskable=torch.tensor(E0_maskable, requires_grad=requires_grad, dtype=torch.float32)
 		
 		if torch.is_tensor(E0_maskable_amp):
 			self.E0_maskable_amp = E0_maskable_amp.clone().detach().requires_grad_(requires_grad=requires_grad)
@@ -95,7 +95,7 @@ class ExcitationPatterns:
 			if torch.is_tensor(E0_nonmaskable):
 				self.E0_nonmaskable = E0_nonmaskable.clone().detach().requires_grad_(requires_grad=requires_grad)
 			else:
-				self.E0_nonmaskable=torch.tensor(E0_nonmaskable, requires_grad=requires_grad)
+				self.E0_nonmaskable=torch.tensor(E0_nonmaskable, requires_grad=requires_grad,  dtype=torch.float32)
 		
 		self.masked=False
 		self.use_bincount=use_bincount
@@ -163,11 +163,11 @@ class ExcitationPatterns:
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
 			maskingAmount=self.maskingIOFunc(I, f)
 
-			if self.maskingConditions.mat_release == None:  #considering broadband noise masker as reference (by convention, masking=100%)
+			if self.maskingConditions.mat_release is None:  #considering broadband noise masker as reference (by convention, masking=100%)
 				res= torch.unsqueeze(self.E0_nonmaskable, 0)+ self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)
 			else: 
-				res= torch.unsqueeze(self.E0_nonmaskable, 0)
-				res-= self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(torch.dot(self.maskingConditions.mat_release, maskingAmount))
+				res= -self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(torch.matmul(self.maskingConditions.mat_release, maskingAmount))
+				res+= torch.unsqueeze(self.E0_nonmaskable, 0) #done in this order to avoid broadcasting issues (on in-place operations)
 			if isinstance(self.latencies, SingleLatency):
 				ind=self.latencies.get_ind(self.t)
 				res2=torch.zeros( (res.shape[0], len(self.t)) )
