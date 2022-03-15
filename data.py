@@ -229,10 +229,15 @@ class CAPData:
 		self.mat_ref_maskers=mat
 
 	@property
-	def maskingConditions(self):
+	def maskingConditions(self, subtract_ref=False):
+		'''
+		Args: 
+			subtract_ref: if mat_ref_maskers is not None, adds mat_release to masking conds (as torch tensor)
+		'''
 		#similar to cached_property
 		if not hasattr(self, '_maskingConditions'):
-			self._maskingConditions=MaskingConditions(stim_dic_list=self.list_stim_dic, mat_release=torch.tensor(self.mat_ref_maskers,  dtype=torch.float32))
+			mat_release = None if ( (self.mat_ref_maskers is None) or not(subtract_ref) ) else torch.tensor(self.mat_ref_maskers,  dtype=torch.float32)
+			self._maskingConditions=MaskingConditions(stim_dic_list=self.list_stim_dic, mat_release=mat_release)
 		return self._maskingConditions
 
 	def get_signal_by_name(self, maskerName, subtract_ref=False):
@@ -262,18 +267,19 @@ class CAPData:
 			capSigs=obj.CAP_signals[indices]
 			if subtract_ref and not self.mat_ref_maskers is None:
 				mat_release=self.mat_ref_maskers[np.ix_(indices, indices)]
+				mat_release=torch.tensor(mat_release,  dtype=torch.float32)
 				capSigs=np.dot(mat_release, capSigs)
 			else:
 				mat_release=None
 			batch = ([obj.maskerNames[ind] for ind in indices], 
-				MaskingConditions([obj.list_stim_dic[ind] for ind in indices], mat_release=torch.tensor(mat_release,  dtype=torch.float32)), capSigs)
+				MaskingConditions([obj.list_stim_dic[ind] for ind in indices], mat_release=mat_release), capSigs)
 			yield batch
 
 
 	def get_batch_re(self, reg_expr, subtract_ref=False):
 		'''return a batch (maskerNames, maskingConditions, CAPsignals) with maskers corresponding to a regular expression. 
 		Args: 
-			subtract_ref: if mat_ref_maskers is not None, substracts signal corresponding to ref masker to CAPsignals and adds mat_release to maskingConds (as torch tensor)'''
+			subtract_ref: if mat_ref_maskers is not None, subtracts signal corresponding to ref masker to CAPsignals and adds mat_release to maskingConds (as torch tensor)'''
 		inds=[]
 		for ind, maskerName in enumerate(self.maskerNames):
 			if re.match(reg_expr, maskerName):
@@ -284,11 +290,12 @@ class CAPData:
 		capSigs=obj.CAP_signals[inds]
 		if subtract_ref and not self.mat_ref_maskers is None:
 			mat_release=self.mat_ref_maskers[np.ix_(inds, inds)]
+			mat_release=torch.tensor(mat_release,  dtype=torch.float32)
 			capSigs=np.dot(mat_release, capSigs)
 		else:
 			mat_release=None
 		batch = ([obj.maskerNames[ind] for ind in inds], 
-				MaskingConditions([obj.list_stim_dic[ind] for ind in inds], mat_release=torch.tensor(mat_release,  dtype=torch.float32)),  capSigs)
+				MaskingConditions([obj.list_stim_dic[ind] for ind in inds], mat_release=mat_release),  capSigs)
 		return batch
 
 

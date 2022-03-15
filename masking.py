@@ -381,7 +381,7 @@ class MaskingConditions:
 		f_low_list: torch tensors (dim: nb_conditions) of low cut-off frequencies by bands
 		f_high_list: torch tensors (dim: nb_conditions) of high cut-off frequencies by bands
 		amp0: amplitude of reference (amp=1 defined in maskers means that amplitude is amp0) (default: 1). Taken in account when returning tensors
-		mat_release: (mat_ref_maskers) matrix to compute the release of masking. Default:None (considering the broandband noise condition as reference)
+		mat_release: (mat_ref_maskers) matrix to compute the release of masking. Default:None (considering the broandband noise condition as reference). Torch tensor.
 	'''
 
 	def __init__(self, stim_dic_list=[], mat_release=None):

@@ -168,6 +168,7 @@ class ExcitationPatterns:
 			else: 
 				res= -self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(torch.matmul(self.maskingConditions.mat_release, maskingAmount))
 				res+= torch.unsqueeze(self.E0_nonmaskable, 0) #done in this order to avoid broadcasting issues (on in-place operations)
+			
 			if isinstance(self.latencies, SingleLatency):
 				ind=self.latencies.get_ind(self.t)
 				res2=torch.zeros( (res.shape[0], len(self.t)) )

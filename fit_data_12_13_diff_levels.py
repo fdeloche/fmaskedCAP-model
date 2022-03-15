@@ -89,15 +89,6 @@ dic_ref_maskers={
  }
 
 
-#more explicit labels for hp6200 gradual amp  #to be used later?
-labels_gradual_amp={
- '11_hp6200_gradualamp':  '11_hp6200_gradualamp_bw1000',
- '12_hp6200_gradualamp':  '12_hp6200_gradualamp_bw700',
- '13_hp6200_gradualamp':  '13_hp6200_gradualamp_bw1400',
- '14_hp6200_gradualamp':  '14_hp6200_gradualamp_bw1200',
- '15_hp6200_gradualamp':  '15_hp6200_gradualamp_nonotch',
- '16_hp6200_gradualamp':  '16_hp6200_gradualamp_nonotch_27dB',
-}
 
 # indices
 dic_inds={
@@ -283,7 +274,7 @@ weights_f, weights_E0, weights_E0_amp=data_weights['f'], data_weights['E0'], dat
 #  }
 
 #follows same format as maskers for previous expes for consistency (even if names are not very accurate)
-
+# caution: also include ref maskers in masker lists
 
 ntch_5k_masker_list=['1_hp6000_narrowband5kHz_45dB',
 '2_hp6000_narrowband5kHz_40dB',
@@ -296,13 +287,50 @@ ntch_5k_masker_list=['1_hp6000_narrowband5kHz_45dB',
 '9_hp6000_narrowband5kHz_17dB',
 '10_hp6000_narrowband5kHz_14dB']
 
+ntch_5k_masker_list+=['15_hp6200_gradualamp', '16_hp6200_gradualamp'] #extra maskers
+
+ntch_5k_re='\d*_hp6000_narrowband5kHz_\d*dB'
+
+
+vbw_5k_fln_list =['11_hp6200_gradualamp',
+  '12_hp6200_gradualamp',
+ '13_hp6200_gradualamp',
+  '14_hp6200_gradualamp',
+  '15_hp6200_gradualamp',
+  '16_hp6200_gradualamp',
+  '17_notch5300_bw1000',
+  '18_notch5300_bw1200',
+  '19_notch5300_bw1400',
+  '21_notch5300_bw1800_nonotch',
+  '22_notch5k',
+  '23_notch4800_bw900',
+  '24_notch4800_bw800']
+
+
+vfreq_fln_lists={ 5000:[]}  #import weights instead     
+
+
+vbw_fln_lists={5000:vbw_5k_fln_list}
 
 attns_5k=np.array([45,40,35,32,29,26,23, 17, 14])
+
+ntch_regexps={5000:ntch_5k_re}   
 
 ntch_masker_lists={5000: ntch_5k_masker_list}
 
 attns_arrays={
 5000:attns_5k}
+
+
+#more explicit labels for hp6200 gradual amp  #to be used later?
+labels_gradual_amp={
+ '11_hp6200_gradualamp':  '11_hp6200_gradualamp_bw1000',
+ '12_hp6200_gradualamp':  '12_hp6200_gradualamp_bw700',
+ '13_hp6200_gradualamp':  '13_hp6200_gradualamp_bw1400',
+ '14_hp6200_gradualamp':  '14_hp6200_gradualamp_bw1200',
+ '15_hp6200_gradualamp':  '15_hp6200_gradualamp_nonotch',
+ '16_hp6200_gradualamp':  '16_hp6200_gradualamp_nonotch_27dB',
+}
 
 
 
