@@ -14,6 +14,9 @@ class LogLinearSuppression:
 		self.a=torch.tensor(a, requires_grad=requires_grad)
 		self.I0_supp=torch.tensor(I0_supp, requires_grad=requires_grad)
 
+	def set_I0_supp(self, I0_supp):
+		self.I0_supp.data=I0_supp
+
 	def __call__(self, I_supp):
 		return self.a*(I_supp-self.I0_supp)
 

@@ -66,7 +66,7 @@ class ExcitationPatterns:
 		Note: excitation patterns are defined in time (same size as t) unless the latency model is SingleLatencies or the bincount mode is enabled, then defined in frequency
 		Args:
 			t: time vector (torch  or np array, converted to torch tensor)
-			E0_maskable: raw excitation pattern (numpy array or torch tensor), maskable part
+			E0_maskable: raw excitation pattern (numpy array or torch tensor), maskable part (defined in frequency domain [fmin, fmax])
 			E0_maskable_amp: amplitude factor for E0_maskable (default: 1)
 			E0_nonmaskable (optional): raw excitation pattern (numpy array or torch tensor), fixed part
 			requires_grad: if E0 tensors requires gradient mdFunc
