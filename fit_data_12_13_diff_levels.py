@@ -291,20 +291,20 @@ ntch_5k_masker_list+=['15_hp6200_gradualamp', '16_hp6200_gradualamp'] #extra mas
 
 ntch_5k_re='\d*_hp6000_narrowband5kHz_\d*dB'
 
-
-vbw_5k_fln_list =['11_hp6200_gradualamp',
-  '12_hp6200_gradualamp',
- '13_hp6200_gradualamp',
-  '14_hp6200_gradualamp',
-  '15_hp6200_gradualamp',
-  '16_hp6200_gradualamp',
-  '17_notch5300_bw1000',
+vbw_5k_fln_list=['17_notch5300_bw1000',
   '18_notch5300_bw1200',
   '19_notch5300_bw1400',
   '21_notch5300_bw1800_nonotch',
   '22_notch5k',
   '23_notch4800_bw900',
   '24_notch4800_bw800']
+
+vbw_5k_fln_list +=['11_hp6200_gradualamp',
+  '12_hp6200_gradualamp',
+ '13_hp6200_gradualamp',
+  '14_hp6200_gradualamp',
+  '15_hp6200_gradualamp',
+  '16_hp6200_gradualamp']
 
 
 vfreq_fln_lists={ 5000:[]}  #import weights instead     

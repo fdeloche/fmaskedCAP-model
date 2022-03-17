@@ -133,9 +133,9 @@ def plotExcitationPatterns(E, plot_raw_excitation=False, axlist=None, max_plots=
 		maskAmounts, excs = E.get_tensors() 
 		maskingConditions = E.maskingConditions
 		if plot_raw_excitation:
-			pl.suptitle('E_0, M  /  E_0*(1-M)')
+			pl.suptitle('E_0, M  /  E')
 		else:
-			pl.suptitle('Excitation patterns: E_0*(1-M)')
+			pl.suptitle('Excitation patterns')
 
 		nb_plots=min(maskingConditions.n_conditions, max_plots)
 		ind=0
@@ -275,7 +275,7 @@ def plotSimulatedCAPs(E, u=None, CAParray=None, axlist=None, shift=0,
 	Args:
 		E:ExcitationPatterns object
 		u: unitary response (numpy array)
-		CAParray: array of CAP signals (if the convolution is done outside the function), must be of size (nb_conditions, len(E.t)) . either CAParray or u must be given
+		CAParray: array of CAP masking release signals (if the convolution is done outside the function), must be of size (nb_conditions, len(E.t)) . either CAParray or u must be given
 		axlist:list of axes for the plots. If none creates a list of axes
 		plot_excitations: if True, also plots exc patterns (dashed line)
 		sig_exc: gauss_sig applied to excitation patterns (!: in bins, not time). if 0., no filtering
