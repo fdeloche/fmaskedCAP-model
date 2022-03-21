@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 import tuning
-from excitation import get_sq_masking_excitation_patterns_maskCond
+import excitation
 
 
 class LogLinearSuppression:
@@ -17,6 +17,10 @@ class LogLinearSuppression:
 	def set_I0_supp(self, I0_supp):
 		self.I0_supp.data=I0_supp
 
+
+	def list_param_tensors(self):
+		return [self.a, self.I0_supp]
+
 	def __call__(self, I_supp):
 		return self.a*(I_supp-self.I0_supp)
 
@@ -29,6 +33,7 @@ class SoftPlusSuppression:
 
 	def __call__(self, I_supp):
 		return self.a*torch.log(1+torch.exp(self.b*(I_supp-self.I0_supp )))
+
 
 
 class SuppressionAmount:
@@ -47,7 +52,7 @@ class SuppressionAmount:
 		self.filter_model=filter_model
 
 	def __call__(self, f, maskCond, eps=1e-6):
-		exc_sq=get_sq_masking_excitation_patterns_maskCond(f*self.freq_factor, self.suppBW10Func, 
+		exc_sq=excitation.get_sq_masking_excitation_patterns_maskCond(f*self.freq_factor, self.suppBW10Func, 
 			maskCond, filter_model=self.filter_model)
 		I_supp=10*torch.log10(exc_sq+eps)
 		return self.suppFunc(I_supp)
