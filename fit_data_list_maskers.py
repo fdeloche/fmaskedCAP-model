@@ -1,21 +1,19 @@
-#NOTE:masker names can be in good format or with the json extension
-#ex code correction:
+#NOTE:masker names can be in the right format or with the json extension at the end (filenames)
+#ex how to handle this:
 #masker_list=[st.replace('-', '_').replace('.json', '') for st in fln_list]
 
 import numpy as np
 
 #8k
 
-ntch_8k_masker_list=[#'2_notch8000_bw2300_55dB',
- #'3_notch8000_bw2300_50dB',  #removed
- #'4_notch8000_bw2300_45dB',
+ntch_8k_masker_list=[
  '5_notch8000_bw2300_40dB',
  '6_notch8000_bw2300_35dB',
  '7_notch8000_bw2300_32dB',
  '7_notch8000_bw2300_29dB',
  '8_notch8000_bw2300_26dB',
  '9_notch8000_bw2300_23dB',
- '10_notch8000_bw2300_17dB',  #new one,
+ '10_notch8000_bw2300_17dB',  
  '2-notch7300_1600_30dB.json', 
  '3-notch7300_1600_25dB.json', 
  '4-notch8300_2000_26dB.json',
@@ -29,7 +27,6 @@ ntch_8k_re='.*notch8000_bw2300'   #not used anymore
 
 
 vfreq_8k_fln_list=[
-#'1_hp_10000Hz', '2_hp_9000Hz', '3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
 '6_notch8000_bw2300_35dB', '8_notch8000_bw2300_26dB',
 '1-notch7600_bw1100.json', '2-notch7800_bw1300.json',
 '3-notch8000_bw1400.json',
@@ -77,8 +74,7 @@ vbw_8k_fln_list+= ['2-notch7300_1600_30dB.json',
 
 # 6k
 
-ntch_6k_masker_list=[#'2_notch6000_bw2000_55dB',
-#'3_notch6000_bw2000_50dB',
+ntch_6k_masker_list=[
 '4_notch6000_bw2000_45dB',
 '5_notch6000_bw2000_40dB',
 '6_notch6000_bw2000_35dB',
@@ -102,8 +98,6 @@ attns_6k=np.array([45,40,35,32,29,26,23,17])
 ntch_6k_re='.*notch6000_bw2000'  #not used anymore
 
 vfreq_6k_fln_list=[
-#'2_hp_9000Hz', '3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-#'7_hp_4000Hz', '8_hp_3200Hz', 
            '6_notch8000_bw2300_35dB', '8_notch8000_bw2300_26dB',
 
 '6_notch6000_bw2000_35dB', 
@@ -170,8 +164,7 @@ vbw_6k_fln_list+=['1-notch5800_1400_30dB.json',
 
 # 5k
 
-ntch_5k_masker_list=[#'2_notch5000_bw2000_55dB',
-#'3_notch5000_bw2000_50dB',
+ntch_5k_masker_list=[
 '4_notch5000_bw2000_45dB',
 '5_notch5000_bw2000_40dB',
 '6_notch5000_bw2000_35dB',
@@ -191,9 +184,6 @@ ntch_5k_re='.*notch5000_bw2000'
 
 
 vfreq_5k_fln_list=[
-#'3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-#'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz',
-
 '6_notch6000_bw2000_35dB', 
 '9_notch6000_bw2000_26dB',
 
@@ -207,7 +197,6 @@ vfreq_5k_fln_list=[
 '8-notch5800_bw1400',
 
 '1-notch4800_bw900.json',
-#'2-notch5000_bw1000.json',
 '3-notch5100_bw1200.json',
 '4-notch4800_bw1400.json',
 '5-notch5100_bw1100.json',
@@ -239,7 +228,6 @@ vfreq_5k_fln_list=[
 '1-notch4500_bw700.json']
 
 vbw_5k_fln_list=['1-notch4800_bw900.json',
-#'2-notch5000_bw1000.json',  #removed
 '3-notch5100_bw1200.json',
 '4-notch4800_bw1400.json',
 '5-notch5100_bw1100.json',
@@ -253,8 +241,7 @@ vbw_5k_fln_list+=['1-notch4800_1200_30dB.json',
 
 #4k
 
-ntch_4k_masker_list=[#'2_notch4000_bw1700_55dB',
-#'3_notch4000_bw1700_50dB',
+ntch_4k_masker_list=[
 '4_notch4000_bw1700_45dB',
 '5_notch4000_bw1700_40dB',
 '6_notch4000_bw1700_35dB',
@@ -263,7 +250,7 @@ ntch_4k_masker_list=[#'2_notch4000_bw1700_55dB',
 '9_notch4000_bw1700_26dB',
 '10_notch4000_bw1700_23dB',
 '11_notch400_bw1700_17dB', #XXX typo
-'1-notch3800_1100_30dB.json',  #new ones
+'1-notch3800_1100_30dB.json', 
 '2-notch3800_1100_25dB.json',
 '3-notch4300_1100_26dB.json',
 '4-notch4300_1100_23dB.json']
@@ -274,8 +261,6 @@ attns_4k=np.array([45,40,35,32,29,26,23, 17])
 ntch_4k_re='(.*notch4000_bw1700)|(.*notch400_bw1700)'
 
 vfreq_4k_fln_list=[
-#'3_hp_8000Hz', '4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-#'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz', 
 
 '6_notch6000_bw2000_35dB', 
 '9_notch6000_bw2000_26dB',
@@ -287,7 +272,6 @@ vfreq_4k_fln_list=[
 '8-notch5800_bw1400',
 
 '1-notch4800_bw900.json',
-#'2-notch5000_bw1000.json',
 '3-notch5100_bw1200.json',
 '4-notch4800_bw1400.json',
 '5-notch5100_bw1100.json',
@@ -348,8 +332,7 @@ vbw_4k_fln_list+=['1-notch3800_1100_30dB.json',
 
 #3k
 
-ntch_3k_masker_list=[#'2_notch3000_bw1500_55dB'
-#,'4_notch3000_bw1500_50dB',
+ntch_3k_masker_list=[
 '5_notch3000_bw1500_45dB'
 ,'6_notch3000_bw1500_40dB'
 ,'7_notch3000_bw1500_35dB'
@@ -383,14 +366,10 @@ vbw_3k_fln_list+=['1-notch2600_900_30dB.json',
 
 
 vfreq_3k_fln_list=[
-    #'4_hp_7000Hz', '5_hp_6000Hz', '6_hp_5000Hz',
-#'7_hp_4000Hz', '8_hp_3200Hz', '9_hp_2400Hz', '10_hp_1800Hz', '11_hp_1500Hz', 
-#'12_hp_1200Hz',
 
 '8-notch5800_bw1400',
 
 '1-notch4800_bw900.json',
-#'2-notch5000_bw1000.json',
 '3-notch5100_bw1200.json',
 '4-notch4800_bw1400.json',
 '5-notch5100_bw1100.json',
@@ -433,7 +412,6 @@ vfreq_3k_fln_list=[
 '3-notch1500_bw700.json',
 '4-notch1600_bw600.json',
 '5-notch1700_bw800.json',
-#'6-notch1700_bw500.json'
 
 '1-notch3800_1100_30dB.json',
 '3-notch4300_1100_26dB.json',
@@ -453,8 +431,7 @@ vfreq_3k_fln_list=[
 
 # 2.2khz
 
-ntch_2200_masker_list=[#'2_notch2200_bw1500_55dB',
-#'3_notch2200_bw1500_50dB',
+ntch_2200_masker_list=[
 '4_notch2200_bw1500_45dB',
 '5_notch2200_bw1500_40dB',
 '6_notch2200_bw1500_35dB',
@@ -471,12 +448,12 @@ attns_2200=np.array([45,40,35,32,29,26,23, 17])
 ntch_2200_re='.*notch2200_bw1500'
 
 
-vbw_2200_fln_list=['1-notch2000_bw600.json', #modified
+vbw_2200_fln_list=['1-notch2000_bw600.json', 
 '2-notch2200_bw800.json',
 '3-notch2300_bw900.json',
-'3-notch2600_bw700.json', #modified
+'3-notch2600_bw700.json', 
 '5-notch2400_bw900.json',
-'3-notch2600_bw700.json' #new one
+'3-notch2600_bw700.json' 
 ]
 
 
@@ -484,8 +461,7 @@ vbw_2200_fln_list=['1-notch2000_bw600.json', #modified
 # 1.5 kHz
 
 
-ntch_1500_masker_list=[#'31_notch1500_bw1000_55dB',
-#'32_notch1500_bw1000_50dB',
+ntch_1500_masker_list=[
 '33_notch1500_bw1000_45dB',
 '34_notch1500_bw1000_40dB',
 '35_notch1500_bw1000_35dB',
@@ -493,7 +469,7 @@ ntch_1500_masker_list=[#'31_notch1500_bw1000_55dB',
 '37_notch1500_bw1000_29dB',
 '38_notch1500_bw1000_26dB',
 '39_notch1500_bw1000_23dB',
-'40_notch1500_bw1000_17dB' #new one
+'40_notch1500_bw1000_17dB' 
 ]
 
 
@@ -506,9 +482,8 @@ vbw_1500_fln_list=['1-notch_1400_bw400.json',
 '3-notch1500_bw700.json',
 '4-notch1600_bw600.json',
 '5-notch1700_bw800.json',
-#'6-notch1700_bw500.json'  #removed
-'3-notch1300_bw400.json', #added
-'4-notch1800_bw500.json'  #added
+'3-notch1300_bw400.json',
+'4-notch1800_bw500.json' 
 ]
 
 # dictionnaries
