@@ -8,6 +8,8 @@ from excitation import *
 from deconv import *
 from ur import *
 from tuning import *
+from suppression import *
+
 import re
 
 from scipy.ndimage import gaussian_filter1d
@@ -55,7 +57,7 @@ def plotMaskingAmountExcitations(BW10Func, maskingConditions, maskingIO, eps=1e-
 		refMaskers: masking Conditions (same number of conds as maskingConditions) serving as reference maskers. 
 		axlist:list of axes for the plots. If none creates a list of axes
 	Returns:
-		the list of axes corresponding to the figures plotted
+		list of axes corresponding to figures
 	'''
 	m=500
 	f=torch.linspace(fmin, fmax, m)
@@ -219,7 +221,7 @@ def plotExcitationPatternsSingleLat(E, plot_raw_excitation=False, axlist=None, m
 	maskAmounts, excs = E.get_tensors() 
 	maskingConditions = E.maskingConditions
 	if plot_raw_excitation:
-		pl.suptitle('E_0, M  /  E_0*(1-M)')
+		pl.suptitle('E_0, M  /  E')
 	else:
 		pl.suptitle('Excitation patterns: E_0*(1-M)')
 

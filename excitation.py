@@ -9,6 +9,7 @@ import re
 
 from latencies import *
 from filters import *
+from suppression import *
 
 #from scipy.stats import gamma
 
@@ -114,11 +115,12 @@ class ExcitationPatterns:
 
 
 
-	def set_masking_model(self, latencies, bw10Func, maskCond, maskingIOFunc, filter_model='gaussian'):
+	def set_masking_model(self, latencies, bw10Func, maskCond, maskingIOFunc, filter_model='gaussian', suppression_model=None):
 		'''
 		Args:
 			maskCond: MaskingConditions object
 			maskingIOFunc: e.g. SigmoidMaskingDegreeFunction object
+			suppression_model: object of the SuppressionAmount class. None by default.
 		'''
 		self.masked=True
 		self.latencies=latencies
@@ -126,6 +128,7 @@ class ExcitationPatterns:
 		self.maskingConditions=maskCond
 		self.maskingIOFunc=maskingIOFunc
 		self.filter_model=filter_model
+		self.suppression_model=suppression_model
 
 		if self.use_bincount: #count once for all the mapping bins <-> freqs to avoid the computational burden
 			#Note: assumes a monotonic (decreasing) function of latencies with frequencies
@@ -141,9 +144,6 @@ class ExcitationPatterns:
 				ind-=1
 			self.bincount_f=f
 			self.bincount_map=mapping		
-
-
-
 
 	def get_tensors(self, eps=1e-6):
 		'''
@@ -161,7 +161,13 @@ class ExcitationPatterns:
 			sq_masking_exc_patterns=get_sq_masking_excitation_patterns_maskCond(f, self.bw10Func, self.maskingConditions, filter_model=self.filter_model)
 		
 			I=10*torch.log10(sq_masking_exc_patterns+eps)
-			maskingAmount=self.maskingIOFunc(I, f)
+
+
+			if not(self.suppression_model is None):
+				suppAmount=self.suppression_model(f,  self.maskingConditions)
+			else:
+				suppAmount=torch.zeros_like(I)
+			maskingAmount=self.maskingIOFunc(I-suppAmount, f)
 
 			if self.maskingConditions.mat_release is None:  #considering broadband noise masker as reference (by convention, masking=100%)
 				res= torch.unsqueeze(self.E0_nonmaskable, 0)+ self.E0_maskable_amp*torch.unsqueeze(self.E0_maskable, 0)*(1-maskingAmount)

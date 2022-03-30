@@ -23,7 +23,7 @@ def complex_multiplication(t1, t2):
 
 def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0=1, E0_t_min=0, E0_t_max=np.infty,
 	sum_grad_E0=False,
-	plot_E0_graph=False, plot_E0_amp_graph=False, plot_masking_I0_graph=False, 
+	plot_E0_graph=False, plot_E0_amp_graph=False, plot_masking_I0_graph=False, plot_supp_params=False,
 	plot_Q10=False, fc_ref_Q10=0,
 	step_plots=1, axes=None, ind_plots=None, step0=0, tot_steps=0, verbose=False, 
 	Q10_distributed=False, E0_distributed=False, I0_distributed=False,
@@ -102,7 +102,7 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				return E0*filter_t
 
 	if ind_plots is None:
-		nb_plots=sum([plot_E0_graph, plot_E0_amp_graph, plot_masking_I0_graph, plot_Q10, debug_grad_excs])
+		nb_plots=sum([plot_E0_graph, plot_E0_amp_graph, plot_masking_I0_graph, plot_Q10, debug_grad_excs, plot_supp_params])
 	else:
 		nb_plots=len(ind_plots)
 
@@ -336,6 +336,33 @@ def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0
 				ax3.set_ylabel('Q10')
 			if i==1:
 				ax3.set_xlim(right=step+nb_steps)
+
+		if plot_supp_params: #XXX for now, only constant slope
+			if ind_plots is None:
+				ind_plot+=1
+				if i==1:
+					ind_plots2['supp']=ind_plot
+			else:
+				ind_plot=ind_plots['supp']
+			if i==1:
+				if axes is None:
+					ax4 = pl.subplot(nb_plots, 1, ind_plot)
+					axes2.append(ax4)
+				else:
+					ax4 = axes[ind_plot-1]
+
+			if E.suppression_model is not None:
+				with torch.no_grad():
+					ax4.plot(step, E.suppression_model.suppFunc.a, '+', color=cstep)
+				
+
+			if i==1 and axes is None:
+				ax4.set_title('Suppresion slope ')
+				ax4.set_xlabel('Step')
+				ax4.set_ylabel('Suppression slope (dB/dB)')
+			if i==1:
+				ax4.set_xlim(right=step+nb_steps)
+
 	if ind_plots is None:
 		ind_plots=ind_plots2
 		axes=axes2
