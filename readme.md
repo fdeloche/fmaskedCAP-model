@@ -4,11 +4,11 @@
 
 Code for *Estimation of cochlear frequency selectivity based on a convolution model of forward-masked compound action potentials*. François Deloche, Satyabrata Parida, Andrew Sivaprakasam,  Michael G. Heinz. 2022
 
-
+Zenodo badge: [![DOI](https://zenodo.org/badge/476437527.svg)](https://zenodo.org/badge/latestdoi/476437527)
 
 ## Lab notes 
 
-Some of these notes are specific to the data pipeline in our lab, but explains nevertheless the entire procedure from data to
+Some of these notes are specific to the data pipeline in our lab, but explains nevertheless the entire procedure from handling raw data to analysis of results.
 
 ### Steps fitting new expe
 
