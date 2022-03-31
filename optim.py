@@ -10,15 +10,6 @@ from latencies import *
 
 import rbf
 
-'''
-#not needed anymore
-def complex_multiplication(t1, t2):
-	#complex multiplication of a 2 D array by a (unsqueezed) 1D array (playing the role of the unitary response)
-	real1, imag1 = t1[:, :, 0], t1[:, :, 1]
-	real2, imag2 = t2[:, 0], t2[:, 1]
-	return torch.stack([real1 * real2 - imag1 * imag2, real1 * imag2 + imag1 * real2], dim = -1)
-
-'''
 
 
 def optim_steps(E, ur, signals_proc,  alpha_dic, nb_steps, n_dim_E0=7, k_mode_E0=1, E0_t_min=0, E0_t_max=np.infty,
