@@ -11,7 +11,6 @@ from latencies import *
 from filters import *
 from suppression import *
 
-#from scipy.stats import gamma
 
 def get_sq_masking_excitation_patterns(f, bw10Func, n_conditions, n_bands, 
 	amp_list, f_low_list, f_high_list, filter_model='gaussian', mat_release=None):

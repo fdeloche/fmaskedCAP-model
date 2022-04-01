@@ -52,8 +52,8 @@ def deconv_newton_step(EPs, u_fft, CAPs_fft, eps=1e-6, eps_ridge=0, proj_fft=Non
 def blind_deconv_alternate_steps(EPs_init, u_init, CAPs, nb_alternations, nb_steps, alpha, proj_EPs, 
 	proj_u, sig_d, maskingPatterns):
 	'''
-	Comment:unused
-	#TODO
+	Comment:not used
+
 	Deconv for u first -> change that? 
 	Low pass on E #HACK
 	Args:

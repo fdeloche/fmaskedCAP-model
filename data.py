@@ -93,14 +93,6 @@ class CAPData:
 
 
 		def loadPic(n):
-			'''found=False
-
-			for filename in listFilesMat:
-				if f'p{str(n).zfill(4)}' in filename:
-					found=True
-					break
-			assert found, f'pic {n} not found.'
-			'''
 			filename=picnum_to_filename[n]
 			arr= loadmat(f'{data_folder}/{filename}')
 			if old_format:
@@ -112,7 +104,7 @@ class CAPData:
 		def get_info_pic(pic, mode='C+R'):
 			'''
 			Args:
-				mode: 'C+R', 'C' 'R' (check C and R? #TODO )
+				mode: 'C+R', 'C' 'R'
 			'''
 
 			if mode=='C+R':
@@ -155,7 +147,6 @@ class CAPData:
 				picDic=loadPic(picNum)
 				if firstPic:
 					if old_format:
-						#val=np.sum(picDic['valAll'][1::2], axis=0)
 						val=np.squeeze(picDic['valAvg'].T)
 						firstPic=False
 						#info on masker
