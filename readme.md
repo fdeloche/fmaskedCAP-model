@@ -2,7 +2,7 @@
 
 ## Description 
 
-Code and minimal dataset for *Estimation of cochlear frequency selectivity based on a convolution model of forward-masked compound action potentials*. François Deloche, Satyabrata Parida, Andrew Sivaprakasam,  Michael G. Heinz. 2022
+Code and minimal dataset for "Estimation of Cochlear Frequency Selectivity Using a Convolution Model of Forward-Masked Compound Action Potentials".  Deloche, F., Parida, S., Sivaprakasam, A., Heinz M.G., *JARO* (2024). https://doi.org/10.1007/s10162-023-00922-1
 
 Zenodo badge: [![DOI](https://zenodo.org/badge/476437527.svg)](https://zenodo.org/badge/latestdoi/476437527)
 
