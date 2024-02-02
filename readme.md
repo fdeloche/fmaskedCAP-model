@@ -13,8 +13,6 @@ Averaged data
 
 We provide the average CAP data associated with each masking condition for each of the four experiments presented in the paper in folder `averaged_data`. See the notebooks in `utils/Data` for how to display data. More specifically, there are 10 averaged response signals in each 'picture file', corresponding to the 10 repetitions of stimulus by block (odd/even indices alternate the polarity of clicks).
 
-
-
 ## Lab notes 
 
 Some of these notes are specific to the data pipeline in the Heinz lab, but it describes nevertheless the procedure from raw data processing to analysis of results.
@@ -101,3 +99,9 @@ Some of these notes are specific to the data pipeline in the Heinz lab, but it d
 * Some results are saved by `Fit data.ipynb`  (`write_results` on True), or plotted directly in the jupyter notebook
 * Further analysis of data is done in `Fit data synthesis.ipynb`
 
+
+
+Code for specific exper. data
+------
+
+Code for pre-processing, as well as optimization parameters (and sometimes initialization parameters) have to be adapted for each experimental dataset. As an example, we provide the specific code for the main figures (chinchilla Q395) that were presented in the paper (e.g., file `fit_data_1_22_common.py`). The jupyter notebook (`Fit data.ipynb`) loading this dataset should run by itself without modification.
