@@ -2,7 +2,7 @@
 
 ## Description 
 
-Code and minimal dataset for "Estimation of Cochlear Frequency Selectivity Using a Convolution Model of Forward-Masked Compound Action Potentials".  Deloche, F., Parida, S., Sivaprakasam, A., Heinz M.G., *JARO* (2024). https://doi.org/10.1007/s10162-023-00922-1
+Code and minimal dataset for "Estimation of Cochlear Frequency Selectivity Using a Convolution Model of Forward-Masked Compound Action Potentials". F. Deloche, S. Parida, A. Sivaprakasam, M.G. Heinz, *JARO* (2024). https://doi.org/10.1007/s10162-023-00922-1
 
 Zenodo badge: [![DOI](https://zenodo.org/badge/476437527.svg)](https://zenodo.org/badge/latestdoi/476437527)
 
@@ -105,3 +105,4 @@ Code for specific exper. data
 ------
 
 Code for pre-processing, as well as optimization parameters (and sometimes initialization parameters) have to be adapted for each experimental dataset. As an example, we provide the specific code for the main figures (chinchilla Q395) that were presented in the paper (e.g., file `fit_data_1_22_common.py`). The jupyter notebook (`Fit data.ipynb`) loading this dataset should run by itself without modification.
+

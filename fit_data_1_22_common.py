@@ -408,25 +408,19 @@ def plot_figures_narrowband_analysis_deconv():
 
 ### Latencies
 
-#NB: some data not clear
 t_max=np.array([43.5,43.5,45,42,45.5,46.5,48,51,56,65,74,82])
-#t_max_bis=np.array([23,26,25.5,25.5,28.5,29])
 
 t_max_C=np.array([44,51.5,47,46,52,54,49,52,65,73,77,96.5])   #mod 0
 
 t_max_R=np.array([44,49.5,47.5,45,49.5,51,53.5,61,76.5,88,104,122])
 
 
-#t_0lat=4e-3-3.6e-3+2e-3
 t_0lat=4e-3+2e-3-6e-3
-
 
 t_max=t_0lat+t_max*2*1e-5
 t_max_C=t_0lat+t_max_C*2*1e-5
-
 t_max_R=t_0lat+t_max_R*2*1e-5
 
-#t_max_bis=t_0lat+t_max_bis*2*1e-5
 freqs=np.array([9.5,8.5,7.5,6.5,5.5,4.5,3.6,2.8,2.1,1.65, 1.35, 1])
 
 def plot_estimated_latencies_deconv():
@@ -444,6 +438,8 @@ def plot_estimated_latencies_deconv():
 
 	pl.legend()
 	pl.show()
+
+
 #NB CM begins at 6 ms approx
 #peak convol begins at 5-3 ms = 2ms (C) approx
 
@@ -455,7 +451,7 @@ def plot_estimated_latencies_deconv():
 
 freqs_pts=np.array([9.5,8.5,7.5,6.5,5.5,4.5])*1e3
 
-inds=np.array([0,1,2, 4,5]) #HACK remove outlier 6.5 kHz
+inds=np.array([0,1,2, 4,5]) #remove outlier 6.5 kHz
 freqs_pts=freqs_pts[inds]
 freqs_pts0=freqs_pts
 t_max_pts=t_max[inds]
